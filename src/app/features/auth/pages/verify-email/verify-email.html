@@ -1,0 +1,142 @@
+<main class="auth-page">
+  <div class="auth-shell">
+    <header class="page-header">
+      <a class="brand" routerLink="/" aria-label="Resto.pk home">
+        <span class="brand-mark">R</span>
+        <span class="brand-name">Resto<span>.pk</span></span>
+      </a>
+
+      <div class="hero-badge">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-2-5.8L4 11l6-2.2L12 3Z" />
+          <path d="m19 14 1.2 2.8L23 18l-2.8 1.2L19 22l-1.2-2.8L15 18l2.8-1.2L19 14Z" />
+        </svg>
+        <span>Restaurant Website Builder</span>
+      </div>
+
+      <h1 class="page-title">
+        Verify your <span>email</span>
+      </h1>
+
+      <p class="page-subtitle">
+        Enter the six-digit verification code we sent to activate your
+        Resto.pk account and start building your restaurant website.
+      </p>
+    </header>
+
+    <section class="card-area" aria-labelledby="verify-title">
+      @if (emailMissing) {
+        <div class="login-card recovery-card" role="alert">
+          <header class="card-header">
+            <span class="welcome-label">ACCOUNT NOT FOUND</span>
+            <h2 id="verify-title">We couldn't find your email</h2>
+            <p>
+              This page was opened directly or refreshed, so the email address
+              from registration is no longer available. Start again to receive
+              a new verification code.
+            </p>
+          </header>
+
+          <app-button
+            type="button"
+            [fullWidth]="true"
+            variant="primary"
+            size="lg"
+            (click)="goToRegister()"
+          >
+            <span>Create an account</span>
+          </app-button>
+
+          <p class="register-prompt">
+            Already verified?
+            <a routerLink="/login">Sign in here</a>
+          </p>
+        </div>
+      } @else {
+        <div class="login-card">
+          <header class="card-header">
+            <span class="welcome-label">ALMOST THERE</span>
+            <h2 id="verify-title">Verify your email</h2>
+            <p>
+              We sent a six-digit code to
+              <strong>{{ email }}</strong>
+            </p>
+          </header>
+
+          @if (generalError) {
+            <div class="alert alert-error" role="alert">{{ generalError }}</div>
+          }
+
+          <div
+            class="otp-row"
+            [class.otp-row--complete]="isOtpComplete"
+            role="group"
+            aria-label="Six digit verification code"
+          >
+            @for (digit of digits; track trackByIndex($index)) {
+              <input
+                #digitInput
+                class="otp-box"
+                [class.otp-box--filled]="digit !== ''"
+                type="text"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                maxlength="1"
+                [attr.aria-label]="'Digit ' + ($index + 1) + ' of 6'"
+                (input)="onDigitInput($index, $event)"
+                (keydown)="onDigitKeydown($index, $event)"
+                (paste)="onDigitPaste($event)"
+              />
+            }
+          </div>
+
+          <p class="otp-status" aria-live="polite">
+            @if (isOtpComplete) {
+              <span class="otp-status-ready">Code ready — press Verify email to continue.</span>
+            } @else {
+              <span class="otp-status-hint">Enter all six digits to enable verification.</span>
+            }
+          </p>
+
+          <app-button
+            type="button"
+            [fullWidth]="true"
+            variant="primary"
+            size="lg"
+            [loading]="verifying"
+            [disabled]="!canVerify"
+            loadingText="Verifying..."
+            (click)="verify()"
+          >
+            <span>Verify Email</span>
+          </app-button>
+
+          <div class="resend-row">
+            <span class="resend-label">Didn't receive the code?</span>
+            <button
+              type="button"
+              class="resend-link"
+              [disabled]="!canResend"
+              (click)="resend()"
+            >
+              @if (resending) {
+                Sending...
+              } @else if (cooldownSeconds > 0) {
+                Resend OTP in {{ cooldownSeconds }}s
+              } @else {
+                Resend OTP
+              }
+            </button>
+          </div>
+
+          <p class="register-prompt">
+            Wrong account?
+            <a routerLink="/register">Create a different account</a>
+            or
+            <a routerLink="/login">sign in</a>
+          </p>
+        </div>
+      }
+    </section>
+  </div>
+</main>
