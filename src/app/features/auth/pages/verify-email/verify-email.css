@@ -1,3 +1,5 @@
+@import "auth-card-base.css";
+
 :host {
   display: block;
   min-height: 100vh;
