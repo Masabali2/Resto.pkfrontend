@@ -6,7 +6,9 @@ import { environment } from '../../../environments/environment';
 import type { ApiResponse } from '../models/api-response.model';
 import type {
   AuthResult,
-  LoginRequest
+  AuthenticatedUser,
+  LoginRequest,
+  RegisterRequest
 } from '../models/auth.model';
 
 @Injectable({
@@ -19,6 +21,13 @@ export class AuthService {
   login(request: LoginRequest): Observable<ApiResponse<AuthResult>> {
     return this.http.post<ApiResponse<AuthResult>>(
       `${this.apiUrl}/login`,
+      request
+    );
+  }
+
+  register(request: RegisterRequest): Observable<ApiResponse<AuthenticatedUser>> {
+    return this.http.post<ApiResponse<AuthenticatedUser>>(
+      `${this.apiUrl}/register`,
       request
     );
   }

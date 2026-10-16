@@ -24,10 +24,9 @@ export interface AuthResult {
   activeTenant: TenantSummary | null;
   permissions: string[];
 }
-export interface registerRequest {
-  Email: string;
-  UserName: string;
+export interface RegisterRequest {
+  email: string;
+  userName: string;
   password: string;
   confirmPassword: string;
- 
 }

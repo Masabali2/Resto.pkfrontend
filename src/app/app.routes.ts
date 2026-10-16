@@ -10,6 +10,13 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'register',
+    loadComponent: () =>
+      import('./features/auth/pages/register/register').then(
+        m => m.Register
+      )
+  },
+  {
     path: '',
     redirectTo: 'login',
     pathMatch: 'full'
