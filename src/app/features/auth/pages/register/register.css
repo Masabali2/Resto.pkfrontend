@@ -113,6 +113,22 @@
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+
+  .desktop-brand {
+    display: none;
+  }
+
+  .login-card {
+    padding: 28px;
+  }
+
+  .login-header {
+    margin-bottom: 20px;
+  }
+
+  .form-field {
+    margin-bottom: 16px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

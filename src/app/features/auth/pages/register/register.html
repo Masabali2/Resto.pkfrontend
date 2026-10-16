@@ -1,11 +1,14 @@
-<main class="auth-page">
-  <div class="auth-shell">
-    <header class="page-header">
-      <a class="brand" routerLink="/" aria-label="Resto.pk home">
-        <span class="brand-mark">R</span>
-        <span class="brand-name">Resto<span>.pk</span></span>
-      </a>
+<main class="auth-layout">
+  <section class="brand-panel" aria-label="About Resto.pk">
+    <div class="brand-glow brand-glow-top"></div>
+    <div class="brand-glow brand-glow-bottom"></div>
 
+    <a class="brand mobile-brand" routerLink="/" aria-label="Resto.pk home">
+      <span class="brand-mark">R</span>
+      <span class="brand-name">Resto<span>.pk</span></span>
+    </a>
+
+    <div class="hero-content">
       <div class="hero-badge">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-2-5.8L4 11l6-2.2L12 3Z" />
@@ -14,33 +17,45 @@
         <span>Restaurant Website Builder</span>
       </div>
 
-      <h1 class="page-title">
+      <h1>
         Start your restaurant journey with
         <span>Resto.pk!</span>
       </h1>
 
-      <p class="page-subtitle">
+      <p class="hero-description">
         Create your account and launch a professional restaurant website with
         online ordering, menus, and business tools in just a few clicks.
       </p>
+    </div>
 
-      <ul class="benefit-list" aria-label="What you get with Resto.pk">
-        <li>
-          <span class="benefit-check" aria-hidden="true">✓</span>
-          A branded restaurant website in minutes
-        </li>
-        <li>
-          <span class="benefit-check" aria-hidden="true">✓</span>
-          Menus, orders, and customers in one dashboard
-        </li>
-        <li>
-          <span class="benefit-check" aria-hidden="true">✓</span>
-          Multi-restaurant management for growing teams
-        </li>
-      </ul>
-    </header>
+    <ul class="benefit-list" aria-label="What you get with Resto.pk">
+      <li>
+        <span class="benefit-check" aria-hidden="true">✓</span>
+        A branded restaurant website in minutes
+      </li>
+      <li>
+        <span class="benefit-check" aria-hidden="true">✓</span>
+        Menus, orders, and customers in one dashboard
+      </li>
+      <li>
+        <span class="benefit-check" aria-hidden="true">✓</span>
+        Multi-restaurant management for growing teams
+      </li>
+    </ul>
 
-    <section class="card-area" [attr.aria-labelledby]="registrationComplete ? 'register-success-title' : 'register-title'">
+    <footer class="brand-footer">
+      <span>© 2026 Resto.pk</span>
+      <span>Everything your restaurant needs to grow.</span>
+    </footer>
+  </section>
+
+  <section class="form-panel" [attr.aria-labelledby]="registrationComplete ? 'register-success-title' : 'register-title'">
+    <div class="form-container">
+      <a class="brand desktop-brand" routerLink="/" aria-label="Resto.pk home">
+        <span class="brand-mark">R</span>
+        <span class="brand-name">Resto<span>.pk</span></span>
+      </a>
+
       @if (registrationComplete) {
         <div class="login-card success-card" role="status">
           <header class="login-header">
@@ -69,9 +84,13 @@
         </div>
       } @else {
         <div class="login-card">
-          <header class="card-header">
+          <header class="login-header">
             <span class="welcome-label">GET STARTED</span>
             <h2 id="register-title">Create your Resto.pk account</h2>
+            <p>
+              Set up your account to build, launch, and manage your restaurant
+              website.
+            </p>
           </header>
 
           @if (generalError) {
@@ -313,6 +332,14 @@
             Already have an account?
             <a class="register-link" routerLink="/login">Sign in</a>
           </p>
+
+          <div class="login-footer">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="4" y="10" width="16" height="11" rx="2" />
+              <path d="M8 10V7a4 4 0 1 1 8 0v3" />
+            </svg>
+            <span>Your information is protected and never shared</span>
+          </div>
         </div>
       }
     </section>
