@@ -1,9 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 @Component({
-  imports: [],
   selector: 'app-loading-spinner',
-  styleUrl: './loading-spinner.css',
+  standalone: true,
   templateUrl: './loading-spinner.html',
+  styleUrl: './loading-spinner.css'
 })
-export class LoadingSpinner {}
+export class LoadingSpinner {
+  size = input<number>(24);
+}

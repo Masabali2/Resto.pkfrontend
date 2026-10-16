@@ -1,0 +1,23 @@
+
+<section class="notification-container" aria-label="Notifications">
+  @for (notification of notificationService.notifications(); track notification.id) {
+    <article
+      class="notification"
+      [class.notification-success]="notification.type === 'success'"
+      [class.notification-error]="notification.type === 'error'"
+      [class.notification-info]="notification.type === 'info'"
+      [attr.role]="notification.type === 'error' ? 'alert' : 'status'"
+    >
+      <p>{{ notification.message }}</p>
+
+      <button
+        type="button"
+        class="notification-dismiss"
+        aria-label="Dismiss notification"
+        (click)="notificationService.dismiss(notification.id)"
+      >
+        ×
+      </button>
+    </article>
+  }
+</section>

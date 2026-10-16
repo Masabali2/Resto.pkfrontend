@@ -1,1 +1,22 @@
-<p>button works!</p>
+
+<button
+  class="button"
+  [class.button-primary]="variant() === 'primary'"
+  [class.button-secondary]="variant() === 'secondary'"
+  [class.button-outline]="variant() === 'outline'"
+  [class.button-danger]="variant() === 'danger'"
+  [class.button-sm]="size() === 'sm'"
+  [class.button-md]="size() === 'md'"
+  [class.button-lg]="size() === 'lg'"
+  [class.button-full-width]="fullWidth()"
+  [type]="type()"
+  [disabled]="disabled() || loading()"
+  [attr.aria-busy]="loading()"
+>
+  @if (loading()) {
+    <app-loading-spinner [size]="17" />
+    <span>{{ loadingText() }}</span>
+  } @else {
+    <ng-content />
+  }
+</button>
