@@ -44,27 +44,27 @@ export const routes: Routes = [
       import('./features/dashboard/pages/under-construction/under-construction').then(
         m => m.UnderConstruction
       )
-  },
-  {
-    path: 'platform/dashboard',
-    canActivate: [authGuard],
-    redirectTo: 'dashboard'
-  },
-  {
-    path: 'tenant/dashboard',
-    canActivate: [authGuard],
-    redirectTo: 'dashboard'
-  },
-  {
-    path: 'manager/dashboard',
-    canActivate: [authGuard],
-    redirectTo: 'dashboard'
-  },
-  {
-    path: 'staff/dashboard',
-    canActivate: [authGuard],
-    redirectTo: 'dashboard'
-  },
+   },
+//   {
+//     path: 'platform/dashboard',
+//     canActivate: [authGuard],
+//     redirectTo: 'dashboard'
+//   },
+//   {
+//     path: 'tenant/dashboard',
+//     canActivate: [authGuard],
+//     redirectTo: 'dashboard'
+//   },
+//   {
+//     path: 'manager/dashboard',
+//     canActivate: [authGuard],
+//     redirectTo: 'dashboard'
+//   },
+//   {
+//     path: 'staff/dashboard',
+//     canActivate: [authGuard],
+//     redirectTo: 'dashboard'
+//   },
   {
     path: '',
     redirectTo: 'login',

@@ -1,4 +1,4 @@
-@import "auth-card-base.css";
+@import "../../../../styles/auth-card-base.css";
 
 :host {
   display: block;
