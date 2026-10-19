@@ -1,5 +1,24 @@
+
 <section id="hero" class="hero-section" aria-labelledby="hero-title">
-  <!-- Decorative background layers: soft brand gradients, blurred orbs, understated texture -->
+  <header class="main-header">
+    <a routerLink="/" class="brand-logo" aria-label="Resto.pk home">
+      <span class="logo-icon">R</span>
+      <span class="logo-text">Resto<span class="logo-dot">.pk</span></span>
+    </a>
+
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="#templates" class="nav-link">Templates</a>
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#how-it-works" class="nav-link">How It Works</a>
+      <a href="#pricing" class="nav-link">Pricing</a>
+    </nav>
+
+    <div class="header-actions">
+      <a routerLink="/login" class="nav-link-sign-in">Sign In</a>
+      <a routerLink="/register" class="btn-primary-glow btn-sm">Get Started</a>
+    </div>
+  </header>
+
   <div class="hero-backdrop" aria-hidden="true">
     <svg class="hero-contours" focusable="false" viewBox="0 0 1440 640" preserveAspectRatio="none">
       <path d="M-40 120 C 320 40 720 200 1120 110 S 1500 60 1520 130" />
@@ -9,7 +28,6 @@
   </div>
 
   <div class="section-inner">
-    <!-- ============ Left column: conversion-focused content ============ -->
     <div class="hero-content">
       <p class="hero-eyebrow" [style.--hero-delay]="'0ms'">
         <span class="eyebrow-dot" aria-hidden="true"></span>
@@ -20,8 +38,8 @@
         <span class="title-line" [style.--hero-delay]="'90ms'">Your Restaurant</span>
         <span class="title-line" [style.--hero-delay]="'190ms'">Deserves a</span>
         <span class="title-line accent-line" [style.--hero-delay]="'290ms'">
-          <span class="accent-word">Beautiful Website</span
-          ><svg class="accent-underline" aria-hidden="true" focusable="false" viewBox="0 0 300 14" preserveAspectRatio="none">
+          <span class="accent-word">Beautiful Website</span>
+          <svg class="accent-underline" aria-hidden="true" focusable="false" viewBox="0 0 300 14" preserveAspectRatio="none">
             <path d="M4 9 C 70 3, 150 12, 220 5 S 292 8, 296 7" />
           </svg>
         </span>
@@ -37,11 +55,10 @@
           <app-button variant="primary" size="lg" [fullWidth]="false">Get Started</app-button>
         </a>
         <a href="#templates" data-testid="hero-cta-templates" class="cta-link">
-          <app-button variant="outline" size="lg" [fullWidth]="false">Explore Templates&nbsp;&rarr;</app-button>
+          <app-button variant="outline" size="lg" [fullWidth]="false">Explore Templates →</app-button>
         </a>
       </div>
 
-      <!-- Trust row: qualitative product truths only — no invented metrics -->
       <ul class="trust-row" [style.--hero-delay]="'600ms'" aria-label="Why restaurant owners choose Resto.pk">
         <li>
           <span class="trust-icon" aria-hidden="true">🇵🇰</span>
@@ -58,30 +75,38 @@
       </ul>
     </div>
 
-    <!-- ============ Right column: layered visual showcase ============ -->
-    <div class="hero-showcase" [style.--hero-delay]="'260ms'" role="img"
-         aria-label="Illustrative design preview of a restaurant website built with Resto.pk, shown on desktop and mobile, with a floating featured-dish card.">
+    <div
+      class="hero-showcase"
+      [style.--hero-delay]="'260ms'"
+      role="img"
+      aria-label="Illustrative preview of a restaurant website on desktop and mobile, featuring a restaurant menu and featured dish."
+    >
       <div class="showcase-glow" aria-hidden="true"></div>
 
-      <!-- Desktop browser mockup (main layer) -->
       <div class="mockup-frame">
         <div class="browser-window">
           <div class="browser-bar" aria-hidden="true">
-            <span class="browser-dot dot-red"></span>
-            <span class="browser-dot dot-yellow"></span>
-            <span class="browser-dot dot-green"></span>
-            <span class="browser-address">spice-garden.example</span>
+            <div class="dots-wrapper">
+              <span class="browser-dot dot-red"></span>
+              <span class="browser-dot dot-yellow"></span>
+              <span class="browser-dot dot-green"></span>
+            </div>
+            <div class="browser-address">spice-garden.example</div>
           </div>
+
           <div class="browser-body">
             <header class="site-header">
               <span class="site-brand">Spice Garden</span>
               <nav class="site-nav" aria-hidden="true">
                 <span>Menu</span>
-                <span>About</span>
+                <span>Navigation ▾</span>
+                <span>Pricing</span>
                 <span>Contact</span>
+                <span class="btn-book-table">Book Table</span>
               </nav>
             </header>
-            <figure class="site-photo">
+
+            <div class="site-photo-container">
               <img
                 src="assets/images/hero-food-preview.jpg"
                 alt=""
@@ -90,26 +115,18 @@
                 loading="eager"
                 decoding="async"
               />
-            </figure>
-            <div class="site-info">
-              <div class="site-text">
-                <h3 class="site-name">
-                  Spice Garden
-                  <span class="site-sample">Illustrative sample</span>
-                </h3>
-                <p class="site-tagline">Authentic flavours, served fresh.</p>
+
+              <div class="floating-tag tag-special" aria-hidden="true">
+                Today's Special
               </div>
-              <ul class="site-menu" aria-hidden="true">
-                <li><span>Chicken Karahi</span><span>Rs. 780</span></li>
-                <li><span>Butter Naan</span><span>Rs. 120</span></li>
-                <li><span>Mango Lassi</span><span>Rs. 250</span></li>
-              </ul>
+              <div class="floating-tag tag-fresh" aria-hidden="true">
+                <span class="dot-orange">●</span> Fresh Food
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Secondary overlapping phone mockup -->
       <div class="phone-frame" aria-hidden="true">
         <div class="phone-notch"></div>
         <div class="phone-screen">
@@ -123,16 +140,14 @@
         </div>
       </div>
 
-      <!-- Floating featured-dish card -->
       <div class="float-card float-dish" aria-hidden="true">
         <span class="dish-swatch">🍲</span>
         <span class="float-copy">
-          <strong>Today&rsquo;s Special</strong>
-          <small>Chicken Karahi &middot; Rs. 780</small>
+          <strong>Today's Special</strong>
+          <small>Chicken Karahi · Rs. 780</small>
         </span>
       </div>
 
-      <!-- Floating brand chip -->
       <div class="float-card float-chip" aria-hidden="true">
         <span class="chip-sparkle">✦</span>
         <strong>Your brand, online</strong>

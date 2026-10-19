@@ -1,252 +1,36 @@
 <section id="templates" class="templates-section" aria-labelledby="templates-title">
   <div class="section-inner">
     <p class="templates-eyebrow">Template Showcase</p>
-    <h2 id="templates-title">See your restaurant in Brewed &amp; Co.</h2>
+    <h2 id="templates-title">Beautiful Templates for Every Restaurant</h2>
     <p class="templates-intro">
-      A live design mockup of our specialty-coffee house template. Everything below is a
-      demonstration of how a restaurant's website could look when built with Resto.pk —
-      no real orders, payments or sign-ups happen here.
+      Choose from professionally designed templates tailored to your restaurant type.
     </p>
 
-    <!-- Framed embedded-preview presentation of the example restaurant site -->
-    <div class="showcase-frame" role="region" aria-label="Brewed &amp; Co. template preview, an example restaurant website showcased by Resto.pk">
-      <div class="showcase-chrome" aria-hidden="true">
-        <span class="chrome-dot dot-red"></span>
-        <span class="chrome-dot dot-yellow"></span>
-        <span class="chrome-dot dot-green"></span>
-        <span class="chrome-address">brewedandco.example.com</span>
-        <span class="chrome-badge">Resto.pk demo</span>
-      </div>
-
-      <div id="brewed-co-mockup" class="brewed-mockup">
-        <!-- Compact restaurant navbar -->
-        <header class="bc-navbar">
-          <a class="bc-brand" href="#brewed-co-mockup" (click)="scrollMockupTo('bc-hero'); $event.preventDefault()">
-            <span class="bc-brand-mark" aria-hidden="true">☕</span>
-            <span class="bc-brand-name">Brewed <em>&amp;</em> Co.</span>
-          </a>
-
-          <nav class="bc-nav-links" aria-label="Demo site navigation">
-            <button type="button" class="bc-nav-link" (click)="scrollMockupTo('bc-menu')">Menu</button>
-            <button type="button" class="bc-nav-link" (click)="scrollMockupTo('bc-about')">About</button>
-            <button type="button" class="bc-nav-link" (click)="scrollMockupTo('bc-gallery')">Gallery</button>
-            <button type="button" class="bc-nav-link" (click)="scrollMockupTo('bc-reviews')">Reviews</button>
-          </nav>
-
-          <button type="button" class="bc-order-cta" (click)="scrollToMenu($event)">Order Now</button>
-        </header>
-
-        <!-- Coffee-shop hero -->
-        <section id="bc-hero" class="bc-hero" aria-label="Brewed and Co. hero">
-          <div class="bc-hero-copy">
-            <p class="bc-hero-kicker">Specialty coffee house · Est. 2019</p>
-            <h3 class="bc-hero-title">Slow-poured.<br />Freshly baked.<br /><span class="bc-hero-accent">Delivered warm.</span></h3>
-            <p class="bc-hero-sub">
-              Small-batch roasts, seasonal teas and pastries baked before sunrise —
-              served in the cosiest corner of the neighbourhood.
-            </p>
-            <div class="bc-hero-actions">
-              <button type="button" class="bc-btn bc-btn-primary" (click)="scrollToMenu($event)">View Menu</button>
-              <button type="button" class="bc-btn bc-btn-ghost" (click)="scrollMockupTo('bc-about')">Our Story</button>
-            </div>
-          </div>
-
-          <figure class="bc-hero-media">
-            @if (!isImageFailed('assets/images/hero-food-preview.jpg')) {
-              <img
-                src="assets/images/hero-food-preview.jpg"
-                alt="Freshly prepared café food and coffee styled for the Brewed & Co. hero banner"
-                width="1200"
-                height="900"
-                loading="lazy"
-                decoding="async"
-                (error)="markImageFailed('assets/images/hero-food-preview.jpg')"
-              />
-            } @else {
-              <span class="bc-img-fallback bc-img-fallback-hero" role="img" aria-label="Coffee cup illustration placeholder">☕</span>
-            }
-            <figcaption class="bc-hero-card">
-              <span class="bc-hero-card-star" aria-hidden="true">★</span>
-              <span>Tonight's pour: Ethiopia Guji, notes of jasmine &amp; peach</span>
-            </figcaption>
-          </figure>
-        </section>
-
-        <!-- Menu preview with category tabs -->
-        <section id="bc-menu" class="bc-menu" aria-labelledby="bc-menu-title">
-          <div class="bc-section-head">
-            <h4 id="bc-menu-title">The Menu</h4>
-            <p>Browse a taste of the counter — tap a category to filter the demo items.</p>
-          </div>
-
-          <div class="bc-tabs" role="tablist" aria-label="Demo menu categories">
-            @for (category of categories; track category.id) {
-              <button
-                type="button"
-                role="tab"
-                id="bc-tab-{{ category.id }}"
-                class="bc-tab"
-                [attr.aria-selected]="activeCategory() === category.id"
-                [tabindex]="activeCategory() === category.id ? 0 : -1"
-                (click)="selectCategory(category.id)">
-                {{ category.label }}
-              </button>
-            }
-          </div>
-
-          <ul class="bc-product-grid" role="tabpanel" [attr.aria-labelledby]="'bc-tab-' + activeCategory()">
-            @for (product of visibleProducts(); track product.name) {
-              <li class="bc-product-card">
-                <div class="bc-product-media">
-                  @if (!isImageFailed(product.imageSrc)) {
-                    <img
-                      [src]="product.imageSrc"
-                      [alt]="product.imageAlt"
-                      width="480"
-                      height="360"
-                      loading="lazy"
-                      decoding="async"
-                      (error)="markImageFailed(product.imageSrc)"
-                    />
-                  } @else {
-                    <span class="bc-img-fallback" role="img" [attr.aria-label]="product.name + ' illustration placeholder'">{{ product.icon }}</span>
-                  }
-                </div>
-                <div class="bc-product-body">
-                  <div class="bc-product-row">
-                    <h5 class="bc-product-name">{{ product.name }}</h5>
-                    <span class="bc-product-price">{{ product.price }}</span>
-                  </div>
-                  <p class="bc-product-desc">{{ product.description }}</p>
-                </div>
-              </li>
-            }
-          </ul>
-
-          <p class="bc-demo-note">Demo items only — this preview doesn't take real orders.</p>
-        </section>
-
-        <!-- About / brand story -->
-        <section id="bc-about" class="bc-about" aria-labelledby="bc-about-title">
-          <figure class="bc-about-media">
-            @if (!isImageFailed(galleryImages[1].src)) {
-              <img
-                [src]="galleryImages[1].src"
-                [alt]="galleryImages[1].alt"
-                width="480"
-                height="360"
-                loading="lazy"
-                decoding="async"
-                (error)="markImageFailed(galleryImages[1].src)"
-              />
-            } @else {
-              <span class="bc-img-fallback bc-img-fallback-hero" role="img" aria-label="Barista illustration placeholder">👩‍🍳</span>
-            }
-          </figure>
-          <div class="bc-about-copy">
-            <h4 id="bc-about-title">Roasted with intent since 2019</h4>
-            <p>
-              Brewed &amp; Co. started as a single two-group machine on a quiet side street.
-              Today we still roast in small batches, buy direct from growers we've met, and
-              bake every pastry by hand before opening.
-            </p>
-            <p>
-              With Resto.pk, a story like ours gets a home online: a branded site, a living
-              menu, and one-click ordering — without writing a line of code.
-            </p>
-            <ul class="bc-about-points">
-              <li><span aria-hidden="true">✦</span> Single-origin beans, roasted weekly</li>
-              <li><span aria-hidden="true">✦</span> Pastries laminated fresh every morning</li>
-              <li><span aria-hidden="true">✦</span> Order ahead, skip the queue</li>
-            </ul>
-          </div>
-        </section>
-
-        <!-- Gallery preview -->
-        <section id="bc-gallery" class="bc-gallery" aria-labelledby="bc-gallery-title">
-          <div class="bc-section-head">
-            <h4 id="bc-gallery-title">From the Counter</h4>
-            <p>A glimpse of the space, the craft and the cups.</p>
-          </div>
-          <ul class="bc-gallery-grid">
-            @for (image of galleryImages; track image.src) {
-              <li class="bc-gallery-item">
-                @if (!isImageFailed(image.src)) {
-                  <img
-                    [src]="image.src"
-                    [alt]="image.alt"
-                    width="480"
-                    height="480"
-                    loading="lazy"
-                    decoding="async"
-                    (error)="markImageFailed(image.src)"
-                  />
-                } @else {
-                  <span class="bc-img-fallback" role="img" [attr.aria-label]="'Photo placeholder: ' + image.alt">☕</span>
-                }
-              </li>
-            }
-          </ul>
-        </section>
-
-        <!-- Customer reviews -->
-        <section id="bc-reviews" class="bc-reviews" aria-labelledby="bc-reviews-title">
-          <div class="bc-section-head">
-            <h4 id="bc-reviews-title">Regulars Say It Best</h4>
-            <p>Sample reviews included with this template.</p>
-          </div>
-          <ul class="bc-review-grid">
-            @for (review of reviews; track review.author) {
-              <li class="bc-review-card">
-                <span class="bc-review-stars" aria-hidden="true">{{ '★'.repeat(review.rating) }}{{ '☆'.repeat(5 - review.rating) }}</span>
-                <span class="visually-hidden-demo" >Rated {{ review.rating }} out of 5 stars</span>
-                <blockquote class="bc-review-quote">{{ review.quote }}</blockquote>
-                <footer class="bc-review-author">
-                  <span class="bc-review-avatar" aria-hidden="true">{{ review.author.charAt(0) }}</span>
-                  <span>
-                    <strong>{{ review.author }}</strong>
-                    <small>{{ review.detail }}</small>
-                  </span>
-                </footer>
-              </li>
-            }
-          </ul>
-        </section>
-
-        <!-- Restaurant footer preview -->
-        <footer class="bc-footer" aria-label="Brewed and Co. demo site footer">
-          <div class="bc-footer-top">
-            <div class="bc-footer-brand">
-              <span class="bc-brand-name">Brewed <em>&amp;</em> Co.</span>
-              <p>12 Kiln Street · Open daily 7am – 6pm</p>
-              <p class="bc-footer-hours">Mon–Fri 7:00–18:00 · Sat–Sun 8:00–16:00</p>
-            </div>
-            <nav class="bc-footer-links" aria-label="Demo footer links">
-              <a href="#bc-menu" (click)="scrollMockupTo('bc-menu'); $event.preventDefault()">Menu</a>
-              <a href="#bc-about" (click)="scrollMockupTo('bc-about'); $event.preventDefault()">About</a>
-              <a href="#bc-gallery" (click)="scrollMockupTo('bc-gallery'); $event.preventDefault()">Gallery</a>
-              <a href="#bc-reviews" (click)="scrollMockupTo('bc-reviews'); $event.preventDefault()">Reviews</a>
-            </nav>
-            <form class="bc-newsletter" (submit)="preventSignup($event)">
-              <label for="bc-newsletter-input">Email updates</label>
-              <div class="bc-newsletter-row">
-                <input id="bc-newsletter-input" type="email" placeholder="you@example.com" autocomplete="email" />
-                <button type="submit" class="bc-btn bc-btn-primary bc-btn-sm">Join</button>
-              </div>
-              <p class="bc-newsletter-note">Demonstration only — nothing is sent or stored.</p>
-            </form>
-          </div>
-          <div class="bc-footer-bottom">
-            <small>© 2026 Brewed &amp; Co. — example site powered by Resto.pk templates</small>
-          </div>
-        </footer>
-      </div>
+    <!-- Four animated template cards, rendered from the typed TEMPLATE_CARDS model -->
+    <div
+      #templateGrid
+      class="templates-grid"
+      [class.templates-grid-pending]="revealState() === 'pending'"
+      [class.templates-grid-revealed]="revealState() === 'revealed'"
+    >
+      @for (tpl of templates; track tpl.id) {
+        <app-template-card
+          class="templates-grid-item"
+          [template]="tpl"
+          [index]="$index"
+          (preview)="openPreview(tpl)"
+          (useTemplate)="useTemplate()"
+        />
+      }
     </div>
 
-    <p class="showcase-caption">
-      <span class="caption-badge" aria-hidden="true">☕</span>
-      <strong>Brewed &amp; Co.</strong> is a design mockup hosted by Resto.pk to showcase what a
-      restaurant website can look like. The production template preview is coming soon.
+    <p class="templates-note">
+      All four designs are showcased as concept previews on this page — none is a live
+      restaurant website, and “Use Template” simply starts free sign-up.
     </p>
   </div>
 </section>
+
+@if (previewingTemplate(); as tpl) {
+  <app-template-preview-modal [template]="tpl" (closed)="closePreview()" />
+}

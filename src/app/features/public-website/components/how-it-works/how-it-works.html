@@ -13,7 +13,7 @@
       @for (step of steps; track step.number; let index = $index) {
         <li class="hiw-step" appReveal [style.--hiw-step-delay]="(index * 140) + 'ms'">
           <!-- Connector line between cards (desktop only, decorative). -->
-          @if (!last) {
+          @if (!$last) {
             <span class="hiw-connector" aria-hidden="true"></span>
           }
 
