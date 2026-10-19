@@ -1,14 +1,65 @@
 <section id="hero" class="hero-section" aria-labelledby="hero-title">
   <div class="section-inner">
-    <h1 id="hero-title">Website builder for restaurants</h1>
-    <p class="hero-subtitle">Coming soon.</p>
-    <div class="hero-actions">
-      <a routerLink="/register">
-        <app-button variant="primary" size="lg" [fullWidth]="false">Get started</app-button>
-      </a>
-      <a href="#how-it-works">
-        <app-button variant="outline" size="lg" [fullWidth]="false">See how it works</app-button>
-      </a>
+    <div class="hero-content">
+      <p class="hero-eyebrow">Restaurant Website Platform</p>
+      <h1 id="hero-title" class="hero-title">Your Restaurant. Your Website. Your Brand.</h1>
+      <p class="hero-subtitle">
+        Resto.pk helps restaurant owners establish their online presence with a branded
+        restaurant website — built, managed, and growing with your business.
+      </p>
+      <div class="hero-actions">
+        <a routerLink="/register">
+          <app-button variant="primary" size="lg" [fullWidth]="false">Get Started</app-button>
+        </a>
+        <a href="#templates">
+          <app-button variant="outline" size="lg" [fullWidth]="false">Explore Templates</app-button>
+        </a>
+      </div>
+    </div>
+
+    <div class="hero-preview" role="img" aria-label="Design preview of a restaurant website showing a food photograph, restaurant name, and sample menu items.">
+      <div class="preview-window">
+        <div class="preview-bar" aria-hidden="true">
+          <span class="preview-dot"></span>
+          <span class="preview-dot"></span>
+          <span class="preview-dot"></span>
+          <span class="preview-address">spice-garden.example</span>
+        </div>
+        <div class="preview-body">
+          <header class="preview-header">
+            <span class="preview-brand">Spice Garden</span>
+            <nav class="preview-nav" aria-hidden="true">
+              <span>Menu</span>
+              <span>About</span>
+              <span>Contact</span>
+            </nav>
+          </header>
+          <figure class="preview-photo">
+            <img
+              src="assets/images/hero-food-preview.jpg"
+              alt="Plated curry with naan and rice on a dark table"
+              width="1200"
+              height="900"
+              loading="eager"
+              decoding="async"
+            />
+          </figure>
+          <div class="preview-info">
+            <div class="preview-text">
+              <h3 class="preview-name">
+                Spice Garden
+                <span class="preview-sample">Illustrative sample</span>
+              </h3>
+              <p class="preview-tagline">Authentic flavours, served fresh.</p>
+            </div>
+            <ul class="preview-menu" aria-hidden="true">
+              <li><span>Chicken Karahi</span><span>Rs. 780</span></li>
+              <li><span>Butter Naan</span><span>Rs. 120</span></li>
+              <li><span>Mango Lassi</span><span>Rs. 250</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
