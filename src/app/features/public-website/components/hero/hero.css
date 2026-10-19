@@ -168,10 +168,14 @@
  line-height: 1;
 }
 .hero-showcase {
- position: relative;
- min-width: 0;
- animation-name: hero-showcase-in;
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  min-width: 0;
+  justify-self: center;
+  animation-name: hero-showcase-in;
 }
+
 .showcase-glow {
  position: absolute;
  top: 50%;
@@ -189,16 +193,16 @@
  perspective: 1400px;
 }
 .browser-window {
- overflow: hidden;
- background: var(--color-surface);
- border: 1px solid var(--color-border);
- border-radius: var(--radius-card);
- box-shadow: var(--shadow-card), 0 34px 80px rgb(230 81 0 / 16%);
- transform: rotateY(-7deg) rotateX(3deg);
- transform-style: preserve-3d;
- transition: transform 300ms ease, box-shadow 300ms ease;
- will-change: transform;
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card), 0 24px 55px rgb(230 81 0 / 14%);
+  transform: rotateY(-5deg) rotateX(2deg);
+  transform-style: preserve-3d;
+  transition: transform 300ms ease, box-shadow 300ms ease;
 }
+
 .browser-window:hover {
  transform: rotateY(-4deg) rotateX(1.5deg) translateY(-6px);
  box-shadow: var(--shadow-card), 0 44px 96px rgb(230 81 0 / 22%);
@@ -244,23 +248,23 @@
  gap: 1rem;
  color: var(--color-text-muted);
  font-size: var(--font-size-sm);
+}.site-photo-container {
+  position: relative;
+  margin: 0 1rem 1rem;
+  overflow: hidden;
+  border-radius: var(--radius-md);
 }
-.site-photo {
- margin: 0 1.25rem;
- overflow: hidden;
- border-radius: var(--radius-md);
- background: linear-gradient(135deg, var(--resto-orange-soft), var(--color-surface-secondary));
+
+.site-photo-container img {
+  display: block;
+  width: 100%;
+  height: 230px;
+  object-fit: cover;
+  transition: transform 450ms ease;
 }
-.site-photo img {
- display: block;
- width: 100%;
- height: auto;
- aspect-ratio: 4 / 3;
- object-fit: cover;
- transition: transform 450ms ease;
-}
-.browser-window:hover .site-photo img {
- transform: scale(1.045);
+
+.browser-window:hover .site-photo-container img {
+  transform: scale(1.04);
 }
 .site-info {
  display: flex;
