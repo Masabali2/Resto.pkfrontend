@@ -2,23 +2,178 @@
   display: block;
 }
 
+/* ------------------------------------------------------------------ */
+/* Section shell — mirrors the padding/container rhythm of the sibling */
+/* homepage sections (features, pricing, faq) so it fits in naturally. */
+/* ------------------------------------------------------------------ */
 .final-cta-section {
-  padding: 4rem 1.5rem;
+  padding: 4rem 1.5rem 5rem;
 }
 
 .section-inner {
   max-width: var(--container-max-width);
   margin: 0 auto;
+}
+
+/* ------------------------------------------------------------------ */
+/* CTA card — brand-dark surface using the existing --resto-dark token,*/
+/* with a restrained orange glow consistent with the design language.  */
+/* ------------------------------------------------------------------ */
+.cta-card {
+  position: relative;
+  overflow: hidden;
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: var(--radius-card);
+  background:
+    radial-gradient(circle at 50% 0%, rgb(255 107 0 / 14%), transparent 55%),
+    var(--resto-dark);
+  box-shadow: var(--shadow-card);
   text-align: center;
 }
 
-.final-cta-section h2 {
-  margin: 0 0 1rem;
-  color: var(--color-text);
-  font-family: var(--font-family-base);
+.cta-eyebrow {
+  display: inline-block;
+  margin: 0 0 1.25rem;
+  padding: 0.375rem 1rem;
+  border: 1px solid rgb(255 176 0 / 35%);
+  border-radius: var(--radius-full);
+  background: rgb(255 107 0 / 12%);
+  color: var(--resto-yellow);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
-.section-placeholder {
-  margin: 0 0 1.5rem;
-  color: var(--color-text-muted);
+.cta-title {
+  max-width: 22ch;
+  margin: 0 auto 1rem;
+  color: var(--color-surface);
+  font-family: var(--font-family-base);
+  font-size: clamp(1.75rem, 1.2rem + 2.4vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.cta-subtitle {
+  max-width: 56ch;
+  margin: 0 auto 2rem;
+  color: #cbd5e1; /* slate-300 on dark surface — AA contrast against --resto-dark */
+  font-size: var(--font-size-lg);
+  line-height: 1.65;
+}
+
+/* ------------------------------------------------------------------ */
+/* Actions                                                            */
+/* ------------------------------------------------------------------ */
+.cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.875rem;
+}
+
+/* The outline button lives on a dark surface: flip its resting colors to
+   light-on-dark (scoped to this component via ::ng-deep — the only way to
+   restyle the shared Button inside these files). */
+.cta-secondary ::ng-deep .button-outline {
+  border-color: rgb(255 255 255 / 35%);
+  background: transparent;
+  color: var(--color-surface);
+}
+
+.cta-secondary ::ng-deep .button-outline:hover {
+  border-color: var(--resto-yellow);
+  background: rgb(255 255 255 / 8%);
+  color: var(--color-surface);
+}
+
+.cta-action {
+  display: inline-flex;
+  border-radius: var(--radius-control);
+  transition: transform var(--transition-base);
+}
+
+.cta-action:hover {
+  transform: translateY(-2px);
+}
+
+.cta-action:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+/* ------------------------------------------------------------------ */
+/* SSR-safe entrance reveal (same lifecycle as features/pricing/faq)  */
+/* ------------------------------------------------------------------ */
+.cta-card-pending {
+  opacity: 0;
+}
+
+.cta-card-revealed {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 450ms ease,
+    transform 450ms ease;
+}
+
+.cta-card-revealed.cta-card-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ------------------------------------------------------------------ */
+/* Responsive                                                         */
+/* ------------------------------------------------------------------ */
+@media (max-width: 639px) {
+  .final-cta-section {
+    padding: 2.5rem 1rem 3.5rem;
+  }
+
+  .cta-card {
+    padding: 2.5rem 1.25rem;
+  }
+
+  .cta-subtitle {
+    margin-bottom: 1.5rem;
+  }
+
+  /* Stack actions full-width so buttons never become too narrow. */
+  .cta-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cta-action {
+    justify-content: center;
+  }
+
+  .cta-action app-button {
+    width: 100%;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Reduced motion: no hidden window, no movement — content always     */
+/* visible and usable.                                                 */
+/* ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  .cta-card-pending,
+  .cta-card-revealed,
+  .cta-card-revealed.cta-card-in {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .cta-action,
+  .cta-action:hover {
+    transform: none;
+    transition: none;
+  }
 }
