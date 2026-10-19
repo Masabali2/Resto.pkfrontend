@@ -5,7 +5,7 @@ import {
   inject,
   viewChildren
 } from '@angular/core';
-import { Location } from '@angular/common';
+import {Location} from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs';
@@ -42,21 +42,21 @@ export class VerifyEmail implements AfterViewInit {
   cooldownSeconds = 0;
 
   private cooldownTimer: ReturnType<typeof setInterval> | null = null;
+ngAfterViewInit(): void {
+  const state = this.location.getState() as { email?: unknown };
+  const navigationEmail = state.email;
 
-  ngAfterViewInit(): void {
-    const state = this.location.getState() as { email?: unknown } | null;
-    const stateEmail = state?.email;
-
-    if (typeof stateEmail === 'string' && stateEmail.trim().length > 0) {
-      this.email = stateEmail.trim();
-    } else {
-      this.emailMissing = true;
-      return;
-    }
-
-    this.focusFirstDigit();
+  if (
+    typeof navigationEmail !== 'string' ||
+    navigationEmail.trim().length === 0
+  ) {
+    this.emailMissing = true;
+    return;
   }
 
+  this.email = navigationEmail.trim();
+  this.focusFirstDigit();
+}
   get otpValue(): string {
     return this.digits.join('');
   }
