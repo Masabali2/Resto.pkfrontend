@@ -5,7 +5,7 @@ import { TemplateShowcase } from '../../components/template-showcase/template-sh
 import { Features } from '../../components/features/features';
 import { HowItWorks } from '../../components/how-it-works/how-it-works';
 import { Testimonials } from '../../components/testimonials/testimonials';
-import { OwnerReviews } from '../../components/owner-reviews/owner-reviews';
+
 import { Pricing } from '../../components/pricing/pricing';
 import { Faq } from '../../components/faq/faq';
 import { FinalCta } from '../../components/final-cta/final-cta';
@@ -21,7 +21,6 @@ import { Footer } from '../../components/footer/footer';
     Features,
     HowItWorks,
     Testimonials,
-    OwnerReviews,
     Pricing,
     Faq,
     FinalCta,
