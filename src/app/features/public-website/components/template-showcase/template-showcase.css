@@ -45,6 +45,51 @@
   line-height: 1.65;
 }
 
+/* ---------- Animated template card grid ---------- */
+
+.templates-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+/* Browser-only reveal states (never present in the SSR-prerendered HTML, so
+   cards are always visible when JavaScript does not run). */
+.templates-grid-pending .templates-grid-item {
+  visibility: hidden;
+}
+
+.templates-grid-revealed .templates-grid-item {
+  visibility: visible;
+}
+
+.templates-note {
+  max-width: 46rem;
+  margin: 0 0 2.5rem;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+}
+
+@media (max-width: 1023px) {
+  .templates-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 639px) {
+  .templates-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .templates-grid-revealed .templates-grid-item {
+    visibility: visible;
+  }
+}
+
 .showcase-caption {
   display: flex;
   flex-wrap: wrap;

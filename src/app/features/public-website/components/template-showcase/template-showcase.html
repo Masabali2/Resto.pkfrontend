@@ -1,21 +1,42 @@
 <section id="templates" class="templates-section" aria-labelledby="templates-title">
   <div class="section-inner">
     <p class="templates-eyebrow">Template Showcase</p>
-    <h2 id="templates-title">See your restaurant in Brewed &amp; Co.</h2>
+    <h2 id="templates-title">Beautiful Templates for Every Restaurant</h2>
     <p class="templates-intro">
-      A live design mockup of our specialty-coffee house template. Everything below is a
-      demonstration of how a restaurant's website could look when built with Resto.pk —
-      no real orders, payments or sign-ups happen here.
+      Choose from professionally designed templates tailored to your restaurant type.
     </p>
 
-    <!-- Framed embedded-preview presentation of the example restaurant site -->
+    <!-- Four animated template cards, rendered from the typed TEMPLATE_CARDS model -->
+    <div
+      #templateGrid
+      class="templates-grid"
+      [class.templates-grid-pending]="revealState() === 'pending'"
+      [class.templates-grid-revealed]="revealState() === 'revealed'"
+    >
+      @for (tpl of templates; track tpl.id) {
+        <app-template-card
+          class="templates-grid-item"
+          [template]="tpl"
+          [index]="$index"
+          (preview)="openPreview(tpl)"
+          (useTemplate)="useTemplate()"
+        />
+      }
+    </div>
+
+    <p class="templates-note">
+      All four designs are showcased as previews on this page — none is a live
+      restaurant website, and “Use Template” simply starts free sign-up.
+    </p>
+
+    <!-- Framed embedded-preview presentation of the Brewed & Co. demo site -->
     <div class="showcase-frame" role="region" aria-label="Brewed &amp; Co. template preview, an example restaurant website showcased by Resto.pk">
       <div class="showcase-chrome" aria-hidden="true">
         <span class="chrome-dot dot-red"></span>
         <span class="chrome-dot dot-yellow"></span>
         <span class="chrome-dot dot-green"></span>
         <span class="chrome-address">brewedandco.example.com</span>
-        <span class="chrome-badge">Resto.pk demo</span>
+        <span class="chrome-badge">Resto.pk demo · Brew &amp; Bean design</span>
       </div>
 
       <div id="brewed-co-mockup" class="brewed-mockup">
@@ -245,8 +266,13 @@
 
     <p class="showcase-caption">
       <span class="caption-badge" aria-hidden="true">☕</span>
-      <strong>Brewed &amp; Co.</strong> is a design mockup hosted by Resto.pk to showcase what a
-      restaurant website can look like. The production template preview is coming soon.
+      <strong>Brewed &amp; Co.</strong> above is an interactive design mockup hosted by Resto.pk
+      that demonstrates the <strong>Brew &amp; Bean</strong> template direction. The other three
+      templates are shown as concept previews today — production versions are coming soon.
     </p>
   </div>
 </section>
+
+@if (previewingTemplate(); as tpl) {
+  <app-template-preview-modal [template]="tpl" (closed)="closePreview()" />
+}
