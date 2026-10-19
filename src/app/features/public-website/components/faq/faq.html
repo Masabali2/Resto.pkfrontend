@@ -1,6 +1,60 @@
 <section id="faq" class="faq-section" aria-labelledby="faq-title">
   <div class="section-inner">
-    <h2 id="faq-title">FAQ</h2>
-    <p class="section-placeholder">Coming soon.</p>
+    <header class="faq-header">
+      <p class="faq-eyebrow">FAQs</p>
+      <h2 id="faq-title" class="faq-title">Frequently Asked Questions</h2>
+      <p class="faq-intro">
+        Quick answers to the questions restaurant owners ask most about Resto.pk and building their online presence.
+      </p>
+    </header>
+
+    <!--
+      Browser-only reveal states mirror the features/testimonials/pricing pattern:
+      the SSR HTML never carries these classes, so content is always visible
+      when JS does not run. Stagger delay is passed through a scoped CSS
+      custom property. The list itself is plain native semantics (h3 + button),
+      so no extra ARIA roles are needed on the container.
+    -->
+    <ul
+      #faqList
+      class="faq-list"
+      [class.faq-list-pending]="revealState() === 'pending'"
+      [class.faq-list-revealed]="revealState() === 'revealed'"
+      [class.faq-list-in]="itemsIn()"
+    >
+      @for (item of faqItems; track item.id; let index = $index) {
+        <li class="faq-item" [style.--faq-item-delay]="(index * 60) + 'ms'">
+          <h3 class="faq-item-heading">
+            <button
+              type="button"
+              class="faq-trigger"
+              [id]="triggerId(index)"
+              [attr.aria-expanded]="isOpen(index)"
+              [attr.aria-controls]="panelId(index)"
+              (click)="toggle(index)"
+            >
+              <span class="faq-question">{{ item.question }}</span>
+              <!-- Decorative expand/collapse indicator: state is carried by aria-expanded and text order. -->
+              <span class="faq-indicator" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" focusable="false">
+                  <path d="M12 5v14" />
+                  <path d="M5 12h14" />
+                </svg>
+              </span>
+            </button>
+          </h3>
+
+          <div
+            class="faq-panel"
+            [id]="panelId(index)"
+            role="region"
+            [attr.aria-labelledby]="triggerId(index)"
+            [hidden]="!isOpen(index)"
+          >
+            <p class="faq-answer">{{ item.answer }}</p>
+          </div>
+        </li>
+      }
+    </ul>
   </div>
 </section>
