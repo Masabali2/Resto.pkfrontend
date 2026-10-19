@@ -1,63 +1,98 @@
 <section id="hero" class="hero-section" aria-labelledby="hero-title">
+  <svg class="hero-contours" aria-hidden="true" focusable="false" viewBox="0 0 1440 640" preserveAspectRatio="none">
+    <path d="M-40 120 C 320 40 720 200 1120 110 S 1500 60 1520 130" />
+    <path d="M-40 240 C 360 160 760 320 1160 230 S 1500 180 1520 250" />
+    <path d="M-40 380 C 340 300 740 460 1140 370 S 1500 320 1520 390" />
+    <path d="M-40 520 C 360 440 760 600 1160 510 S 1500 460 1520 530" />
+  </svg>
+
   <div class="section-inner">
     <div class="hero-content">
-      <p class="hero-eyebrow">Restaurant Website Platform</p>
-      <h1 id="hero-title" class="hero-title">Your Restaurant. Your Website. Your Brand.</h1>
+      <p class="hero-eyebrow"><span class="eyebrow-spark" aria-hidden="true">✨</span> Restaurant Website Platform</p>
+      <h1 id="hero-title" class="hero-title">
+        Your Restaurant.<br />
+        <span class="highlight">Your Website.</span><br />
+        Your Brand.
+      </h1>
       <p class="hero-subtitle">
-        Resto.pk helps restaurant owners establish their online presence with a branded
-        restaurant website — built, managed, and growing with your business.
+        Resto.pk helps restaurant owners bring their brand online with a beautiful, branded
+        website they can manage and grow with their business.
       </p>
       <div class="hero-actions">
         <a routerLink="/register">
           <app-button variant="primary" size="lg" [fullWidth]="false">Get Started</app-button>
         </a>
         <a href="#templates">
-          <app-button variant="outline" size="lg" [fullWidth]="false">Explore Templates</app-button>
+          <app-button variant="outline" size="lg" [fullWidth]="false">Explore Templates&nbsp;&rarr;</app-button>
         </a>
       </div>
     </div>
 
-    <div class="hero-preview" role="img" aria-label="Design preview of a restaurant website showing a food photograph, restaurant name, and sample menu items.">
-      <div class="preview-window">
-        <div class="preview-bar" aria-hidden="true">
-          <span class="preview-dot"></span>
-          <span class="preview-dot"></span>
-          <span class="preview-dot"></span>
-          <span class="preview-address">spice-garden.example</span>
-        </div>
-        <div class="preview-body">
-          <header class="preview-header">
-            <span class="preview-brand">Spice Garden</span>
-            <nav class="preview-nav" aria-hidden="true">
-              <span>Menu</span>
-              <span>About</span>
-              <span>Contact</span>
-            </nav>
-          </header>
-          <figure class="preview-photo">
-            <img
-              src="assets/images/hero-food-preview.jpg"
-              alt="Plated curry with naan and rice on a dark table"
-              width="1200"
-              height="900"
-              loading="eager"
-              decoding="async"
-            />
-          </figure>
-          <div class="preview-info">
-            <div class="preview-text">
-              <h3 class="preview-name">
-                Spice Garden
-                <span class="preview-sample">Illustrative sample</span>
-              </h3>
-              <p class="preview-tagline">Authentic flavours, served fresh.</p>
-            </div>
-            <ul class="preview-menu" aria-hidden="true">
-              <li><span>Chicken Karahi</span><span>Rs. 780</span></li>
-              <li><span>Butter Naan</span><span>Rs. 120</span></li>
-              <li><span>Mango Lassi</span><span>Rs. 250</span></li>
-            </ul>
+    <div class="hero-preview">
+      <div class="preview-glow" aria-hidden="true"></div>
+
+      <div class="mockup-frame" role="img" aria-label="Design preview of a restaurant website inside a browser window, showing a food photograph, restaurant name, and sample menu items.">
+        <div class="browser-window">
+          <div class="browser-bar" aria-hidden="true">
+            <span class="browser-dot dot-red"></span>
+            <span class="browser-dot dot-yellow"></span>
+            <span class="browser-dot dot-green"></span>
+            <span class="browser-address">spice-garden.example</span>
           </div>
+          <div class="browser-body">
+            <header class="site-header">
+              <span class="site-brand">Spice Garden</span>
+              <nav class="site-nav" aria-hidden="true">
+                <span>Menu</span>
+                <span>About</span>
+                <span>Contact</span>
+              </nav>
+            </header>
+            <figure class="site-photo">
+              <img
+                src="assets/images/hero-food-preview.jpg"
+                alt="Chicken karahi with naan and rice, plated for a restaurant website"
+                width="1200"
+                height="900"
+                loading="eager"
+                decoding="async"
+              />
+            </figure>
+            <div class="site-info">
+              <div class="site-text">
+                <h3 class="site-name">
+                  Spice Garden
+                  <span class="site-sample">Illustrative sample</span>
+                </h3>
+                <p class="site-tagline">Authentic flavours, served fresh.</p>
+              </div>
+              <ul class="site-menu" aria-hidden="true">
+                <li><span>Chicken Karahi</span><span>Rs. 780</span></li>
+                <li><span>Butter Naan</span><span>Rs. 120</span></li>
+                <li><span>Mango Lassi</span><span>Rs. 250</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card card-special" aria-hidden="true">
+          <span class="card-icon">🍲</span>
+          <span class="card-title">Today's Special</span>
+          <span class="card-sub">Chicken Karahi</span>
+        </div>
+
+        <div class="glass-card card-rating" aria-hidden="true">
+          <span class="rating-value">4.9 ★</span>
+          <span class="card-sub">Sample rating</span>
+        </div>
+
+        <div class="glass-card card-menu" aria-hidden="true">
+          <span class="card-title">Menu</span>
+          <ul>
+            <li><span>Chicken Karahi</span><span>Rs. 780</span></li>
+            <li><span>Butter Naan</span><span>Rs. 120</span></li>
+            <li><span>Mango Lassi</span><span>Rs. 250</span></li>
+          </ul>
         </div>
       </div>
     </div>
