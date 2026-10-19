@@ -1,0 +1,46 @@
+<header class="navbar">
+  <div class="navbar-inner">
+    <a class="navbar-brand" routerLink="/" aria-label="Resto.pk home">Resto<span class="brand-accent">.pk</span></a>
+
+    <nav class="navbar-links desktop-only" aria-label="Primary">
+      @for (link of navLinks; track link.anchor) {
+        <a class="navbar-link" [href]="'#' + link.anchor">{{ link.label }}</a>
+      }
+    </nav>
+
+    <div class="navbar-actions desktop-only">
+      <a routerLink="/login">
+        <app-button variant="outline" size="sm" [fullWidth]="false">Log in</app-button>
+      </a>
+      <a routerLink="/register">
+        <app-button variant="primary" size="sm" [fullWidth]="false">Get started</app-button>
+      </a>
+    </div>
+
+    <button
+      type="button"
+      class="mobile-menu-toggle"
+      [attr.aria-expanded]="mobileMenuOpen()"
+      aria-controls="mobile-nav"
+      aria-label="Toggle navigation menu"
+      (click)="toggleMobileMenu()">
+      <span class="toggle-bar" [class.open]="mobileMenuOpen()"></span>
+    </button>
+  </div>
+
+  @if (mobileMenuOpen()) {
+    <nav id="mobile-nav" class="mobile-nav" aria-label="Mobile">
+      @for (link of navLinks; track link.anchor) {
+        <a class="mobile-link" [href]="'#' + link.anchor" (click)="closeMobileMenu()">{{ link.label }}</a>
+      }
+      <div class="mobile-actions">
+        <a routerLink="/login">
+          <app-button variant="outline" size="md" [fullWidth]="true">Log in</app-button>
+        </a>
+        <a routerLink="/register">
+          <app-button variant="primary" size="md" [fullWidth]="true">Get started</app-button>
+        </a>
+      </div>
+    </nav>
+  }
+</header>

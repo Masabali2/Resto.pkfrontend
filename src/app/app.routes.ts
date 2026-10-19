@@ -67,7 +67,10 @@ export const routes: Routes = [
 //   },
   {
     path: '',
-    redirectTo: 'login',
+    loadComponent: () =>
+      import('./features/public-website/pages/home/home').then(
+        m => m.PublicHome
+      ),
     pathMatch: 'full'
   },
   {
