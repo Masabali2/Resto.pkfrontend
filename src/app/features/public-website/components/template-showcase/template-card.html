@@ -1,0 +1,49 @@
+<article
+  class="tpl-card"
+  [style.--tpl-accent]="template().accentColor"
+  [style.animation-delay]="index() * 90 + 'ms'"
+>
+  <div class="tpl-media">
+    <img
+      class="tpl-img"
+      [src]="template().imageSrc"
+      [alt]="template().imageAlt"
+      width="640"
+      height="420"
+      loading="lazy"
+      decoding="async"
+    />
+    <!-- Shown behind the image while it loads or if it fails -->
+    <span class="tpl-img-fallback" aria-hidden="true">{{ template().fallbackIcon }}</span>
+    <span class="tpl-icon-badge" aria-hidden="true">{{ template().icon }}</span>
+    <span class="tpl-category-pill">{{ template().category }}</span>
+  </div>
+
+  <div class="tpl-body">
+    <h3 class="tpl-name">{{ template().name }}</h3>
+    <p class="tpl-desc">{{ template().description }}</p>
+
+    <div class="tpl-actions">
+      <app-button
+        variant="outline"
+        size="md"
+        [fullWidth]="false"
+        (click)="onPreview()"
+        [attr.aria-label]="'Preview the ' + template().name + ' template design'"
+      >
+        Preview
+      </app-button>
+      <app-button
+        variant="primary"
+        size="md"
+        [fullWidth]="false"
+        (click)="onUseTemplate()"
+        [attr.aria-label]="'Use the ' + template().name + ' template — opens sign up'"
+      >
+        Use Template
+      </app-button>
+    </div>
+
+    <p class="tpl-flag">Design concept — full preview coming soon</p>
+  </div>
+</article>

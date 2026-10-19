@@ -127,6 +127,10 @@ private getDashboardRoute(result: AuthResult): string {
 
   this.generalError = result.message;
   this.fieldErrors = result.fieldErrors;
+
+  if (result.message) {
+    this.notificationService.error(result.message);
+  }
 }
 
   private showGeneralError(message: string): void {

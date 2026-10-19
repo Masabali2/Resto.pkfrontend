@@ -1,0 +1,37 @@
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <a class="footer-logo-link" routerLink="/" aria-label="Resto.pk home">
+        <span class="brand-mark" aria-hidden="true">R</span>
+        <span class="footer-logo">Resto<span class="brand-accent">.pk</span></span>
+      </a>
+      <p class="footer-tagline">{{ brandDescription }}</p>
+    </div>
+
+    <nav class="footer-columns" aria-label="Footer">
+      @for (column of columns; track column.title) {
+        <div class="footer-column">
+          <h2 class="column-title">{{ column.title }}</h2>
+          <ul>
+            @for (link of column.links; track link.label) {
+              <li>
+                @if (link.route) {
+                  <a [routerLink]="link.route">{{ link.label }}</a>
+                } @else {
+                  <a [href]="'#' + link.anchor">{{ link.label }}</a>
+                }
+              </li>
+            }
+          </ul>
+        </div>
+      }
+    </nav>
+  </div>
+
+  <!-- Social links and legal links are intentionally omitted: the project has
+       no verified Resto.pk social accounts, privacy policy, or terms pages. -->
+
+  <div class="footer-bottom">
+    <small>&copy; {{ currentYear }} Resto.pk. All rights reserved.</small>
+  </div>
+</footer>

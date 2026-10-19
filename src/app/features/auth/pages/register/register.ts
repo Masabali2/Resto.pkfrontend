@@ -88,8 +88,6 @@ export class Register {
 
   loading = false;
   submitted = false;
-  registrationComplete = false;
-  showVerifyModal = false;
   registeredEmail = '';
   generalError = '';
   fieldErrors: Partial<Record<RegisterField, string>> = {};
@@ -136,35 +134,17 @@ export class Register {
           }
 
           this.registeredEmail = response.data?.email ?? request.email;
-          this.registrationComplete = true;
-          this.showVerifyModal = true;
           this.notificationService.success(
             'Account created successfully. Please verify your email to continue.'
           );
+          void this.router.navigate(['/verify-email'], {
+            state: { email: this.registeredEmail }
+          });
         },
         error: (error: unknown) => {
           this.handleRegistrationError(error);
         }
       });
-  }
-
-  goToLogin(): void {
-    void this.router.navigateByUrl('/login');
-  }
-
-  openVerifyModal(): void {
-    this.showVerifyModal = true;
-  }
-
-  closeVerifyModal(): void {
-    this.showVerifyModal = false;
-  }
-
-  goToVerifyEmail(): void {
-    this.showVerifyModal = false;
-    void this.router.navigate(['/verify-email'], {
-      state: { email: this.registeredEmail }
-    });
   }
 
   showFieldError(field: RegisterField): boolean {
@@ -269,7 +249,11 @@ export class Register {
       fieldAliases: {}
     });
 
-    this.applyMappedErrors(result.message, result.fieldErrors);
+    // Prefer the meaningful backend message over the generic status-based one.
+    const message =
+      this.httpErrorHandler.extractBackendMessage(error) ?? result.message;
+
+    this.applyMappedErrors(message, result.fieldErrors);
   }
 
   private applyBackendErrors(
@@ -311,7 +295,10 @@ export class Register {
     }
 
     this.generalError = message;
-    this.notificationService.error(message);
+
+    if (message) {
+      this.notificationService.error(message);
+    }
   }
 
   private normalizeFieldKey(key: string): RegisterField | null {

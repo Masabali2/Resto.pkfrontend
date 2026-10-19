@@ -1,0 +1,36 @@
+<section id="templates" class="templates-section" aria-labelledby="templates-title">
+  <div class="section-inner">
+    <p class="templates-eyebrow">Template Showcase</p>
+    <h2 id="templates-title">Beautiful Templates for Every Restaurant</h2>
+    <p class="templates-intro">
+      Choose from professionally designed templates tailored to your restaurant type.
+    </p>
+
+    <!-- Four animated template cards, rendered from the typed TEMPLATE_CARDS model -->
+    <div
+      #templateGrid
+      class="templates-grid"
+      [class.templates-grid-pending]="revealState() === 'pending'"
+      [class.templates-grid-revealed]="revealState() === 'revealed'"
+    >
+      @for (tpl of templates; track tpl.id) {
+        <app-template-card
+          class="templates-grid-item"
+          [template]="tpl"
+          [index]="$index"
+          (preview)="openPreview(tpl)"
+          (useTemplate)="useTemplate()"
+        />
+      }
+    </div>
+
+    <p class="templates-note">
+      All four designs are showcased as concept previews on this page — none is a live
+      restaurant website, and “Use Template” simply starts free sign-up.
+    </p>
+  </div>
+</section>
+
+@if (previewingTemplate(); as tpl) {
+  <app-template-preview-modal [template]="tpl" (closed)="closePreview()" />
+}

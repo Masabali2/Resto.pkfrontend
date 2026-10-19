@@ -5,11 +5,13 @@ import {
   inject,
   viewChildren
 } from '@angular/core';
+import {Location} from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs';
 import { OtpService } from '../../../../core/services/otp.service';
 import { NotificationService } from '../../../../core/services/notification.service';
+import { HttpErrorHandlerService } from '../../../../core/services/http-error-handler.service';
 import { Button } from '../../../../shared/components/button/button';
 import type { ApiResponse } from '../../../../core/models/api-response.model';
 
@@ -25,7 +27,9 @@ const OTP_LENGTH = 6;
 export class VerifyEmail implements AfterViewInit {
   private readonly otpService = inject(OtpService);
   private readonly notificationService = inject(NotificationService);
+  private readonly httpErrorHandler = inject(HttpErrorHandlerService);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
 
   readonly digitInputs = viewChildren<ElementRef<HTMLInputElement>>('digitInput');
 
@@ -38,20 +42,21 @@ export class VerifyEmail implements AfterViewInit {
   cooldownSeconds = 0;
 
   private cooldownTimer: ReturnType<typeof setInterval> | null = null;
+ngAfterViewInit(): void {
+  const state = this.location.getState() as { email?: unknown };
+  const navigationEmail = state.email;
 
-  ngAfterViewInit(): void {
-    const navigationEmail = this.router.getCurrentNavigation()?.extras.state?.['email'];
-
-    if (typeof navigationEmail === 'string' && navigationEmail.length > 0) {
-      this.email = navigationEmail;
-    } else {
-      this.emailMissing = true;
-      return;
-    }
-
-    this.focusFirstDigit();
+  if (
+    typeof navigationEmail !== 'string' ||
+    navigationEmail.trim().length === 0
+  ) {
+    this.emailMissing = true;
+    return;
   }
 
+  this.email = navigationEmail.trim();
+  this.focusFirstDigit();
+}
   get otpValue(): string {
     return this.digits.join('');
   }
@@ -335,15 +340,7 @@ export class VerifyEmail implements AfterViewInit {
   }
 
   private extractBackendMessage(error: unknown): string | null {
-    if (error instanceof HttpErrorResponse) {
-      const message = (error.error as ApiResponse<string> | null)?.message;
-
-      if (typeof message === 'string' && message.length > 0) {
-        return message;
-      }
-    }
-
-    return null;
+    return this.httpErrorHandler.extractBackendMessage(error);
   }
 
   private extractRetryAfter(error: unknown): number | null {

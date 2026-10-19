@@ -1,0 +1,99 @@
+<section id="pricing" class="pricing-section" aria-labelledby="pricing-title">
+  <div class="section-inner">
+    <header class="pricing-header">
+      <p class="pricing-eyebrow">Pricing</p>
+      <h2 id="pricing-title" class="pricing-title">Simple, Transparent Pricing</h2>
+      <p class="pricing-intro">
+        Choose the right plan for your restaurant and grow your online presence with Resto.pk.
+      </p>
+    </header>
+
+    <!--
+      Browser-only reveal states mirror the features/testimonials pattern:
+      the SSR HTML never carries these classes, so content is always visible
+      when JS does not run. Stagger delay is passed through a scoped CSS
+      custom property.
+    -->
+    <div
+      #pricingGrid
+      class="pricing-grid"
+      [class.pricing-grid-pending]="revealState() === 'pending'"
+      [class.pricing-grid-revealed]="revealState() === 'revealed'"
+      [class.pricing-grid-in]="cardsIn()"
+    >
+      @for (plan of plans; track plan.id; let index = $index) {
+        <article
+          class="pricing-card"
+          [class.pricing-card-recommended]="plan.recommended"
+          [style.--pricing-card-delay]="(index * 90) + 'ms'"
+        >
+          @if (plan.recommended) {
+            <span class="pricing-badge">Recommended</span>
+          } @else {
+            <span class="pricing-badge-spacer" aria-hidden="true"></span>
+          }
+
+          <header class="pricing-card-head">
+            <h3 class="pricing-plan-name">{{ plan.name }}</h3>
+            <p class="pricing-plan-description">{{ plan.description }}</p>
+          </header>
+
+          <p class="pricing-price">
+            <span class="pricing-amount">{{ plan.price }}</span>
+            <span class="pricing-period">{{ plan.period }}</span>
+          </p>
+
+          <!--
+            Integrity flag: prices are illustrative placeholders because no
+            official Resto.pk pricing has been defined in this repository.
+          -->
+          <p class="pricing-provisional">
+            <span class="provisional-dot" aria-hidden="true"></span>
+            Provisional placeholder price — final pricing to be announced
+          </p>
+
+          <ul class="pricing-features" [attr.aria-label]="plan.name + ' plan features'">
+            @for (feature of plan.features; track feature) {
+              <li class="pricing-feature">
+                <svg
+                  class="pricing-check-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+                <span>{{ feature }}</span>
+              </li>
+            }
+          </ul>
+
+          <footer class="pricing-card-actions">
+            <!-- Same anchor-wrapping-app-button pattern as final-cta/navbar. -->
+            <a routerLink="/register" class="pricing-cta-link">
+              <app-button
+                [variant]="plan.recommended ? 'primary' : 'outline'"
+                size="lg"
+                [fullWidth]="true"
+              >{{ plan.ctaLabel }}</app-button>
+            </a>
+          </footer>
+        </article>
+      }
+    </div>
+
+    <!--
+      Content-integrity note: no official prices or plan limits exist yet for
+      this product, so the cards above use clearly labelled provisional
+      placeholders rather than commercial commitments.
+    -->
+    <p class="pricing-disclaimer">
+      Plan prices shown are provisional design placeholders. Official Resto.pk pricing will be announced before launch.
+    </p>
+  </div>
+</section>

@@ -1,0 +1,114 @@
+<section id="how-it-works" class="how-it-works-section" aria-labelledby="how-it-works-title">
+  <div class="section-inner">
+    <header class="hiw-header" appReveal>
+      <p class="hiw-eyebrow">How It Works</p>
+      <h2 id="how-it-works-title" class="hiw-title">Get Your Restaurant Online in <span class="hiw-title-accent">3 Simple Steps</span></h2>
+      <p class="hiw-intro">
+        Everything you need to launch your restaurant website, manage your menu, and start
+        connecting with customers.
+      </p>
+    </header>
+
+    <ol class="hiw-steps" aria-label="Three steps to get your restaurant online with Resto.pk">
+      @for (step of steps; track step.number; let index = $index) {
+        <li class="hiw-step" appReveal [style.--hiw-step-delay]="(index * 140) + 'ms'">
+          <!-- Connector line between cards (desktop only, decorative). -->
+          @if (!$last) {
+            <span class="hiw-connector" aria-hidden="true"></span>
+          }
+
+          <div class="hiw-card">
+            <div class="hiw-card-head">
+              <span class="hiw-step-badge" aria-hidden="true">{{ step.icon }}</span>
+              <span class="hiw-step-number" aria-hidden="true">
+                <span class="hiw-step-number-pre">Step</span>{{ step.number }}
+              </span>
+              <h3 class="hiw-step-title">
+                <span class="hiw-step-title-pre">Step {{ step.number }} — </span>{{ step.title }}
+              </h3>
+            </div>
+
+            <p class="hiw-step-description">{{ step.description }}</p>
+
+            <!-- Decorative CSS/SVG illustrations — no real product screens. -->
+            <div class="hiw-visual" role="img" [attr.aria-label]="'Illustration: ' + stepVisualLabels[step.visual]">
+              @switch (step.visual) {
+                @case ('template-picker') {
+                  <div class="tpl-picker">
+                    @for (cardTemplate of ['tpl-a', 'tpl-b', 'tpl-c']; track cardTemplate; let firstCard = $first) {
+                      <div class="tpl-card {{ cardTemplate }}">
+                        <span class="tpl-card-bar"></span>
+                        <span class="tpl-card-hero"></span>
+                        <span class="tpl-card-line tpl-card-line-wide"></span>
+                        <span class="tpl-card-line"></span>
+                        @if (firstCard) {
+                          <span class="tpl-card-check" aria-hidden="true">✓</span>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+                @case ('menu-editor') {
+                  <div class="menu-editor">
+                    <div class="editor-window">
+                      <span class="editor-dot dot-red"></span>
+                      <span class="editor-dot dot-yellow"></span>
+                      <span class="editor-dot dot-green"></span>
+                      <span class="editor-title">Menu Editor</span>
+                    </div>
+                    <div class="editor-body">
+                      <ul class="editor-menu">
+                        <li><span class="editor-item-name">Chicken Karahi</span><span class="editor-item-price">Rs 620</span></li>
+                        <li><span class="editor-item-name">Seekh Kebab Platter</span><span class="editor-item-price">Rs 540</span></li>
+                        <li><span class="editor-item-name">Fresh Naan Basket</span><span class="editor-item-price">Rs 180</span></li>
+                      </ul>
+                      <div class="editor-photo">
+                        <svg viewBox="0 0 64 64" width="64" height="64" aria-hidden="true" focusable="false">
+                          <rect x="8" y="14" width="48" height="36" rx="6" fill="none" stroke="currentColor" stroke-width="3"/>
+                          <circle cx="24" cy="28" r="4" fill="currentColor"/>
+                          <path d="M14 44l12-12 8 8 10-12 6 8v6H14z" fill="currentColor" opacity="0.55"/>
+                        </svg>
+                        <span class="editor-photo-label">Add photos &amp; branding</span>
+                      </div>
+                      <span class="editor-swatch swatch-orange" aria-hidden="true"></span>
+                      <span class="editor-swatch swatch-amber" aria-hidden="true"></span>
+                      <span class="editor-swatch swatch-dark" aria-hidden="true"></span>
+                    </div>
+                  </div>
+                }
+                @case ('device-launch') {
+                  <div class="device-scene">
+                    <div class="device-monitor">
+                      <div class="monitor-screen">
+                        <span class="screen-nav"><i></i><i></i><i></i></span>
+                        <span class="screen-hero"></span>
+                        <span class="screen-line screen-line-short"></span>
+                        <span class="screen-chips"><i></i><i></i><i></i></span>
+                      </div>
+                      <span class="monitor-stand" aria-hidden="true"></span>
+                    </div>
+                    <div class="device-phone">
+                      <span class="phone-notch" aria-hidden="true"></span>
+                      <span class="phone-hero"></span>
+                      <span class="phone-line"></span>
+                      <span class="phone-line phone-line-short"></span>
+                      <span class="phone-btn"></span>
+                    </div>
+                    <span class="launch-spark spark-a" aria-hidden="true">✦</span>
+                    <span class="launch-spark spark-b" aria-hidden="true">✦</span>
+                    <span class="launch-spark spark-c" aria-hidden="true">✦</span>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        </li>
+      }
+    </ol>
+
+    <p class="hiw-note">
+      This is the intended Resto.pk workflow — live template previews and one-click publishing
+      are coming soon.
+    </p>
+  </div>
+</section>

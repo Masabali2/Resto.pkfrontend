@@ -1,0 +1,52 @@
+<div class="modal-backdrop" (click)="close()" (keydown)="onKeydown($event)">
+  <div
+    #dialogEl
+    class="modal-panel"
+    role="dialog"
+    aria-modal="true"
+    tabindex="-1"
+    [attr.aria-label]="template().name + ' template preview'"
+    [style.--tpl-accent]="template().accentColor"
+    (click)="$event.stopPropagation()"
+    (keydown)="onKeydown($event)"
+  >
+    <header class="modal-head">
+      <span class="modal-icon" aria-hidden="true">{{ template().icon }}</span>
+      <div class="modal-titles">
+        <h3 class="modal-title">{{ template().name }}</h3>
+        <p class="modal-subtitle">{{ template().category }} · Resto.pk template</p>
+      </div>
+      <button type="button" class="modal-close" (click)="close()" aria-label="Close preview">✕</button>
+    </header>
+
+    <p class="modal-note">
+      Design concept preview — the production website for this template is still
+      being built. Nothing here is a live restaurant site, and no orders can be placed.
+    </p>
+
+    <!-- Framed mini wireframe of the template's visual direction -->
+    <div class="concept-frame" role="img"
+      [attr.aria-label]="'Static design concept for the ' + template().name + ' template: header, hero banner and sample menu list'">
+      <div class="concept-bar">
+        <span class="concept-brand">{{ template().icon }} {{ template().name }}</span>
+        <span class="concept-links" aria-hidden="true">Menu · About · Contact</span>
+        <span class="concept-cta">Order Now</span>
+      </div>
+      <div class="concept-hero">
+        <strong>{{ template().name }}</strong>
+        <span>{{ template().description }}</span>
+      </div>
+      <ul class="concept-menu">
+        @for (item of menu(); track item.name) {
+          <li><span>{{ item.name }}</span><b>{{ item.price }}</b></li>
+        }
+      </ul>
+    </div>
+
+    <div class="modal-actions">
+      <app-button variant="primary" size="md" [fullWidth]="false" (click)="close()">
+        Got it — close preview
+      </app-button>
+    </div>
+  </div>
+</div>

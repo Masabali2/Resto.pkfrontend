@@ -1,0 +1,205 @@
+:host {
+  display: block;
+}
+
+/* ---------- Resto.pk section chrome (matches other public sections) ---------- */
+
+.features-section {
+  padding: 4rem 1.5rem;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.section-inner {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+}
+
+/* ---------- Header ---------- */
+
+.features-header {
+  max-width: 46rem;
+  margin: 0 auto 3rem;
+  text-align: center;
+}
+
+.features-eyebrow {
+  display: inline-block;
+  margin: 0 0 0.75rem;
+  padding: 0.35rem 0.9rem;
+  color: var(--color-primary-hover);
+  background: var(--color-primary-soft);
+  border: 1px solid var(--resto-orange-soft);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.features-title {
+  margin: 0 0 0.75rem;
+  color: var(--color-text);
+  font-family: var(--font-family-base);
+  font-size: clamp(1.7rem, 3.4vw, 2.4rem);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.features-intro {
+  max-width: 38rem;
+  margin: 0 auto;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-lg);
+  line-height: 1.65;
+}
+
+/* ---------- Feature grid ---------- */
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+/* Browser-only reveal states (never present in the SSR-prerendered HTML, so
+   cards are always visible when JavaScript does not run). The stagger delay
+   is supplied per card through the --feature-card-delay custom property. */
+.features-grid-pending .feature-card {
+  visibility: hidden;
+}
+
+.features-grid-revealed .feature-card {
+  visibility: visible;
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 550ms ease-out var(--feature-card-delay, 0ms),
+    transform 550ms ease-out var(--feature-card-delay, 0ms);
+}
+
+.features-grid-revealed.features-grid-in .feature-card {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------- Card ---------- */
+
+.feature-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  height: 100%;
+  padding: 1.5rem 1.4rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.feature-card:hover {
+  border-color: rgb(255 107 0 / 35%);
+  box-shadow: var(--shadow-card);
+  transform: translateY(-3px);
+}
+
+/* ---------- Icon tile ---------- */
+
+.feature-icon {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 1.1rem;
+  color: var(--resto-orange);
+  background: var(--resto-orange-soft);
+  border: 1px solid rgb(255 107 0 / 22%);
+  border-radius: var(--radius-md);
+  transition: transform var(--transition-base);
+}
+
+.feature-card:hover .feature-icon {
+  transform: scale(1.06);
+}
+
+.feature-icon svg {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+/* ---------- Text ---------- */
+
+.feature-card-title {
+  margin: 0 0 0.45rem;
+  color: var(--color-text);
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.feature-card-description {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.65;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1023px) {
+  .features-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 639px) {
+  .features-section {
+    padding: 3.25rem 1rem;
+  }
+
+  .features-header {
+    margin-bottom: 2.25rem;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .feature-card {
+    padding: 1.35rem 1.25rem;
+  }
+}
+
+/* ---------- Reduced motion: content stays visible, no movement ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  /* Reveal states must never hide or animate content here — including the
+     brief pending window before the observer fires. */
+  .features-grid-pending .feature-card,
+  .features-grid-revealed .feature-card,
+  .features-grid-revealed.features-grid-in .feature-card {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .feature-card,
+  .feature-icon {
+    transition: none;
+  }
+
+  .feature-card:hover,
+  .feature-card:hover .feature-icon {
+    transform: none;
+  }
+}

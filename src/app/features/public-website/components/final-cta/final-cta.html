@@ -1,0 +1,32 @@
+<section id="final-cta" class="final-cta-section" aria-labelledby="final-cta-title">
+  <div class="section-inner">
+    <div
+      #ctaCard
+      class="cta-card"
+      [class.cta-card-pending]="revealState() === 'pending'"
+      [class.cta-card-revealed]="revealState() === 'revealed'"
+      [class.cta-card-in]="cardIn()"
+    >
+      <p class="cta-eyebrow">Ready to Get Started?</p>
+
+      <h2 id="final-cta-title" class="cta-title">Your Restaurant Deserves to Stand Out Online.</h2>
+
+      <p class="cta-subtitle">
+        Create a beautiful online presence for your restaurant and make it easier for customers to
+        discover your menu and brand.
+      </p>
+
+      <div class="cta-actions">
+        <!-- Primary: verified existing registration route (same destination as navbar/hero CTAs). -->
+        <a routerLink="/register" class="cta-action">
+          <app-button variant="primary" size="lg" [fullWidth]="false">Get Started</app-button>
+        </a>
+
+        <!-- Secondary: verified in-page anchor rendered by the Template Showcase section. -->
+        <a href="#templates" class="cta-action cta-secondary">
+          <app-button variant="outline" size="lg" [fullWidth]="false">Explore Templates</app-button>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
