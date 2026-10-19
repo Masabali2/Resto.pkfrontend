@@ -10,8 +10,6 @@ export type TemplateId = 'elegance' | 'brew-and-bean' | 'flame-grill' | 'bella-p
 
 /** What the "Preview" action shows for a template. */
 export type TemplatePreviewKind =
-  /** Full interactive mockup hosted inside this showcase (Brewed & Co. demo). */
-  | 'mockup'
   /** Static concept preview rendered inside the showcase modal. */
   | 'concept';
 
@@ -59,7 +57,7 @@ export const TEMPLATE_CARDS: readonly TemplateCardModel[] = [
     imageAlt:
       'Latte with heart art on a wooden café counter, inspiration for the Brew & Bean template',
     fallbackIcon: '☕',
-    previewKind: 'mockup',
+    previewKind: 'concept',
     accentColor: '#a0622d'
   },
   {
