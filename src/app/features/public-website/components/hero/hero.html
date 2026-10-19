@@ -1,4 +1,25 @@
 <section id="hero" class="hero-section" aria-labelledby="hero-title">
+  <!-- Top Navigation Bar -->
+  <header class="main-header">
+    <a href="#" class="brand-logo">
+      <div class="logo-icon">R</div>
+      <span class="logo-text">Resto<span class="logo-dot">.pk</span></span>
+    </a>
+    
+    <nav class="main-nav" aria-label="Main Navigation">
+      <a href="#templates" class="nav-link active">Templates <span class="caret">▸</span></a>
+      <a href="#features" class="nav-link">Features <span class="caret">▸</span></a>
+      <a href="#how-it-works" class="nav-link">How It Works <span class="caret">▸</span></a>
+      <a href="#pricing" class="nav-link">Pricing</a>
+    </nav>
+
+    <div class="header-actions">
+      <a href="/login" class="nav-link-sign-in">Sign In</a>
+      <a routerLink="/register" class="btn-primary-glow btn-sm">Get Started</a>
+    </div>
+  </header>
+
+  <!-- Background Contour Graphic & Orbiting Nodes -->
   <svg class="hero-contours" aria-hidden="true" focusable="false" viewBox="0 0 1440 640" preserveAspectRatio="none">
     <path d="M-40 120 C 320 40 720 200 1120 110 S 1500 60 1520 130" />
     <path d="M-40 240 C 360 160 760 320 1160 230 S 1500 180 1520 250" />
@@ -7,91 +28,129 @@
   </svg>
 
   <div class="section-inner">
+    <!-- Left Hero Content -->
     <div class="hero-content">
-      <p class="hero-eyebrow"><span class="eyebrow-spark" aria-hidden="true">✨</span> Restaurant Website Platform</p>
+      <div class="hero-eyebrow">
+        <span class="eyebrow-spark" aria-hidden="true">✦</span>
+        <span>RESTAURANT WEBSITE PLATFORM</span>
+        <span class="eyebrow-spark" aria-hidden="true">✦</span>
+      </div>
+
       <h1 id="hero-title" class="hero-title">
         Your Restaurant.<br />
         <span class="highlight">Your Website.</span><br />
-        Your Brand.
+        Your Brand.<span class="title-sparkle">✦<span class="cursor-pointer">↖</span></span>
       </h1>
+
       <p class="hero-subtitle">
-        Resto.pk helps restaurant owners bring their brand online with a beautiful, branded
-        website they can manage and grow with their business.
+        Resto.pk helps restaurant owners establish their online presence with a branded restaurant website — built with your business.
       </p>
+
       <div class="hero-actions">
         <a routerLink="/register">
-          <app-button variant="primary" size="lg" [fullWidth]="false">Get Started</app-button>
+          <button class="btn-primary-glow">Get Started</button>
         </a>
         <a href="#templates">
-          <app-button variant="outline" size="lg" [fullWidth]="false">Explore Templates&nbsp;&rarr;</app-button>
+          <button class="btn-outline-custom">
+            Explore Templates <span class="btn-arrow">&gt;&gt;</span>
+          </button>
         </a>
       </div>
     </div>
 
+    <!-- Right Hero Preview Visual -->
     <div class="hero-preview">
+      <!-- Background Ambient Glow & Nodes -->
       <div class="preview-glow" aria-hidden="true"></div>
+      <div class="orbit-ring" aria-hidden="true">
+        <span class="node node-top"></span>
+        <span class="node node-left"></span>
+        <span class="node node-right"></span>
+      </div>
 
-      <div class="mockup-frame" role="img" aria-label="Design preview of a restaurant website inside a browser window, showing a food photograph, restaurant name, and sample menu items.">
+      <!-- Main Browser Mockup -->
+      <div class="mockup-frame">
         <div class="browser-window">
           <div class="browser-bar" aria-hidden="true">
-            <span class="browser-dot dot-red"></span>
-            <span class="browser-dot dot-yellow"></span>
-            <span class="browser-dot dot-green"></span>
-            <span class="browser-address">spice-garden.example</span>
+            <div class="dots-wrapper">
+              <span class="browser-dot dot-red"></span>
+              <span class="browser-dot dot-yellow"></span>
+              <span class="browser-dot dot-green"></span>
+            </div>
+            <div class="browser-address">spice-garden.example</div>
           </div>
+
           <div class="browser-body">
             <header class="site-header">
               <span class="site-brand">Spice Garden</span>
               <nav class="site-nav" aria-hidden="true">
                 <span>Menu</span>
-                <span>About</span>
+                <span>Navigation ▾</span>
+                <span>Pricing</span>
                 <span>Contact</span>
+                <span class="btn-book-table">Book Table</span>
               </nav>
             </header>
-            <figure class="site-photo">
+
+            <div class="site-photo-container">
               <img
                 src="assets/images/hero-food-preview.jpg"
-                alt="Chicken karahi with naan and rice, plated for a restaurant website"
-                width="1200"
-                height="900"
+                alt="Chicken karahi with naan and rice"
+                class="site-photo"
                 loading="eager"
                 decoding="async"
               />
-            </figure>
-            <div class="site-info">
-              <div class="site-text">
-                <h3 class="site-name">
-                  Spice Garden
-                  <span class="site-sample">Illustrative sample</span>
-                </h3>
-                <p class="site-tagline">Authentic flavours, served fresh.</p>
+              
+              <!-- Tag Badges overlapping image -->
+              <div class="floating-tag tag-special" aria-hidden="true">
+                Today's Special
               </div>
-              <ul class="site-menu" aria-hidden="true">
-                <li><span>Chicken Karahi</span><span>Rs. 780</span></li>
-                <li><span>Butter Naan</span><span>Rs. 120</span></li>
-                <li><span>Mango Lassi</span><span>Rs. 250</span></li>
-              </ul>
+              <div class="floating-tag tag-fresh" aria-hidden="true">
+                <span class="dot-orange">●</span> Fresh Food
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="glass-card card-special" aria-hidden="true">
-          <span class="card-icon">🍲</span>
-          <span class="card-title">Today's Special</span>
-          <span class="card-sub">Chicken Karahi</span>
-        </div>
-
+        <!-- Floating Glass Overlay Badges -->
         <div class="glass-card card-rating" aria-hidden="true">
           <span class="rating-value">4.9 ★</span>
-          <span class="card-sub">Sample rating</span>
+          <span class="card-sub">Rating</span>
         </div>
 
         <div class="glass-card card-menu" aria-hidden="true">
-          <span class="card-title">Menu</span>
-          <ul>
-            <li><span>Chicken Karahi</span><span>Rs. 780</span></li>
-            <li><span>Butter Naan</span><span>Rs. 120</span></li>
-            <li><span>Mango Lassi</span><span>Rs. 250</span></li>
+          <ul class="menu-list">
+            <li>
+              <div class="item-info">
+                <img src="assets/images/karahi-thumb.jpg" alt="" class="item-thumb" />
+                <div class="item-details">
+                  <span class="item-name">Chicken Karahi</span>
+                  <span class="item-price">Rs. 780</span>
+                </div>
+              </div>
+              <span class="price-badge">Rs. 780</span>
+            </li>
+            <li class="active-item">
+              <div class="item-info">
+                <img src="assets/images/naan-thumb.jpg" alt="" class="item-thumb" />
+                <div class="item-details">
+                  <span class="item-name">Butter Naan</span>
+                  <span class="item-price">Rs. 120</span>
+                </div>
+              </div>
+              <span class="price-badge">Rs. 120</span>
+              <span class="click-pointer">👆</span>
+            </li>
+            <li>
+              <div class="item-info">
+                <img src="assets/images/lassi-thumb.jpg" alt="" class="item-thumb" />
+                <div class="item-details">
+                  <span class="item-name">Mango Lassi</span>
+                  <span class="item-price">Rs. 250</span>
+                </div>
+              </div>
+              <span class="price-badge">Rs. 250</span>
+            </li>
           </ul>
         </div>
       </div>
