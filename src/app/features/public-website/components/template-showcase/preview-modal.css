@@ -109,10 +109,6 @@
   border-radius: var(--radius-sm);
 }
 
-.modal-note-live {
-  background: var(--resto-orange-soft);
-  border-left-color: var(--color-primary);
-}
 
 /* ---------- Concept wireframe ---------- */
 

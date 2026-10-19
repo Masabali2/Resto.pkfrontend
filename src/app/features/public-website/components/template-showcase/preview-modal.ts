@@ -1,9 +1,7 @@
-import { DOCUMENT } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  inject,
   input,
   output
 } from '@angular/core';
@@ -42,9 +40,9 @@ const CONCEPT_MENUS: Record<string, readonly ConceptMenuItem[]> = {
 /**
  * Accessible dialog that shows a template preview inside the showcase.
  *
- * For Brew & Bean it points visitors at the full interactive mockup rendered
- * below the card grid. For the other templates it renders an honest static
- * "design concept" — it never claims a live restaurant website exists.
+ * Renders an honest static "design concept" for every template — it never
+ * claims a live restaurant website exists and no interactive demo remains in
+ * the showcase after the Brewed & Co. mockup was removed.
  */
 @Component({
   selector: 'app-template-preview-modal',
@@ -57,8 +55,6 @@ const CONCEPT_MENUS: Record<string, readonly ConceptMenuItem[]> = {
 export class TemplatePreviewModal {
   readonly template = input.required<TemplateCardModel>();
   readonly closed = output<void>();
-
-  private readonly document = inject(DOCUMENT);
 
   protected readonly menu = computed<readonly ConceptMenuItem[]>(
     () => CONCEPT_MENUS[this.template().id] ?? []
@@ -82,12 +78,5 @@ export class TemplatePreviewModal {
       event.stopPropagation();
       this.close();
     }
-  }
-
-  /** Jump to the interactive Brewed & Co. mockup further down the page. */
-  protected openMockup(): void {
-    const target = this.document.getElementById('brewed-co-mockup');
-    target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    this.close();
   }
 }
