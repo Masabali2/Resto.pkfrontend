@@ -1,27 +1,16 @@
-
-import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
-import { inject } from '@angular/core';
+import { HttpInterceptorFn } from '@angular/common/http';
 import { catchError, throwError } from 'rxjs';
-import { NotificationService } from '../services/notification.service';
 
-export const errorInterceptor: HttpInterceptorFn = (request, next) => {
-  const notifications = inject(NotificationService);
-
-  return next(request).pipe(
-    catchError((error: unknown) => {
-      if (error instanceof HttpErrorResponse) {
-        if (error.status === 0) {
-          notifications.error(
-            'Unable to connect to the server. Check your connection and try again.'
-          );
-        } else if (error.status >= 500) {
-          notifications.error(
-            'A server error occurred. Please try again later.'
-          );
-        }
-      }
-
-      return throwError(() => error);
-    })
+/**
+ * Central HTTP error interceptor.
+ *
+ * It does not display notifications itself: every failed response is
+ * re-thrown so the calling feature can route it through
+ * HttpErrorHandlerService, which owns message extraction (preferring
+ * backend messages) and presentation. Keeping notification ownership in
+ * a single layer guarantees at most one error toast per failed request.
+ */
+export const errorInterceptor: HttpInterceptorFn = (request, next) =>
+  next(request).pipe(
+    catchError((error: unknown) => throwError(() => error))
   );
-};
