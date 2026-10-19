@@ -1,74 +1,88 @@
+
 <section id="hero" class="hero-section" aria-labelledby="hero-title">
-  <!-- Top Navigation Bar -->
   <header class="main-header">
-    <a href="#" class="brand-logo">
-      <div class="logo-icon">R</div>
+    <a routerLink="/" class="brand-logo" aria-label="Resto.pk home">
+      <span class="logo-icon">R</span>
       <span class="logo-text">Resto<span class="logo-dot">.pk</span></span>
     </a>
-    
-    <nav class="main-nav" aria-label="Main Navigation">
-      <a href="#templates" class="nav-link active">Templates <span class="caret">▸</span></a>
-      <a href="#features" class="nav-link">Features <span class="caret">▸</span></a>
-      <a href="#how-it-works" class="nav-link">How It Works <span class="caret">▸</span></a>
+
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="#templates" class="nav-link">Templates</a>
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#how-it-works" class="nav-link">How It Works</a>
       <a href="#pricing" class="nav-link">Pricing</a>
     </nav>
 
     <div class="header-actions">
-      <a href="/login" class="nav-link-sign-in">Sign In</a>
+      <a routerLink="/login" class="nav-link-sign-in">Sign In</a>
       <a routerLink="/register" class="btn-primary-glow btn-sm">Get Started</a>
     </div>
   </header>
 
-  <!-- Background Contour Graphic & Orbiting Nodes -->
-  <svg class="hero-contours" aria-hidden="true" focusable="false" viewBox="0 0 1440 640" preserveAspectRatio="none">
-    <path d="M-40 120 C 320 40 720 200 1120 110 S 1500 60 1520 130" />
-    <path d="M-40 240 C 360 160 760 320 1160 230 S 1500 180 1520 250" />
-    <path d="M-40 380 C 340 300 740 460 1140 370 S 1500 320 1520 390" />
-    <path d="M-40 520 C 360 440 760 600 1160 510 S 1500 460 1520 530" />
-  </svg>
+  <div class="hero-backdrop" aria-hidden="true">
+    <svg class="hero-contours" focusable="false" viewBox="0 0 1440 640" preserveAspectRatio="none">
+      <path d="M-40 120 C 320 40 720 200 1120 110 S 1500 60 1520 130" />
+      <path d="M-40 260 C 360 180 760 340 1160 250 S 1500 200 1520 270" />
+      <path d="M-40 420 C 340 340 740 500 1140 410 S 1500 360 1520 430" />
+    </svg>
+  </div>
 
   <div class="section-inner">
-    <!-- Left Hero Content -->
     <div class="hero-content">
-      <div class="hero-eyebrow">
-        <span class="eyebrow-spark" aria-hidden="true">✦</span>
-        <span>RESTAURANT WEBSITE PLATFORM</span>
-        <span class="eyebrow-spark" aria-hidden="true">✦</span>
-      </div>
-
-      <h1 id="hero-title" class="hero-title">
-        Your Restaurant.<br />
-        <span class="highlight">Your Website.</span><br />
-        Your Brand.<span class="title-sparkle">✦<span class="cursor-pointer">↖</span></span>
-      </h1>
-
-      <p class="hero-subtitle">
-        Resto.pk helps restaurant owners establish their online presence with a branded restaurant website — built with your business.
+      <p class="hero-eyebrow" [style.--hero-delay]="'0ms'">
+        <span class="eyebrow-dot" aria-hidden="true"></span>
+        The Restaurant Website Builder
       </p>
 
-      <div class="hero-actions">
-        <a routerLink="/register">
-          <button class="btn-primary-glow">Get Started</button>
+      <h1 id="hero-title" class="hero-title">
+        <span class="title-line" [style.--hero-delay]="'90ms'">Your Restaurant</span>
+        <span class="title-line" [style.--hero-delay]="'190ms'">Deserves a</span>
+        <span class="title-line accent-line" [style.--hero-delay]="'290ms'">
+          <span class="accent-word">Beautiful Website</span>
+          <svg class="accent-underline" aria-hidden="true" focusable="false" viewBox="0 0 300 14" preserveAspectRatio="none">
+            <path d="M4 9 C 70 3, 150 12, 220 5 S 292 8, 296 7" />
+          </svg>
+        </span>
+      </h1>
+
+      <p class="hero-subtitle" [style.--hero-delay]="'400ms'">
+        Create a stunning online home for your restaurant. Showcase your menu, express your
+        brand, and make it easier for customers to discover you.
+      </p>
+
+      <div class="hero-actions" [style.--hero-delay]="'500ms'">
+        <a routerLink="/register" data-testid="hero-cta-start" class="cta-link">
+          <app-button variant="primary" size="lg" [fullWidth]="false">Get Started</app-button>
         </a>
-        <a href="#templates">
-          <button class="btn-outline-custom">
-            Explore Templates <span class="btn-arrow">&gt;&gt;</span>
-          </button>
+        <a href="#templates" data-testid="hero-cta-templates" class="cta-link">
+          <app-button variant="outline" size="lg" [fullWidth]="false">Explore Templates →</app-button>
         </a>
       </div>
+
+      <ul class="trust-row" [style.--hero-delay]="'600ms'" aria-label="Why restaurant owners choose Resto.pk">
+        <li>
+          <span class="trust-icon" aria-hidden="true">🇵🇰</span>
+          Built for Pakistani restaurants
+        </li>
+        <li>
+          <span class="trust-icon" aria-hidden="true">🎨</span>
+          Branded, mobile-friendly designs
+        </li>
+        <li>
+          <span class="trust-icon" aria-hidden="true">🍽️</span>
+          Menus made for hungry customers
+        </li>
+      </ul>
     </div>
 
-    <!-- Right Hero Preview Visual -->
-    <div class="hero-preview">
-      <!-- Background Ambient Glow & Nodes -->
-      <div class="preview-glow" aria-hidden="true"></div>
-      <div class="orbit-ring" aria-hidden="true">
-        <span class="node node-top"></span>
-        <span class="node node-left"></span>
-        <span class="node node-right"></span>
-      </div>
+    <div
+      class="hero-showcase"
+      [style.--hero-delay]="'260ms'"
+      role="img"
+      aria-label="Illustrative preview of a restaurant website on desktop and mobile, featuring a restaurant menu and featured dish."
+    >
+      <div class="showcase-glow" aria-hidden="true"></div>
 
-      <!-- Main Browser Mockup -->
       <div class="mockup-frame">
         <div class="browser-window">
           <div class="browser-bar" aria-hidden="true">
@@ -95,13 +109,13 @@
             <div class="site-photo-container">
               <img
                 src="assets/images/hero-food-preview.jpg"
-                alt="Chicken karahi with naan and rice"
-                class="site-photo"
+                alt=""
+                width="1200"
+                height="900"
                 loading="eager"
                 decoding="async"
               />
-              
-              <!-- Tag Badges overlapping image -->
+
               <div class="floating-tag tag-special" aria-hidden="true">
                 Today's Special
               </div>
@@ -111,48 +125,32 @@
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Floating Glass Overlay Badges -->
-        <div class="glass-card card-rating" aria-hidden="true">
-          <span class="rating-value">4.9 ★</span>
-          <span class="card-sub">Rating</span>
+      <div class="phone-frame" aria-hidden="true">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <span class="phone-brand">Spice Garden</span>
+          <span class="phone-photo"></span>
+          <span class="phone-line line-lg"></span>
+          <span class="phone-line line-sm"></span>
+          <span class="phone-item"><span>Chicken Karahi</span><span>Rs. 780</span></span>
+          <span class="phone-item"><span>Butter Naan</span><span>Rs. 120</span></span>
+          <span class="phone-cta">View full menu</span>
         </div>
+      </div>
 
-        <div class="glass-card card-menu" aria-hidden="true">
-          <ul class="menu-list">
-            <li>
-              <div class="item-info">
-                <img src="assets/images/karahi-thumb.jpg" alt="" class="item-thumb" />
-                <div class="item-details">
-                  <span class="item-name">Chicken Karahi</span>
-                  <span class="item-price">Rs. 780</span>
-                </div>
-              </div>
-              <span class="price-badge">Rs. 780</span>
-            </li>
-            <li class="active-item">
-              <div class="item-info">
-                <img src="assets/images/naan-thumb.jpg" alt="" class="item-thumb" />
-                <div class="item-details">
-                  <span class="item-name">Butter Naan</span>
-                  <span class="item-price">Rs. 120</span>
-                </div>
-              </div>
-              <span class="price-badge">Rs. 120</span>
-              <span class="click-pointer">👆</span>
-            </li>
-            <li>
-              <div class="item-info">
-                <img src="assets/images/lassi-thumb.jpg" alt="" class="item-thumb" />
-                <div class="item-details">
-                  <span class="item-name">Mango Lassi</span>
-                  <span class="item-price">Rs. 250</span>
-                </div>
-              </div>
-              <span class="price-badge">Rs. 250</span>
-            </li>
-          </ul>
-        </div>
+      <div class="float-card float-dish" aria-hidden="true">
+        <span class="dish-swatch">🍲</span>
+        <span class="float-copy">
+          <strong>Today's Special</strong>
+          <small>Chicken Karahi · Rs. 780</small>
+        </span>
+      </div>
+
+      <div class="float-card float-chip" aria-hidden="true">
+        <span class="chip-sparkle">✦</span>
+        <strong>Your brand, online</strong>
       </div>
     </div>
   </div>
