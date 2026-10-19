@@ -5,7 +5,7 @@ import { Button } from '../../../../shared/components/button/button';
 @Component({
   selector: 'app-hero',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink,Button],
   templateUrl: './hero.html',
   styleUrl: './hero.css'
 })

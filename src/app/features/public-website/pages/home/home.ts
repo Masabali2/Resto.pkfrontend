@@ -5,7 +5,6 @@ import { TemplateShowcase } from '../../components/template-showcase/template-sh
 import { Features } from '../../components/features/features';
 import { HowItWorks } from '../../components/how-it-works/how-it-works';
 import { Testimonials } from '../../components/testimonials/testimonials';
-
 import { Pricing } from '../../components/pricing/pricing';
 import { Faq } from '../../components/faq/faq';
 import { FinalCta } from '../../components/final-cta/final-cta';

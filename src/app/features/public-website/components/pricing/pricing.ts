@@ -39,21 +39,6 @@ export interface PricingPlan {
   readonly recommended: boolean;
 }
 
-/**
- * Public-website "Pricing" section.
- *
- * Three comparison cards (Starter / Professional / Business) built entirely
- * from strongly-typed plan data in this file. The section is informational
- * marketing UI only: no checkout, billing, subscription management, or plan
- * enforcement is implemented here, and none is implied. All CTAs reuse the
- * verified existing `/register` route (the same destination used by the navbar
- * and final-CTA sections) — no invented payment or checkout routes.
- *
- * Entrance animation follows the same SSR-safe pattern as the Features and
- * Testimonials sections: prerendered HTML always shows fully visible cards,
- * and interactive browsers opt into a one-shot IntersectionObserver reveal
- * with a staggered fade-up. If JS never runs, content simply stays visible.
- */
 @Component({
   selector: 'app-pricing',
   standalone: true,
@@ -113,12 +98,7 @@ export class Pricing implements AfterViewInit {
     },
   ];
 
-  /**
-   * Entrance-reveal state for the plan grid. The SSR-prerendered page always
-   * shows fully visible cards; in interactive hydrating browsers a one-shot
-   * IntersectionObserver (browser-only) hides the cards and reveals them with
-   * a staggered fade-up when the section scrolls into view.
-   */
+ 
   protected readonly revealState = signal<'idle' | 'pending' | 'revealed'>('idle');
 
   /** Second-phase flag set one frame after `revealed` to trigger the CSS transition. */
