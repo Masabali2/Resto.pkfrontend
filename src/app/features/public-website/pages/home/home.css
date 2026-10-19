@@ -1,0 +1,14 @@
+:host {
+  display: block;
+}
+
+.public-site {
+  min-height: 100vh;
+  background: var(--color-page);
+  font-family: var(--font-family-base);
+}
+
+/* Offset fixed navbar height so anchor targets are not hidden. */
+main {
+  padding-top: var(--header-height);
+}
