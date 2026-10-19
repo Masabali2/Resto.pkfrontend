@@ -5,6 +5,7 @@ import {
   inject,
   viewChildren
 } from '@angular/core';
+import { Location } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs';
@@ -26,6 +27,7 @@ export class VerifyEmail implements AfterViewInit {
   private readonly otpService = inject(OtpService);
   private readonly notificationService = inject(NotificationService);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
 
   readonly digitInputs = viewChildren<ElementRef<HTMLInputElement>>('digitInput');
 
@@ -40,10 +42,11 @@ export class VerifyEmail implements AfterViewInit {
   private cooldownTimer: ReturnType<typeof setInterval> | null = null;
 
   ngAfterViewInit(): void {
-    const navigationEmail = this.router.getCurrentNavigation()?.extras.state?.['email'];
+    const state = this.location.getState() as { email?: unknown } | null;
+    const stateEmail = state?.email;
 
-    if (typeof navigationEmail === 'string' && navigationEmail.length > 0) {
-      this.email = navigationEmail;
+    if (typeof stateEmail === 'string' && stateEmail.trim().length > 0) {
+      this.email = stateEmail.trim();
     } else {
       this.emailMissing = true;
       return;
