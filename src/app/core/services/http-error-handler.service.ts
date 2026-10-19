@@ -1,7 +1,6 @@
 
 import { HttpErrorResponse } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { NotificationService } from './notification.service';
+import { Injectable } from '@angular/core';
 
 export interface HttpErrorHandlerOptions {
   unauthorizedMessage?: string;
@@ -23,8 +22,6 @@ interface ApiErrorBody {
   providedIn: 'root'
 })
 export class HttpErrorHandlerService {
-  private readonly notifications = inject(NotificationService);
-
   handle(
     error: unknown,
     options: HttpErrorHandlerOptions = {}
@@ -32,10 +29,10 @@ export class HttpErrorHandlerService {
     const fieldErrors: Record<string, string> = {};
 
     if (!(error instanceof HttpErrorResponse)) {
-      return this.showError(
-        'An unexpected error occurred. Please try again.',
+      return {
+        message: 'An unexpected error occurred. Please try again.',
         fieldErrors
-      );
+      };
     }
 
     if (error.status === 0) {
@@ -53,10 +50,10 @@ export class HttpErrorHandlerService {
     }
 
     if (error.status === 401 && options.unauthorizedMessage) {
-      return this.showError(
-        options.unauthorizedMessage,
+      return {
+        message: options.unauthorizedMessage,
         fieldErrors
-      );
+      };
     }
 
     const body = error.error as ApiErrorBody | null;
@@ -77,24 +74,29 @@ export class HttpErrorHandlerService {
       };
     }
 
-    return this.showError(
-      body?.message ??
+    return {
+      message:
+        body?.message ??
         options.fallbackMessage ??
         'Something went wrong. Please try again.',
       fieldErrors
-    );
+    };
   }
 
-  private showError(
-    message: string,
-    fieldErrors: Record<string, string>
-  ): HttpErrorDetails {
-    this.notifications.error(message);
+  /**
+   * Extracts the meaningful backend message from a failed HTTP response
+   * without displaying it. Returns null when the backend provided no
+   * usable message so callers can apply their own fallback.
+   */
+  extractBackendMessage(error: unknown): string | null {
+    if (!(error instanceof HttpErrorResponse)) {
+      return null;
+    }
 
-    return {
-      message,
-      fieldErrors
-    };
+    const body = error.error as ApiErrorBody | null;
+    const message = typeof body?.message === 'string' ? body.message.trim() : '';
+
+    return message.length > 0 ? message : null;
   }
 
   private normalizeFieldKey(key: string): string {

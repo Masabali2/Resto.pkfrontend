@@ -249,7 +249,11 @@ export class Register {
       fieldAliases: {}
     });
 
-    this.applyMappedErrors(result.message, result.fieldErrors);
+    // Prefer the meaningful backend message over the generic status-based one.
+    const message =
+      this.httpErrorHandler.extractBackendMessage(error) ?? result.message;
+
+    this.applyMappedErrors(message, result.fieldErrors);
   }
 
   private applyBackendErrors(
@@ -291,7 +295,10 @@ export class Register {
     }
 
     this.generalError = message;
-    this.notificationService.error(message);
+
+    if (message) {
+      this.notificationService.error(message);
+    }
   }
 
   private normalizeFieldKey(key: string): RegisterField | null {

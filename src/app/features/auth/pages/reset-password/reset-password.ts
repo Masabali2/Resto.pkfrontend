@@ -125,7 +125,10 @@ export class ResetPassword {
             fieldAliases: {}
           });
 
-          this.handleFailure(result.message);
+          this.handleFailure(
+            this.httpErrorHandler.extractBackendMessage(error) ??
+            result.message
+          );
         }
       });
   }
