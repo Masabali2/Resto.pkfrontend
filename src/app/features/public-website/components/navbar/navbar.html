@@ -1,19 +1,20 @@
 <header class="navbar">
   <div class="navbar-inner">
-    <a class="navbar-brand" routerLink="/" aria-label="Resto.pk home">Resto<span class="brand-accent">.pk</span></a>
+    <a class="navbar-brand" routerLink="/" aria-label="Resto.pk home">
+      <span class="brand-mark" aria-hidden="true">R</span>
+      <span class="brand-word">Resto<span class="brand-accent">.pk</span></span>
+    </a>
 
-    <nav class="navbar-links desktop-only" aria-label="Primary">
+    <nav class="navbar-links" aria-label="Primary">
       @for (link of navLinks; track link.anchor) {
         <a class="navbar-link" [href]="'#' + link.anchor">{{ link.label }}</a>
       }
     </nav>
 
-    <div class="navbar-actions desktop-only">
-      <a routerLink="/login">
-        <app-button variant="outline" size="sm" [fullWidth]="false">Log in</app-button>
-      </a>
-      <a routerLink="/register">
-        <app-button variant="primary" size="sm" [fullWidth]="false">Get started</app-button>
+    <div class="navbar-actions">
+      <a class="navbar-auth-link" routerLink="/login">Sign In</a>
+      <a class="navbar-cta" routerLink="/register">
+        <app-button variant="primary" size="sm" [fullWidth]="false">Get Started</app-button>
       </a>
     </div>
 
@@ -21,10 +22,11 @@
       type="button"
       class="mobile-menu-toggle"
       [attr.aria-expanded]="mobileMenuOpen()"
-      aria-controls="mobile-nav"
-      aria-label="Toggle navigation menu"
+      [attr.aria-controls]="mobileMenuOpen() ? 'mobile-nav' : null"
+      [attr.aria-label]="mobileMenuOpen() ? 'Close navigation menu' : 'Open navigation menu'"
       (click)="toggleMobileMenu()">
-      <span class="toggle-bar" [class.open]="mobileMenuOpen()"></span>
+      <span class="visually-hidden">&#9776;</span>
+      <span class="toggle-bar" [class.open]="mobileMenuOpen()" aria-hidden="true"></span>
     </button>
   </div>
 
@@ -34,11 +36,9 @@
         <a class="mobile-link" [href]="'#' + link.anchor" (click)="closeMobileMenu()">{{ link.label }}</a>
       }
       <div class="mobile-actions">
-        <a routerLink="/login">
-          <app-button variant="outline" size="md" [fullWidth]="true">Log in</app-button>
-        </a>
-        <a routerLink="/register">
-          <app-button variant="primary" size="md" [fullWidth]="true">Get started</app-button>
+        <a class="mobile-auth-link" routerLink="/login" (click)="closeMobileMenu()">Sign In</a>
+        <a routerLink="/register" (click)="closeMobileMenu()">
+          <app-button variant="primary" size="md" [fullWidth]="true">Get Started</app-button>
         </a>
       </div>
     </nav>

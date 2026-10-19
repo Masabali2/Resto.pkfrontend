@@ -16,11 +16,10 @@ interface NavLink {
 })
 export class Navbar {
   readonly navLinks: NavLink[] = [
-    { label: 'Features', anchor: 'features' },
     { label: 'Templates', anchor: 'templates' },
-    { label: 'How it works', anchor: 'how-it-works' },
-    { label: 'Pricing', anchor: 'pricing' },
-    { label: 'FAQ', anchor: 'faq' }
+    { label: 'Features', anchor: 'features' },
+    { label: 'How It Works', anchor: 'how-it-works' },
+    { label: 'Pricing', anchor: 'pricing' }
   ];
 
   readonly mobileMenuOpen = signal(false);
