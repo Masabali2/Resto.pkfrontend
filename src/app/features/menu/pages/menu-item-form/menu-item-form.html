@@ -1,86 +1,140 @@
+
 <div class="menu-form">
   <header class="menu-form__header">
     <h1>{{ pageTitle() }}</h1>
-    <p class="menu-form__menu">Menu: <strong>{{ menuName() }}</strong></p>
+    <p class="menu-form__menu">
+      Menu: <strong>{{ menuName() }}</strong>
+    </p>
   </header>
 
-  <div *ngIf="loading()" class="menu-form__loading">
-    <app-loading-spinner></app-loading-spinner>
-  </div>
-
-  <form *ngIf="!loading()" class="menu-form__form" (ngSubmit)="submit()">
-    <div class="menu-form__field">
-      <label for="name">Item name <span class="menu-form__required">*</span></label>
-      <input
-        id="name"
-        type="text"
-        formControlName="name"
-        maxlength="150"
-        [aria-describedby]="'name-error'"
-        [class.input-error]="showFieldError('name')"
-      />
-      <span id="name-error" class="menu-form__inline-error" *ngIf="showFieldError('name')">{{ getFieldError('name') }}</span>
+  @if (loading()) {
+    <div class="menu-form__loading">
+      <app-loading-spinner></app-loading-spinner>
     </div>
+  }
 
-    <div class="menu-form__field">
-      <label for="description">Description</label>
-      <textarea
-        id="description"
-        formControlName="description"
-        maxlength="1000"
-        rows="3"
-        [aria-describedby]="'description-error'"
-        [class.input-error]="showFieldError('description')"
-      ></textarea>
-      <span id="description-error" class="menu-form__inline-error" *ngIf="showFieldError('description')">{{ getFieldError('description') }}</span>
-      <p class="menu-form__hint">Up to 1000 characters.</p>
-    </div>
+  @if (!loading()) {
+    <form class="menu-form__form" (ngSubmit)="submit()">
+      <div class="menu-form__field">
+        <label for="name">
+          Item name <span class="menu-form__required">*</span>
+        </label>
+        <input
+          id="name"
+          type="text"
+          formControlName="name"
+          maxlength="150"
+          [aria-describedby]="'name-error'"
+          [class.input-error]="showFieldError('name')"
+        />
+        @if (showFieldError('name')) {
+          <span id="name-error" class="menu-form__inline-error">
+            {{ getFieldError('name') }}
+          </span>
+        }
+      </div>
 
-    <div class="menu-form__field">
-      <label for="price">Price <span class="menu-form__required">*</span></label>
-      <input
-        id="price"
-        type="text"
-        formControlName="price"
-        [aria-describedby]="'price-error'"
-        [class.input-error]="showFieldError('price')"
-      />
-      <span id="price-error" class="menu-form__inline-error" *ngIf="showFieldError('price')">{{ getFieldError('price') }}</span>
-      <p class="menu-form__hint">Non-negative, up to 2 decimal places.</p>
-    </div>
+      <div class="menu-form__field">
+        <label for="description">Description</label>
+        <textarea
+          id="description"
+          formControlName="description"
+          maxlength="1000"
+          rows="3"
+          [aria-describedby]="'description-error'"
+          [class.input-error]="showFieldError('description')"
+        ></textarea>
+        @if (showFieldError('description')) {
+          <span id="description-error" class="menu-form__inline-error">
+            {{ getFieldError('description') }}
+          </span>
+        }
+        <p class="menu-form__hint">Up to 1000 characters.</p>
+      </div>
 
-    <div class="menu-form__field menu-form__field--readonly">
-      <label for="currency">Currency</label>
-      <input id="currency" type="text" readonly value="{{ currency }}" />
-      <p class="menu-form__hint">Always PKR, set by the backend.</p>
-    </div>
+      <div class="menu-form__field">
+        <label for="price">
+          Price <span class="menu-form__required">*</span>
+        </label>
+        <input
+          id="price"
+          type="text"
+          inputmode="decimal"
+          formControlName="price"
+          [aria-describedby]="'price-error'"
+          [class.input-error]="showFieldError('price')"
+        />
+        @if (showFieldError('price')) {
+          <span id="price-error" class="menu-form__inline-error">
+            {{ getFieldError('price') }}
+          </span>
+        }
+        <p class="menu-form__hint">Non-negative, up to 2 decimal places.</p>
+      </div>
 
-    <div class="menu-form__field">
-      <label for="displayOrder">Display order</label>
-      <input
-        id="displayOrder"
-        type="text"
-        formControlName="displayOrder"
-        [aria-describedby]="'displayOrder-error'"
-        [class.input-error]="showFieldError('displayOrder')"
-      />
-      <span id="displayOrder-error" class="menu-form__inline-error" *ngIf="showFieldError('displayOrder')">{{ getFieldError('displayOrder') }}</span>
-      <p class="menu-form__hint">Whole number (0, 1, 2...). Items appear in ascending order.</p>
-    </div>
+      <div class="menu-form__field menu-form__field--readonly">
+        <label for="currency">Currency</label>
+        <input
+          id="currency"
+          type="text"
+          [value]="currency"
+          readonly
+        />
+        <p class="menu-form__hint">Always PKR, set by the backend.</p>
+      </div>
 
-    <div class="menu-form__field menu-form__field--boolean">
-      <label>
-        <input type="checkbox" formControlName="isAvailable" />
-        Available
-      </label>
-      <p class="menu-form__hint">Unavailable items are hidden from the public site.</p>
-    </div>
+      <div class="menu-form__field">
+        <label for="displayOrder">Display order</label>
+        <input
+          id="displayOrder"
+          type="text"
+          inputmode="numeric"
+          formControlName="displayOrder"
+          [aria-describedby]="'displayOrder-error'"
+          [class.input-error]="showFieldError('displayOrder')"
+        />
+        @if (showFieldError('displayOrder')) {
+          <span id="displayOrder-error" class="menu-form__inline-error">
+            {{ getFieldError('displayOrder') }}
+          </span>
+        }
+        <p class="menu-form__hint">
+          Whole number (0, 1, 2...). Items appear in ascending order.
+        </p>
+      </div>
 
-    <div *ngIf="generalError()" class="menu-form__general-error" role="alert">{{ generalError() }}</div>
+      <div class="menu-form__field menu-form__field--boolean">
+        <label>
+          <input type="checkbox" formControlName="isAvailable" />
+          Available
+        </label>
+        <p class="menu-form__hint">
+          Unavailable items are hidden from the public site.
+        </p>
+      </div>
 
-    <div class="menu-form__actions">
-      <button app-button type="button" variant="secondary" (click)="cancel()">Cancel</button>
-      <button app-button type="submit" variant="primary" [disabled]="submitting()">{{ submitting() ? 'Saving...' : (isEdit ? 'Save Item' : 'Create Item') }}</button>
-    </div>
-  </form>
+      @if (generalError()) {
+        <div class="menu-form__general-error" role="alert">
+          {{ generalError() }}
+        </div>
+      }
+
+      <div class="menu-form__actions">
+        <app-button
+          type="button"
+          variant="secondary"
+          (click)="cancel()"
+        >
+          Cancel
+        </app-button>
+        <app-button
+          type="submit"
+          variant="primary"
+          [disabled]="submitting()"
+        >
+          {{ submitting() ? 'Saving...' : (isEdit ? 'Save Item' : 'Create Item') }}
+        </app-button>
+      </div>
+    </form>
+  }
 </div>

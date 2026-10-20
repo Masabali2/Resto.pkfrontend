@@ -1,49 +1,68 @@
+
 <div class="menu-form">
   <header class="menu-form__header">
     <h1>{{ pageTitle() }}</h1>
   </header>
 
-  <div *ngIf="loading()" class="menu-form__loading">
-    <app-loading-spinner></app-loading-spinner>
-  </div>
-
-  <form *ngIf="!loading()" class="menu-form__form" (ngSubmit)="submit()">
-    <div class="menu-form__field">
-      <label for="name">Menu name <span class="menu-form__required">*</span></label>
-      <input
-        id="name"
-        type="text"
-        formControlName="name"
-        maxlength="150"
-        [aria-describedby]="'name-error'"
-        [class.input-error]="showFieldError('name')"
-      />
-      <span id="name-error" class="menu-form__inline-error" *ngIf="showFieldError('name')">{{ getFieldError('name') }}</span>
+  @if (loading()) {
+    <div class="menu-form__loading">
+      <app-loading-spinner></app-loading-spinner>
     </div>
+  }
 
-    <div class="menu-form__field">
-      <label for="description">Description</label>
-      <textarea
-        id="description"
-        formControlName="description"
-        maxlength="1000"
-        rows="3"
-        [aria-describedby]="'description-error'"
-        [class.input-error]="showFieldError('description')"
-      ></textarea>
-      <span id="description-error" class="menu-form__inline-error" *ngIf="showFieldError('description')">{{ getFieldError('description') }}</span>
-      <p class="menu-form__hint">Up to 1000 characters.</p>
-    </div>
+  @if (!loading()) {
+    <form class="menu-form__form" (ngSubmit)="submit()">
+      <div class="menu-form__field">
+        <label for="name">Menu name <span class="menu-form__required">*</span></label>
+        <input
+          id="name"
+          type="text"
+          formControlName="name"
+          maxlength="150"
+          [aria-describedby]="'name-error'"
+          [class.input-error]="showFieldError('name')"
+        />
+        @if (showFieldError('name')) {
+          <span id="name-error" class="menu-form__inline-error">{{ getFieldError('name') }}</span>
+        }
+      </div>
 
-    <div *ngIf="!isEdit && !restaurantId" class="menu-form__general-error" role="alert">
-      No restaurant selected. Go to the menus list and select a restaurant first.
-    </div>
+      <div class="menu-form__field">
+        <label for="description">Description</label>
+        <textarea
+          id="description"
+          formControlName="description"
+          maxlength="1000"
+          rows="3"
+          [aria-describedby]="'description-error'"
+          [class.input-error]="showFieldError('description')"
+        ></textarea>
+        @if (showFieldError('description')) {
+          <span id="description-error" class="menu-form__inline-error">{{ getFieldError('description') }}</span>
+        }
+        <p class="menu-form__hint">Up to 1000 characters.</p>
+      </div>
 
-    <div *ngIf="generalError()" class="menu-form__general-error" role="alert">{{ generalError() }}</div>
+      @if (!isEdit && !restaurantId) {
+        <div class="menu-form__general-error" role="alert">
+          No restaurant selected. Go to the menus list and select a restaurant first.
+        </div>
+      }
 
-    <div class="menu-form__actions">
-      <button app-button type="button" variant="secondary" (click)="cancel()">Cancel</button>
-      <button app-button type="submit" variant="primary" [disabled]="submitting() || (!isEdit && !restaurantId)">{{ submitting() ? 'Saving...' : (isEdit ? 'Save Menu' : 'Create Menu') }}</button>
-    </div>
-  </form>
+      @if (generalError()) {
+        <div class="menu-form__general-error" role="alert">{{ generalError() }}</div>
+      }
+
+      <div class="menu-form__actions">
+        <app-button type="button" variant="secondary" (click)="cancel()">Cancel</app-button>
+        <app-button
+          type="submit"
+          variant="primary"
+          [disabled]="submitting() || (!isEdit && !restaurantId)"
+        >
+          {{ submitting() ? 'Saving...' : (isEdit ? 'Save Menu' : 'Create Menu') }}
+        </app-button>
+      </div>
+    </form>
+  }
 </div>

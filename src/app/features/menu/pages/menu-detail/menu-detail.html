@@ -105,7 +105,7 @@
                 @if (categoryError(category.id); as error) {
                   <div class="menu-detail__error-inline">
                     {{ error }}
-                    <button app-button variant="secondary" size="sm" (click)="loadCategoryItems(category.id, categoryPage(category.id)?.page ?? 1)">Retry</button>
+                    <app-button variant="secondary" size="sm" (click)="loadCategoryItems(category.id, categoryPage(category.id)?.page ?? 1)">Retry</app-button>
                   </div>
                 }
 
@@ -130,14 +130,24 @@
                           <td><span [class]="'menu-detail__bool ' + (item.isActive ? 'menu-detail__bool--yes' : 'menu-detail__bool--no')">{{ item.isActive ? 'Yes' : 'No' }}</span></td>
                           <td>{{ item.displayOrder }}</td>
                           <td class="menu-detail__item-actions">
-                            <button app-button variant="outline" size="sm" [disabled]="!canManageItems() || isArchived()" (click)="editItem(category.id, item)">Edit</button>
-                            <button app-button variant="outline" size="sm" [disabled]="!canManageItems() || isArchived()" (click)="toggleItemAvailability(item, !item.isAvailable)">{{ item.isAvailable ? 'Unavailable' : 'Available' }}</button>
-                            <button app-button variant="outline" size="sm" [disabled]="!canManageItems() || isArchived()" (click)="toggleItemActive(item, !item.isActive)">{{ item.isActive ? 'Hide' : 'Show' }}</button>
-                            <button app-button variant="danger" size="sm" [disabled]="!canDeleteItem() || isArchived()" (click)="openDeleteItemDialog(item)">Delete</button>
-                            <button app-button variant="outline" size="sm" [disabled]="!canManageItems() || isArchived() || isFirstItem(category.id, item.id)" (click)="moveItem(category.id, item.id, 'up')">↑</button>
-                            <button app-button variant="outline" size="sm" [disabled]="!canManageItems() || isArchived() || isLastItem(category.id, item.id)" (click)="moveItem(category.id, item.id, 'down')">↓</button>
-                          </td>
-                        </tr>
+                           <app-button variant="outline" size="sm" [fullWidth]="false" [disabled]="!canManageItems() || isArchived()" (click)="editItem(category.id, item)">Edit</app-button>
+
+<app-button variant="outline" size="sm" [fullWidth]="false" [disabled]="!canManageItems() || isArchived()" (click)="toggleItemAvailability(item, !item.isAvailable)">
+  {{ item.isAvailable ? 'Unavailable' : 'Available' }}
+</app-button>
+
+<app-button variant="outline" size="sm" [fullWidth]="false" [disabled]="!canManageItems() || isArchived()" (click)="toggleItemActive(item, !item.isActive)">
+  {{ item.isActive ? 'Hide' : 'Show' }}
+</app-button>
+
+<app-button variant="danger" size="sm" [fullWidth]="false" [disabled]="!canDeleteItem() || isArchived()" (click)="openDeleteItemDialog(item)">Delete</app-button>
+
+<app-button variant="outline" size="sm" [fullWidth]="false" [disabled]="!canManageItems() || isArchived() || isFirstItem(category.id, item.id)" (click)="moveItem(category.id, item.id, 'up')">↑</app-button>
+
+<app-button variant="outline" size="sm" [fullWidth]="false" [disabled]="!canManageItems() || isArchived() || isLastItem(category.id, item.id)" (click)="moveItem(category.id, item.id, 'down')">↓</app-button>
+                        
+</td>
+</tr>
                       }
                     </tbody>
                   </table>
@@ -147,16 +157,16 @@
                   <div class="menu-detail__empty-items">
                     No items yet.
                     @if (canCreateItem() && !isArchived()) {
-                      <button app-button variant="secondary" size="sm" (click)="createItem(category.id)">Add one</button>
+                      <app-button variant="secondary" size="sm" (click)="createItem(category.id)">Add one</app-button>
                     }.
                   </div>
                 }
 
                 @if (categoryPage(category.id); as page) {
                   <div class="menu-detail__pager">
-                    <button app-button variant="outline" size="sm" [disabled]="page.page <= 1 || categoryItemsLoading(category.id)" (click)="loadCategoryItems(category.id, page.page - 1)">Prev</button>
+                    <app-button variant="outline" size="sm" [disabled]="page.page <= 1 || categoryItemsLoading(category.id)" (click)="loadCategoryItems(category.id, page.page - 1)">Prev</app-button>
                     <span class="menu-detail__pager-label">Page {{ page.page }} of {{ totalPages(category.id) }}</span>
-                    <button app-button variant="outline" size="sm" [disabled]="page.page * page.pageSize >= page.totalCount || categoryItemsLoading(category.id)" (click)="loadCategoryItems(category.id, page.page + 1)">Next</button>
+                    <app-button variant="outline" size="sm" [disabled]="page.page * page.pageSize >= page.totalCount || categoryItemsLoading(category.id)" (click)="loadCategoryItems(category.id, page.page + 1)">Next</app-button>
                   </div>
                 }
               </div>
@@ -169,7 +179,7 @@
         <div class="menu-detail__empty-categories">
           No categories yet.
           @if (canCreateCategory() && !isArchived()) {
-            <button app-button variant="primary" (click)="createCategory()">Add a category</button>
+            <app-button variant="primary" (click)="createCategory()">Add a category</app-button>
           }
           to get started.
         </div>

@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
+import { finalize } from 'rxjs';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { MenuService } from '../../services/menu.service';
 import { AuthorizationService } from '../../../../core/services/authorization.service';
@@ -28,7 +29,7 @@ interface CategoryItemState {
 
 @Component({
   selector: 'app-menu-detail',
-  imports: [LoadingSpinner, ConfirmationDialog],
+  imports: [LoadingSpinner, ConfirmationDialog, Button],
   templateUrl: './menu-detail.html',
   styleUrl: './menu-detail.css'
 })
@@ -699,6 +700,40 @@ export class MenuDetail {
   private isCurrent(requestId: number, tenantId: string): boolean {
     return requestId === this.requestSequence &&
       this.tenantContext.activeTenantId() === tenantId;
+  }
+
+  protected pluralize(count: number, singular: string): string {
+    return `${count} ${count === 1 ? singular : singular + 's'}`;
+  }
+
+  protected isFirstCategory(categoryId: string): boolean {
+    const categories = this.menu()?.categories ?? [];
+    return categories.length > 0 && categories[0].id === categoryId;
+  }
+
+  protected isLastCategory(categoryId: string): boolean {
+    const categories = this.menu()?.categories ?? [];
+    return categories.length > 0 && categories[categories.length - 1].id === categoryId;
+  }
+
+  protected isFirstItem(categoryId: string, itemId: string): boolean {
+    const items = this.categoryItems(categoryId);
+    return items.length > 0 && items[0].id === itemId;
+  }
+
+  protected isLastItem(categoryId: string, itemId: string): boolean {
+    const items = this.categoryItems(categoryId);
+    return items.length > 0 && items[items.length - 1].id === itemId;
+  }
+
+  protected confirmDialog(): void {
+    if (this.dialogKind() === 'category') {
+      this.deleteCategory();
+    } else if (this.dialogKind() === 'item') {
+      this.deleteItem();
+    } else {
+      this.cancelDialog();
+    }
   }
 
   protected formatPrice(value: number): string {
