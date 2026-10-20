@@ -11,12 +11,11 @@ import { catchError, finalize, of } from 'rxjs';
 import { AuthStateService } from '../../../services/auth-state.service';
 import { AuthService } from '../../../services/auth.service';
 import { NotificationService } from '../../../services/notification.service';
-import { RestaurantSwitcher } from './restaurant-switcher';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink, RestaurantSwitcher],
+  imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './navbar.html',
   styleUrl: './navbar.css'

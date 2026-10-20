@@ -3,13 +3,11 @@
 }
 
 .navbar {
-  position: relative;
-  z-index: 30;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  height: var(--header-height, 72px);
+  height: var(--header-height, 64px);
   padding: 0 clamp(16px, 2.5vw, 28px);
   border-bottom: 1px solid var(--color-border);
   background: var(--color-surface);
@@ -21,10 +19,6 @@
   align-items: center;
   gap: 12px;
   min-width: 0;
-}
-
-.menu-toggle {
-  display: none;
 }
 
 .icon-btn {
@@ -72,12 +66,6 @@
   border-radius: var(--radius-sm);
   text-decoration: none;
   color: var(--color-text);
-}
-
-/* Desktop branding lives in the Sidebar; the Navbar brand only appears on
-   mobile, where the Sidebar is hidden behind the drawer. */
-.brand-mobile {
-  display: none;
 }
 
 .brand:focus-visible {
@@ -343,11 +331,6 @@
 @media (max-width: 900px) {
   .navbar {
     gap: 10px;
-  }
-
-  .menu-toggle,
-  .brand-mobile {
-    display: flex;
   }
 
   .workspace-label {
