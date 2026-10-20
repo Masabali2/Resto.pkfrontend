@@ -68,16 +68,24 @@
       <div class="menu-detail__categories">
         @for (category of currentMenu.categories; track category.id) {
           <div class="menu-detail__category">
-            <div class="menu-detail__category-header" (click)="toggleCategory(category.id)" (keydown.enter)="toggleCategory(category.id)" (keydown.space)="toggleCategory(category.id); $event.preventDefault()" role="button" tabindex="0" [attr.aria-expanded]="isCategoryExpanded(category.id)" [attr.aria-label]="'Toggle ' + category.name">
-              <h3>{{ category.name }}</h3>
-              <span class="menu-detail__category-meta">
-                {{ category.description ? category.description + ' · ' : '' }}Order {{
-                  categoryDisplayOrder(getCategoryIndex(category.id))
-                }}
-              </span>
-              <span class="menu-detail__category-toggle" [class.expanded]="isCategoryExpanded(category.id)">{{
-                isCategoryExpanded(category.id) ? '▲' : '▼'
-              }}</span>
+            <div class="menu-detail__category-header">
+              <button
+                type="button"
+                class="menu-detail__category-toggle-btn"
+                (click)="toggleCategory(category.id)"
+                [attr.aria-expanded]="isCategoryExpanded(category.id)"
+                [attr.aria-label]="'Toggle ' + category.name"
+              >
+                <span class="menu-detail__category-title">{{ category.name }}</span>
+                <span class="menu-detail__category-meta">
+                  {{ category.description ? category.description + ' · ' : '' }}Order {{
+                    categoryDisplayOrder(getCategoryIndex(category.id))
+                  }}
+                </span>
+                <span class="menu-detail__category-caret" aria-hidden="true">{{
+                  isCategoryExpanded(category.id) ? '▲' : '▼'
+                }}</span>
+              </button>
               <div class="menu-detail__category-actions">
                 <button app-button variant="outline" size="sm" [disabled]="!canManageCategories() || isArchived()" (click)="editCategory(category)">Edit</button>
                 <button app-button variant="outline" size="sm" [disabled]="!canManageCategories() || isArchived()" (click)="toggleCategoryActive(category, !category.isActive)">{{ category.isActive ? 'Deactivate' : 'Activate' }}</button>
@@ -145,10 +153,10 @@
 
                 @if (categoryItems(category.id).length === 0 && !categoryItemsLoading(category.id) && !categoryError(category.id)) {
                   <div class="menu-detail__empty-items">
-                    No items yet.
+                    <span>No items yet.</span>
                     @if (canCreateItem() && !isArchived()) {
                       <button app-button variant="secondary" size="sm" (click)="createItem(category.id)">Add one</button>
-                    }.
+                    }
                   </div>
                 }
 
@@ -167,11 +175,10 @@
 
       @if (currentMenu.categories.length === 0) {
         <div class="menu-detail__empty-categories">
-          No categories yet.
+          <span>No categories yet.</span>
           @if (canCreateCategory() && !isArchived()) {
-            <button app-button variant="primary" (click)="createCategory()">Add a category</button>
+            <button app-button variant="primary" (click)="createCategory()">Add a category to get started</button>
           }
-          to get started.
         </div>
       }
     </section>
@@ -179,7 +186,7 @@
 
   <app-confirmation-dialog
     [open]="dialogOpen()"
-    [title]="dialogKind() === 'category' ? 'Delete category' : 'Delete item'"
+    [title]="dialogTitle()"
     [message]="dialogConfirmMessage()"
     [confirmLabel]="'Delete'"
     (confirmed)="confirmDialog()"
