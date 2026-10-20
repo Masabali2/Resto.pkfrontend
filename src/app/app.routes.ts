@@ -41,10 +41,21 @@ export const routes: Routes = [
     path: 'dashboard',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./features/dashboard/pages/under-construction/under-construction').then(
-        m => m.UnderConstruction
-      )
-   },
+      import('./shared/layouts/dashboard-layout/dashboard-layout').then(
+        m => m.DashboardLayout
+      ),
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        title: 'Dashboard — Resto.pk',
+        loadComponent: () =>
+          import('./features/dashboard/pages/dashboard-overview/dashboard-overview').then(
+            m => m.DashboardOverview
+          )
+      }
+    ]
+  },
   {
     path: 'setup/restaurant',
     canActivate: [authGuard],

@@ -1,0 +1,121 @@
+<section class="overview-head">
+  <div class="overview-headings">
+    <h1>Welcome back, {{ greetingName() }}</h1>
+    <p>
+      Here's where you'll manage your restaurant, website, and day-to-day operations on Resto.pk.
+    </p>
+  </div>
+
+  @if (activeTenantName(); as tenant) {
+    <span class="tenant-chip" aria-label="Active workspace">
+      <span class="chip-dot" aria-hidden="true"></span>
+      {{ tenant }}
+    </span>
+  }
+</section>
+
+@switch (workspaceState()) {
+  @case ('loading') {
+    <section class="surface loading-card" role="status" aria-live="polite">
+      <app-loading-spinner [size]="26" />
+      <p>Checking your workspace&hellip;</p>
+    </section>
+  }
+  @case ('error') {
+    <section class="surface error-card" role="alert">
+      <h2>We couldn't load your workspace</h2>
+      <p>{{ workspaceError() }}</p>
+      <div class="card-actions">
+        <app-button variant="primary" size="md" [fullWidth]="false" (click)="loadWorkspace()">
+          Try again
+        </app-button>
+      </div>
+    </section>
+  }
+  @case ('ready') {
+    @if (!hasRestaurant()) {
+      <section class="surface empty-state" aria-labelledby="empty-title">
+        <div class="empty-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3 3 8v13h6v-6h6v6h6V8l-9-5Z" />
+          </svg>
+        </div>
+        <h2 id="empty-title">Create your first restaurant</h2>
+        <p>
+          Your dashboard unlocks once your restaurant profile exists. Tell us about it and
+          you can start building your public website right away.
+        </p>
+        <div class="card-actions">
+          <a routerLink="/setup/restaurant">
+            <app-button variant="primary" size="lg" [fullWidth]="false">
+              Create your first restaurant
+            </app-button>
+          </a>
+        </div>
+      </section>
+    } @else {
+      <section class="surface ready-state" aria-labelledby="ready-title">
+        <h2 id="ready-title">Your workspace is set up</h2>
+        <p>Jump back in wherever you left off.</p>
+        <div class="card-actions">
+          <a routerLink="/websites">
+            <app-button variant="primary" size="md" [fullWidth]="false">
+              Manage Websites
+            </app-button>
+          </a>
+          <a routerLink="/setup/restaurant">
+            <app-button variant="outline" size="md" [fullWidth]="false">
+              Add Another Restaurant
+            </app-button>
+          </a>
+        </div>
+      </section>
+    }
+
+    <section class="quick-actions" aria-labelledby="quick-title">
+      <h2 id="quick-title">Quick actions</h2>
+      <div class="action-grid">
+        <a class="action-card" routerLink="/dashboard">
+          <span class="action-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 13h6V4H4v9Zm0 7h6v-5H4v5Zm10 0h6v-9h-6v9Zm0-16v5h6V4h-6Z" />
+            </svg>
+          </span>
+          <span class="action-label">Dashboard overview</span>
+          <span class="action-desc">Return to this page at any time.</span>
+        </a>
+        <a class="action-card" routerLink="/websites">
+          <span class="action-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 2c1.6 0 3 2.7 3 6s-1.4 6-3 6-3-2.7-3-6 1.4-6 3-6ZM5 9h14M5 15h14" />
+            </svg>
+          </span>
+          <span class="action-label">Manage websites</span>
+          <span class="action-desc">Review, edit, and publish your site.</span>
+        </a>
+        <a class="action-card" routerLink="/setup/restaurant">
+          <span class="action-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </span>
+          <span class="action-label">Add a restaurant</span>
+          <span class="action-desc">Set up another location or brand.</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="placeholder-grid" aria-label="Coming soon">
+      @for (tile of ['Menu & orders', 'Team members', 'Activity feed']; track tile) {
+        <div class="surface placeholder-card">
+          <h3>{{ tile }}</h3>
+          <p>Coming soon</p>
+        </div>
+      }
+    </section>
+  }
+}
