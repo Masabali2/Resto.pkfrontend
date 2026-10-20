@@ -24,6 +24,51 @@
 
     <span class="status-label">DASHBOARD UNDER DEVELOPMENT</span>
 
+    @switch (restaurantState()) {
+      @case ('loading') {
+        <section class="setup-prompt" role="status" aria-live="polite">
+          <app-loading-spinner [size]="24" />
+          <p>Checking your workspace&hellip;</p>
+        </section>
+      }
+      @case ('error') {
+        <section class="setup-prompt setup-error" role="alert">
+          <p>{{ restaurantError() }}</p>
+          <app-button variant="outline" size="md" [fullWidth]="false" (click)="loadRestaurants()">
+            Try again
+          </app-button>
+        </section>
+      }
+      @case ('ready') {
+        @if (needsFirstRestaurant()) {
+          <section class="setup-prompt setup-empty" aria-labelledby="setup-title">
+            <h2 id="setup-title">Add your first restaurant</h2>
+            <p>
+              Before you can build a website, tell us about your restaurant.
+            </p>
+            <a routerLink="/setup/restaurant">
+              <app-button variant="primary" size="md" [fullWidth]="false">
+                Set Up Restaurant
+              </app-button>
+            </a>
+          </section>
+        } @else {
+          <section class="setup-prompt" aria-label="Workspace shortcuts">
+            <a routerLink="/websites">
+              <app-button variant="primary" size="md" [fullWidth]="false">
+                Manage Websites
+              </app-button>
+            </a>
+            <a routerLink="/setup/restaurant">
+              <app-button variant="outline" size="md" [fullWidth]="false">
+                Add Another Restaurant
+              </app-button>
+            </a>
+          </section>
+        }
+      }
+    }
+
     <h1 class="construction-title">
       Your restaurant workspace is <span>coming soon</span>
     </h1>

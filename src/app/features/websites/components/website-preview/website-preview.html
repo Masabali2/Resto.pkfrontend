@@ -1,0 +1,112 @@
+@if (unsupportedReason()) {
+  <div class="preview-state" role="status">
+    <p>{{ unsupportedReason() }}</p>
+  </div>
+} @else if (config(); as cfg) {
+  <div class="preview-frame" [style]="frameStyle()">
+    @if (sections().length === 0) {
+      <div class="preview-state">
+        <h3 class="preview-site-name">{{ websiteName() }}</h3>
+        <p>This configuration has no sections yet. Section editing arrives in a later phase.</p>
+      </div>
+    }
+
+    @for (section of sections(); track $index) {
+      <article class="pv-section" [attr.data-section-type]="section.type">
+        @switch (section.type) {
+          @case ('hero') {
+            <header class="pv-hero">
+              <h2 class="pv-hero-title">{{ text(section, 'heading', websiteName()) }}</h2>
+              <p class="pv-hero-sub">{{ text(section, 'subheading', text(section, 'description')) }}</p>
+              @if (text(section, 'ctaText')) {
+                <span class="pv-button">{{ text(section, 'ctaText') }}</span>
+              }
+            </header>
+          }
+          @case ('banner') {
+            <div class="pv-banner">{{ text(section, 'message', text(section, 'heading')) }}</div>
+          }
+          @case ('menu-preview') {
+            <section class="pv-block">
+              <h3>{{ text(section, 'heading', 'Menu') }}</h3>
+              <ul class="pv-list">
+                @for (item of items(section, 'items'); track item) {
+                  <li>{{ item }}</li>
+                } @empty {
+                  <li class="pv-empty">No menu items configured.</li>
+                }
+              </ul>
+            </section>
+          }
+          @case ('about') {
+            <section class="pv-block">
+              <h3>{{ text(section, 'heading', 'About') }}</h3>
+              <p>{{ text(section, 'body', text(section, 'description')) }}</p>
+            </section>
+          }
+          @case ('gallery') {
+            <section class="pv-block">
+              <h3>{{ text(section, 'heading', 'Gallery') }}</h3>
+              <p class="pv-muted">Gallery images are managed by your template.</p>
+            </section>
+          }
+          @case ('contact') {
+            <section class="pv-block">
+              <h3>{{ text(section, 'heading', 'Contact') }}</h3>
+              <ul class="pv-list">
+                @if (text(section, 'phone')) { <li>{{ text(section, 'phone') }}</li> }
+                @if (text(section, 'email')) { <li>{{ text(section, 'email') }}</li> }
+                @if (text(section, 'address')) { <li>{{ text(section, 'address') }}</li> }
+              </ul>
+            </section>
+          }
+          @case ('hours') {
+            <section class="pv-block">
+              <h3>{{ text(section, 'heading', 'Opening hours') }}</h3>
+              <ul class="pv-list">
+                @for (entry of items(section, 'entries'); track entry) {
+                  <li>{{ entry }}</li>
+                } @empty {
+                  <li class="pv-empty">No hours configured.</li>
+                }
+              </ul>
+            </section>
+          }
+          @case ('map') {
+            <section class="pv-block">
+              <h3>{{ text(section, 'heading', 'Find us') }}</h3>
+              <p class="pv-muted">Map location is provided by the template.</p>
+            </section>
+          }
+          @case ('testimonials') {
+            <section class="pv-block">
+              <h3>{{ text(section, 'heading', 'Testimonials') }}</h3>
+              <ul class="pv-list">
+                @for (entry of items(section, 'quotes'); track entry) {
+                  <li>&ldquo;{{ entry }}&rdquo;</li>
+                } @empty {
+                  <li class="pv-empty">No testimonials configured.</li>
+                }
+              </ul>
+            </section>
+          }
+          @case ('footer') {
+            <footer class="pv-footer">
+              {{ text(section, 'copyright', text(section, 'heading', websiteName())) }}
+            </footer>
+          }
+          @default {
+            <section class="pv-block">
+              <h3>{{ text(section, 'heading', section.type ?? 'Section') }}</h3>
+              <p class="pv-muted">This section type cannot be previewed here.</p>
+            </section>
+          }
+        }
+      </article>
+    }
+  </div>
+} @else {
+  <div class="preview-state" role="status">
+    <p>No editable configuration is loaded.</p>
+  </div>
+}

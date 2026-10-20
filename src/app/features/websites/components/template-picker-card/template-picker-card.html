@@ -1,0 +1,32 @@
+<button
+  type="button"
+  class="picker-card"
+  [class.picker-card-selected]="selected()"
+  [attr.aria-pressed]="selected()"
+  [attr.aria-label]="'Select the ' + template().name + ' template'"
+  (click)="onSelect()"
+>
+  <div class="picker-media">
+    @if (previewImageUrl()) {
+      <img
+        class="picker-img"
+        [src]="previewImageUrl()"
+        [alt]="'Preview of the ' + template().name + ' template'"
+        loading="lazy"
+        decoding="async"
+      />
+    } @else {
+      <span class="picker-placeholder" aria-hidden="true">&#127869;</span>
+    }
+
+    @if (selected()) {
+      <span class="picker-check" aria-hidden="true">&#10003;</span>
+    }
+  </div>
+
+  <div class="picker-body">
+    <h3 class="picker-name">{{ template().name }}</h3>
+    <p class="picker-desc">{{ template().description || 'No description provided.' }}</p>
+    <span class="picker-key">{{ template().templateKey }}</span>
+  </div>
+</button>

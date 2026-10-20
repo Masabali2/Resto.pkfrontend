@@ -1,0 +1,57 @@
+<section class="settings-panel" aria-label="Website theme settings">
+  <h2 class="panel-title">Theme</h2>
+
+  <fieldset class="field-group">
+    <legend class="group-label">Colors</legend>
+
+    @for (field of colorFields; track field) {
+      <div class="setting-row">
+        <label class="setting-label" [attr.for]="'color-' + field">
+          {{ colorLabel(field) }}
+        </label>
+        <div class="control-with-swatch">
+          <input
+            [id]="'color-' + field"
+            type="color"
+            class="swatch-input"
+            [value]="colorValue()(field)"
+            (input)="onColorInput(field, $any($event.target).value)"
+          />
+          <input
+            type="text"
+            class="hex-input"
+            [value]="colorValue()(field)"
+            maxlength="7"
+            spellcheck="false"
+            autocomplete="off"
+            [attr.aria-label]="colorLabel(field) + ' hex value'"
+            (change)="onColorInput(field, $any($event.target).value)"
+          />
+        </div>
+      </div>
+    }
+  </fieldset>
+
+  <fieldset class="field-group">
+    <legend class="group-label">Typography</legend>
+
+    <div class="setting-row setting-row-stacked">
+      <label class="setting-label" for="theme-font">Font</label>
+      <select
+        id="theme-font"
+        class="font-select"
+        [value]="fontValue()"
+        (change)="onFontChange($any($event.target).value)"
+      >
+        @for (choice of fontChoices; track choice.value) {
+          <option [value]="choice.value">{{ choice.label }}</option>
+        }
+      </select>
+    </div>
+  </fieldset>
+
+  <p class="panel-note">
+    Sections are managed by your template. Section editing and publishing
+    controls arrive in later phases.
+  </p>
+</section>

@@ -1,0 +1,199 @@
+<main class="editor-page">
+  @switch (state()) {
+    @case ('loading') {
+      <section class="editor-state" role="status" aria-live="polite">
+        <app-loading-spinner [size]="32" />
+        <p>Loading editor&hellip;</p>
+      </section>
+    }
+    @case ('error') {
+      <section class="editor-state" role="alert">
+        <h1>Editor could not start</h1>
+        <p>{{ errorMessage() }}</p>
+        <div class="state-actions">
+          <app-button variant="outline" size="md" [fullWidth]="false" (click)="retry()">
+            Try again
+          </app-button>
+          <a routerLink="/websites">
+            <app-button variant="secondary" size="md" [fullWidth]="false">
+              Back to websites
+            </app-button>
+          </a>
+        </div>
+      </section>
+    }
+    @case ('no-draft') {
+      @if (website(); as site) {
+        <section class="editor-state" role="status" aria-live="polite">
+          <h1>No saved draft yet</h1>
+          <p>
+            <strong>{{ site.name }}</strong> has been created but has no draft
+            configuration stored on the server. Start from a basic layout to
+            configure it &mdash; nothing is saved until you choose Save Draft.
+          </p>
+          <div class="state-actions">
+            <app-button variant="primary" size="md" [fullWidth]="false" (click)="startFromDefault()">
+              Start with a basic layout
+            </app-button>
+            <a routerLink="/websites">
+              <app-button variant="secondary" size="md" [fullWidth]="false">
+                Back to websites
+              </app-button>
+            </a>
+          </div>
+        </section>
+      }
+    }
+    @case ('draft-invalid') {
+      @if (website(); as site) {
+        <section class="editor-state" role="alert">
+          <h1>The saved draft could not be opened</h1>
+          <p>{{ draftError() }}</p>
+          <p class="draft-invalid-note">
+            Your stored draft ({{ site.name }}) has not been modified or
+            replaced. Fixing it requires a backend-compatible configuration;
+            contact support if this persists.
+          </p>
+          <div class="state-actions">
+            <app-button variant="outline" size="md" [fullWidth]="false" (click)="retry()">
+              Try again
+            </app-button>
+            <a routerLink="/websites">
+              <app-button variant="secondary" size="md" [fullWidth]="false">
+                Back to websites
+              </app-button>
+            </a>
+          </div>
+        </section>
+      }
+    }
+    @case ('missing') {
+      <section class="editor-state">
+        <h1>Website not found</h1>
+        <p>
+          This website does not exist in your current workspace, or the
+          identifier in the address is not valid.
+        </p>
+        <a routerLink="/websites">
+          <app-button variant="primary" size="md" [fullWidth]="false">
+            Back to websites
+          </app-button>
+        </a>
+      </section>
+    }
+    @case ('ready') {
+      @if (website(); as site) {
+        <header class="editor-toolbar">
+          <div class="toolbar-left">
+            <a class="back-link" [routerLink]="['/websites', site.id]">
+              <span aria-hidden="true">&larr;</span> Manage
+            </a>
+            <div class="toolbar-title">
+              <h1>{{ site.name }}</h1>
+              <p class="toolbar-meta">
+                <span class="status-badge">{{ publicationLabel() }}</span>
+                <span class="save-state" [attr.data-state]="saveState()" role="status" aria-live="polite">
+                  {{ saveLabel() }}
+                </span>
+              </p>
+            </div>
+          </div>
+          <div class="toolbar-right">
+            @if (publicSiteUrl(); as url) {
+              <a class="live-link" [href]="url" target="_blank" rel="noopener noreferrer">
+                View live site<span aria-hidden="true">&#8599;</span>
+              </a>
+            }
+            @if (website(); as current) {
+              @if (current.isPublished) {
+                <app-button
+                  variant="outline"
+                  size="md"
+                  [fullWidth]="false"
+                  [disabled]="publishState() !== 'idle'"
+                  [loading]="publishState() === 'unpublishing'"
+                  (click)="confirmUnpublish()"
+                >
+                  Unpublish
+                </app-button>
+              } @else {
+                <app-button
+                  variant="secondary"
+                  size="md"
+                  [fullWidth]="false"
+                  [disabled]="!canPublish() || !!publishBlockedReason() || publishState() !== 'idle'"
+                  (click)="confirmPublish()"
+                >
+                  Publish
+                </app-button>
+              }
+            }
+            <app-button
+              variant="primary"
+              size="md"
+              [fullWidth]="false"
+              [disabled]="!config() || saveState() === 'saving' || saveState() === 'clean'"
+              [loading]="saveState() === 'saving'"
+              (click)="saveDraft()"
+            >
+              Save Draft
+            </app-button>
+          </div>
+        </header>
+
+        @if (!config() && publishBlockedReason(); as reason) {
+          <p class="publish-hint" role="status">{{ reason }}</p>
+        }
+
+        @if (publishState() === 'confirming') {
+          <section class="publish-confirm" role="alertdialog" aria-label="Confirm publication">
+            @if (website(); as site) {
+              <p>
+                Publish <strong>{{ site.name }}</strong> at
+                <code>/{{ site.slug }}</code>? Visitors will see the last saved draft
+                (v{{ site.draftVersion }}). This does not include unsaved edits.
+              </p>
+              <div class="state-actions">
+                <app-button
+                  variant="primary"
+                  size="md"
+                  [fullWidth]="false"
+                  [loading]="publishState() === 'publishing'"
+                  (click)="executePublish()"
+                >
+                  Confirm &amp; Publish
+                </app-button>
+                <app-button variant="secondary" size="md" [fullWidth]="false" (click)="cancelPublish()">
+                  Cancel
+                </app-button>
+              </div>
+            }
+          </section>
+        }
+
+        <div class="editor-body">
+          <aside class="editor-settings" aria-label="Editor settings">
+            @if (config()) {
+              @if (startingFromDefault()) {
+                <p class="default-notice" role="status">
+                  This website has no saved draft yet. You are editing a fresh
+                  default configuration &mdash; it stays local until you press
+                  Save Draft.
+                </p>
+              }
+              <app-editor-settings-panel [config]="config()!" (themeChange)="onThemeChange($event)" />
+            }
+          </aside>
+
+          <section class="editor-preview" aria-label="Website preview">
+            <app-website-preview
+              [config]="config()"
+              [websiteName]="site.name"
+              [unsupportedReason]="draftError() ?? 'The preview will appear once a draft configuration is available.'"
+            />
+          </section>
+        </div>
+      }
+    }
+  }
+</main>
