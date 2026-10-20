@@ -1,16 +1,7 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  DestroyRef,
-  inject,
-  signal
-} from '@angular/core';
-import { DatePipe, NgIf, NgForOf } from '@angular/common';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Component, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { finalize } from 'rxjs';
 import { MenuService } from '../../services/menu.service';
 import { AuthorizationService } from '../../../../core/services/authorization.service';
 import { TenantContextService } from '../../../../core/services/tenant-context.service';
@@ -37,17 +28,7 @@ interface CategoryItemState {
 
 @Component({
   selector: 'app-menu-detail',
-  standalone: true,
-  imports: [
-    DatePipe,
-    NgIf,
-    NgForOf,
-    RouterLink,
-    Button,
-    LoadingSpinner,
-    ConfirmationDialog
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [LoadingSpinner, ConfirmationDialog],
   templateUrl: './menu-detail.html',
   styleUrl: './menu-detail.css'
 })
