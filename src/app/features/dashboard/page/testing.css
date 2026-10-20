@@ -1,0 +1,60 @@
+:host {
+  display: block;
+}
+
+.testing-page {
+  display: grid;
+  gap: 24px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: grid;
+  gap: 6px;
+}
+
+.page-title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(24px, 4vw, 30px);
+  font-weight: 850;
+  letter-spacing: -0.5px;
+}
+
+.page-subtitle {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.welcome-card {
+  display: grid;
+  gap: 10px;
+  padding: clamp(18px, 3vw, 28px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 16px);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card, 0 1px 3px rgb(15 23 42 / 6%));
+}
+
+.welcome-title {
+  margin: 0;
+  color: var(--resto-orange);
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.welcome-text {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+@media (max-width: 600px) {
+  .testing-page {
+    gap: 18px;
+  }
+}

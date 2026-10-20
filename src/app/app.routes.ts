@@ -43,8 +43,8 @@ export const routes: Routes = [
     path: 'dashboard',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./shared/layouts/dashboard-layout/dashboard-layout').then(
-        m => m.DashboardLayout
+      import('./core/layout/shared-layout/shared-layout').then(
+        m => m.SharedLayout
       ),
     children: [
       {
@@ -52,8 +52,8 @@ export const routes: Routes = [
         pathMatch: 'full',
         title: 'Dashboard — Resto.pk',
         loadComponent: () =>
-          import('./features/dashboard/pages/dashboard-overview/dashboard-overview').then(
-            m => m.DashboardOverview
+          import('./features/dashboard/page/testing').then(
+            m => m.Testing
           )
       }
     ]

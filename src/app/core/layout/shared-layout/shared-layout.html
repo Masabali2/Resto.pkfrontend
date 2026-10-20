@@ -1,0 +1,24 @@
+<div
+  class="shell"
+  [class.drawer-open]="mobileOpen()"
+  [style.--content-shift]="contentShift()"
+  (keydown)="onDocumentKeydown($event)"
+>
+  <a class="skip-link" href="#shared-layout-main">Skip to main content</a>
+
+  <app-navbar (menuClick)="onMenuClick()" />
+
+  <div class="body">
+    <app-sidebar
+      [collapsed]="collapsed()"
+      [mobileOpen]="mobileOpen()"
+      (collapseToggle)="onCollapseToggle()"
+      (closeMobile)="closeMobile()"
+      (click)="closeMobile()"
+    />
+
+    <main id="shared-layout-main" class="content" tabindex="-1">
+      <router-outlet />
+    </main>
+  </div>
+</div>
