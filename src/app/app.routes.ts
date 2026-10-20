@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { permissionGuard } from './core/guards/permission.guard';
 
 export const routes: Routes = [
   {
@@ -73,6 +74,8 @@ export const routes: Routes = [
         path: '',
         pathMatch: 'full',
         title: 'Websites — Resto.pk',
+        canActivate: [permissionGuard],
+        data: { permission: 'Website.View' },
         loadComponent: () =>
           import('./features/websites/pages/website-list/website-list').then(
             m => m.WebsiteList
@@ -81,6 +84,8 @@ export const routes: Routes = [
       {
         path: 'new',
         title: 'Create Website — Resto.pk',
+        canActivate: [permissionGuard],
+        data: { permissions: ['Website.View', 'Website.Update'], mode: 'any' },
         loadComponent: () =>
           import('./features/websites/pages/create-website/create-website').then(
             m => m.CreateWebsite

@@ -5,7 +5,7 @@
   </a>
 
   <div class="nav-scroll">
-    @for (group of navGroups; track group.heading) {
+    @for (group of navGroups(); track group.heading) {
       <section class="nav-group" [attr.aria-label]="group.heading">
         <h2 class="nav-heading">{{ group.heading }}</h2>
         <ul class="nav-list">
