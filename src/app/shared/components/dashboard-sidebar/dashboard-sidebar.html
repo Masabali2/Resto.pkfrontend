@@ -5,7 +5,7 @@
   </a>
 
   <div class="nav-scroll">
-    @for (group of navGroups; track group.heading) {
+    @for (group of navGroups(); track group.heading) {
       <section class="nav-group" [attr.aria-label]="group.heading">
         <h2 class="nav-heading">{{ group.heading }}</h2>
         <ul class="nav-list">
@@ -24,6 +24,19 @@
                     <path [attr.d]="item.icon" />
                   </svg>
                   <span>{{ item.label }}</span>
+                </a>
+              } @else if (item.setupRoute) {
+                <a
+                  class="nav-link"
+                  [routerLink]="item.setupRoute"
+                  (click)="navigateRequested.emit()"
+                >
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path [attr.d]="item.icon" />
+                  </svg>
+                  <span>{{ item.label }}</span>
+                  <span class="setup-badge">Set up</span>
                 </a>
               } @else {
                 <button type="button" class="nav-link is-planned" disabled>
