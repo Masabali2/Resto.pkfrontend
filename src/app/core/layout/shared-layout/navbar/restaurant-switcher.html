@@ -1,0 +1,74 @@
+<div class="switcher" (keydown)="onKeydown($event)">
+  @if (loading()) {
+    <span class="switcher-skeleton" role="status" aria-label="Loading restaurants"></span>
+  } @else if (!canChoose()) {
+    @if (activeRestaurant(); as restaurant) {
+      <span class="restaurant-chip is-static" [title]="restaurant.name">
+        <svg class="restaurant-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 9.5 5 4h14l2 5.5M4 9.5h16v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-10Zm5 11v-5h6v5" />
+        </svg>
+        <span class="restaurant-name">{{ restaurant.name }}</span>
+      </span>
+    } @else {
+      <a class="restaurant-chip is-setup" routerLink="/setup/restaurant">
+        <svg class="restaurant-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+        <span class="restaurant-name">Add a restaurant</span>
+      </a>
+    }
+  } @else {
+    <button
+      type="button"
+      class="restaurant-chip is-trigger"
+      aria-haspopup="menu"
+      [attr.aria-expanded]="open()"
+      aria-label="Select restaurant"
+      (click)="toggle()"
+    >
+      <svg class="restaurant-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 9.5 5 4h14l2 5.5M4 9.5h16v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-10Zm5 11v-5h6v5" />
+      </svg>
+      <span class="restaurant-name">{{ triggerLabel() }}</span>
+      <svg class="chip-chevron" [class.is-open]="open()" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <path d="m6 9 6 6 6-6" />
+      </svg>
+    </button>
+
+    @if (open()) {
+      <div class="switcher-backdrop" (click)="close()"></div>
+
+      <div class="switcher-menu" role="menu" aria-label="Restaurants">
+        @for (restaurant of restaurants(); track restaurant.id) {
+          <button
+            type="button"
+            class="menu-option"
+            role="menuitemradio"
+            [attr.aria-checked]="isSelected(restaurant)"
+            (click)="select(restaurant)"
+          >
+            <svg class="option-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 9.5 5 4h14l2 5.5M4 9.5h16v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-10Zm5 11v-5h6v5" />
+            </svg>
+            <span class="option-text">
+              <span class="option-name">{{ restaurant.name }}</span>
+              <span class="option-meta">{{ restaurant.city }} · {{ restaurant.status }}</span>
+            </span>
+            @if (isSelected(restaurant)) {
+              <svg class="option-check" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="m5 12.5 4.5 4.5L19 7.5" />
+              </svg>
+            }
+          </button>
+        }
+      </div>
+    }
+  }
+</div>
