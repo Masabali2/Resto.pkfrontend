@@ -14,108 +14,157 @@
   }
 </section>
 
-@switch (workspaceState()) {
-  @case ('loading') {
-    <section class="surface loading-card" role="status" aria-live="polite">
-      <app-loading-spinner [size]="26" />
-      <p>Checking your workspace&hellip;</p>
-    </section>
-  }
-  @case ('error') {
-    <section class="surface error-card" role="alert">
-      <h2>We couldn't load your workspace</h2>
-      <p>{{ workspaceError() }}</p>
-      <div class="card-actions">
-        <app-button variant="primary" size="md" [fullWidth]="false" (click)="loadWorkspace()">
-          Try again
-        </app-button>
-      </div>
-    </section>
-  }
-  @case ('ready') {
-    @if (!hasRestaurant()) {
-      <section class="surface empty-state" aria-labelledby="empty-title">
-        <div class="empty-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
-               stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3 3 8v13h6v-6h6v6h6V8l-9-5Z" />
-          </svg>
-        </div>
-        <h2 id="empty-title">Create your first restaurant</h2>
-        <p>
-          Your dashboard unlocks once your restaurant profile exists. Tell us about it and
-          you can start building your public website right away.
-        </p>
-        <div class="card-actions">
-          <a routerLink="/setup/restaurant">
-            <app-button variant="primary" size="lg" [fullWidth]="false">
-              Create your first restaurant
-            </app-button>
+@if (nextActions().length > 0) {
+  <section class="surface next-actions" aria-labelledby="next-title">
+    <h2 id="next-title">Next best action</h2>
+    <ul class="action-list">
+      @for (action of nextActions(); track action.label) {
+        <li>
+          <a class="action-item" [routerLink]="action.route">
+            <span class="action-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path [attr.d]="action.iconPath" />
+              </svg>
+            </span>
+            <span class="action-copy">
+              <strong>{{ action.label }}</strong>
+              <small>{{ action.description }}</small>
+            </span>
+            <span class="action-arrow" aria-hidden="true">&rarr;</span>
           </a>
+        </li>
+      }
+    </ul>
+  </section>
+}
+
+<div class="summary-grid">
+  <section class="surface summary-card" aria-labelledby="restaurants-title">
+    <header class="card-head">
+      <h2 id="restaurants-title">Restaurants</h2>
+      @if (canViewRestaurants()) {
+        <a class="card-link" routerLink="/restaurants">View all</a>
+      }
+    </header>
+
+    @switch (workspaceState()) {
+      @case ('loading') {
+        <div class="card-state" role="status" aria-live="polite">
+          <app-loading-spinner [size]="20" />
+          <span>Loading&hellip;</span>
         </div>
-      </section>
-    } @else {
-      <section class="surface ready-state" aria-labelledby="ready-title">
-        <h2 id="ready-title">Your workspace is set up</h2>
-        <p>Jump back in wherever you left off.</p>
-        <div class="card-actions">
-          <a routerLink="/websites">
-            <app-button variant="primary" size="md" [fullWidth]="false">
-              Manage Websites
-            </app-button>
-          </a>
-          <a routerLink="/setup/restaurant">
-            <app-button variant="outline" size="md" [fullWidth]="false">
-              Add Another Restaurant
-            </app-button>
-          </a>
+      }
+      @case ('error') {
+        <div class="card-state error" role="alert">
+          <p>{{ workspaceError() }}</p>
+          <app-button variant="outline" size="sm" (click)="retryRestaurants()">Try again</app-button>
         </div>
-      </section>
+      }
+      @case ('ready') {
+        @if (!hasRestaurant()) {
+          <div class="card-state empty">
+            <p>No restaurants yet.</p>
+            @if (canCreateRestaurant()) {
+              <a routerLink="/setup/restaurant">
+                <app-button variant="primary" size="sm">Create your first restaurant</app-button>
+              </a>
+            } @else {
+              <p class="muted">Ask a tenant owner to grant you restaurant access.</p>
+            }
+          </div>
+        } @else {
+          <div class="metric">
+            <strong>{{ restaurantCount() }}</strong>
+            <span>{{ restaurantCount() === 1 ? 'restaurant' : 'restaurants' }}</span>
+          </div>
+          @if (canCreateRestaurant()) {
+            <a class="card-link" routerLink="/setup/restaurant">Add another restaurant</a>
+          }
+        }
+      }
     }
+  </section>
 
-    <section class="quick-actions" aria-labelledby="quick-title">
-      <h2 id="quick-title">Quick actions</h2>
-      <div class="action-grid">
-        <a class="action-card" routerLink="/dashboard">
-          <span class="action-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
-                 stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 13h6V4H4v9Zm0 7h6v-5H4v5Zm10 0h6v-9h-6v9Zm0-16v5h6V4h-6Z" />
-            </svg>
-          </span>
-          <span class="action-label">Dashboard overview</span>
-          <span class="action-desc">Return to this page at any time.</span>
-        </a>
-        <a class="action-card" routerLink="/websites">
-          <span class="action-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
-                 stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 2c1.6 0 3 2.7 3 6s-1.4 6-3 6-3-2.7-3-6 1.4-6 3-6ZM5 9h14M5 15h14" />
-            </svg>
-          </span>
-          <span class="action-label">Manage websites</span>
-          <span class="action-desc">Review, edit, and publish your site.</span>
-        </a>
-        <a class="action-card" routerLink="/setup/restaurant">
-          <span class="action-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
-                 stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-          </span>
-          <span class="action-label">Add a restaurant</span>
-          <span class="action-desc">Set up another location or brand.</span>
-        </a>
-      </div>
-    </section>
+  @if (canViewWebsites()) {
+    <section class="surface summary-card" aria-labelledby="websites-title">
+      <header class="card-head">
+        <h2 id="websites-title">Websites</h2>
+        <a class="card-link" routerLink="/websites">Manage</a>
+      </header>
 
-    <section class="placeholder-grid" aria-label="Coming soon">
-      @for (tile of ['Menu & orders', 'Team members', 'Activity feed']; track tile) {
-        <div class="surface placeholder-card">
-          <h3>{{ tile }}</h3>
-          <p>Coming soon</p>
-        </div>
+      @switch (websitesState()) {
+        @case ('loading') {
+          <div class="card-state" role="status" aria-live="polite">
+            <app-loading-spinner [size]="20" />
+            <span>Loading&hellip;</span>
+          </div>
+        }
+        @case ('error') {
+          <div class="card-state error" role="alert">
+            <p>{{ websitesError() }}</p>
+            <app-button variant="outline" size="sm" (click)="retryWebsites()">Try again</app-button>
+          </div>
+        }
+        @case ('ready') {
+          @if (websiteCount() === 0) {
+            <div class="card-state empty">
+              <p>No websites yet.</p>
+              <a routerLink="/websites/new">
+                <app-button variant="primary" size="sm">Build a website</app-button>
+              </a>
+            </div>
+          } @else {
+            <div class="metric">
+              <strong>{{ websiteCount() }}</strong>
+              <span>{{ websiteCount() === 1 ? 'website' : 'websites' }}</span>
+            </div>
+            <p class="muted">{{ publishedWebsiteCount() }} of {{ websiteCount() }} published</p>
+          }
+        }
       }
     </section>
   }
-}
+
+  @if (canViewStaff()) {
+    <section class="surface summary-card" aria-labelledby="team-title">
+      <header class="card-head">
+        <h2 id="team-title">Team</h2>
+        <a class="card-link" routerLink="/staff">Members</a>
+      </header>
+
+      @switch (staffState()) {
+        @case ('loading') {
+          <div class="card-state" role="status" aria-live="polite">
+            <app-loading-spinner [size]="20" />
+            <span>Loading&hellip;</span>
+          </div>
+        }
+        @case ('error') {
+          <div class="card-state error" role="alert">
+            <p>{{ staffError() }}</p>
+            <app-button variant="outline" size="sm" (click)="retryStaff()">Try again</app-button>
+          </div>
+        }
+        @case ('ready') {
+          <div class="metric">
+            <strong>{{ staffCount() }}</strong>
+            <span>{{ staffCount() === 1 ? 'member' : 'members' }}</span>
+          </div>
+          @if (staffCount() <= 1) {
+            <p class="muted">You're the only member so far.</p>
+          }
+        }
+      }
+    </section>
+  }
+</div>
+
+<section class="placeholder-grid" aria-label="Coming soon">
+  @for (tile of ['Menu & orders', 'Branding & assets', 'Activity feed']; track tile) {
+    <div class="surface placeholder-card">
+      <h3>{{ tile }}</h3>
+      <p>Coming soon</p>
+    </div>
+  }
+</section>
