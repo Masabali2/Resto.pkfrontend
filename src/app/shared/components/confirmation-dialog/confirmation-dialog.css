@@ -1,0 +1,81 @@
+.confirmation-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.panel {
+  width: min(420px, 92vw);
+  max-height: 85vh;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.panel h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+}
+
+.panel p {
+  margin: 0 0 1.5rem;
+  color: #333;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btn:focus-visible {
+  outline: 2px solid #16653a;
+  outline-offset: 2px;
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #111;
+  border-color: #d1d5db;
+}
+
+.btn-secondary:focus-visible {
+  outline-color: #111;
+}
+
+.btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+.btn-danger {
+  background: #b91c1c;
+  color: #fff;
+}
+
+.btn-danger:focus-visible {
+  outline-color: #b91c1c;
+}
+
+.btn-danger:hover {
+  background: #991b1b;
+}

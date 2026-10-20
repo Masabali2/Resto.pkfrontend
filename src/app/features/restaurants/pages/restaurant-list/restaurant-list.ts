@@ -9,7 +9,7 @@ import {
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { RestaurantService } from '../../../websites/services/restaurant.service';
 import { AuthStateService } from '../../../../core/services/auth-state.service';
@@ -56,7 +56,7 @@ export class RestaurantList {
   constructor() {
     this.load();
 
-    this.tenantContext.activeTenantId
+    toObservable(this.tenantContext.activeTenantId)
       .pipe(takeUntilDestroyed())
       .subscribe(tenantId => {
         if (tenantId !== this.loadedTenantId) {

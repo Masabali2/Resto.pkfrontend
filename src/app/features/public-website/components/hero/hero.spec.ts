@@ -25,7 +25,10 @@ describe('Hero', () => {
   });
 
   it('renders the headline and supporting copy', () => {
-    expect(el('#hero-title')?.textContent).toContain('Your Restaurant Deserves a');
+    const titleText = el('#hero-title')?.textContent ?? '';
+    expect(titleText).toContain('Your Restaurant');
+    expect(titleText).toContain('Deserves a');
+    expect(titleText).toContain('Beautiful Website');
     expect(fixture.nativeElement.textContent).toContain(
       'Create a stunning online home for your restaurant'
     );

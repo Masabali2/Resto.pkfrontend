@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { environment } from '../../../../../environments/environment';
+// import { environment } from '../../../../../environments/environment';
 import { WebsiteService } from '../../services/website.service';
 import { HttpErrorHandlerService } from '../../../../core/services/http-error-handler.service';
 import { NotificationService } from '../../../../core/services/notification.service';
@@ -50,12 +50,7 @@ export class WebsiteDetail {
   protected readonly publishAction = signal<PublishAction>('idle');
 
   /** Only shown while the server reports the site as published. */
-  protected readonly publicSiteUrl = computed(() => {
-    const site = this.website();
-    return site?.isPublished
-      ? buildPublicSiteUrl(environment.publicSiteBaseUrl, site.slug)
-      : null;
-  });
+  protected readonly publicSiteUrl = computed(() => null);
 
   protected readonly canPublish = computed(() => {
     const site = this.website();

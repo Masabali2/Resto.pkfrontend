@@ -67,7 +67,8 @@ export const DASHBOARD_NAVIGATION: readonly DashboardNavGroup[] = [
       {
         label: 'Menu',
         icon: 'M8 3v8a2 2 0 0 0 4 0V3M10 11v10M17 3c-1.7 1.2-2.5 3.4-2.5 6 0 1.7.8 2.8 2.5 3v9',
-        status: 'planned',
+        status: 'available',
+        route: ['/menus'],
         requiredPermissions: ['Menu.View']
       },
       {

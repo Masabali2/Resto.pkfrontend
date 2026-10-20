@@ -1,0 +1,89 @@
+<div class="menu-list">
+  <header class="menu-list__header">
+    <h1>Menus</h1>
+    <button app-button variant="primary" [disabled]="!selectedRestaurantId() || !canCreateMenu()" (click)="createMenu()">Create Menu</button>
+  </header>
+
+  <section class="menu-list__restaurant-picker" *ngIf="pageState() !== 'no-workspace' && pageState() !== 'forbidden'">
+    <label class="menu-list__label">Restaurant</label>
+    <select class="menu-list__select" [value]="selectedRestaurantId()" (change)="selectRestaurant($any($event.target).value)">
+      <option [value]="null">Select a restaurant</option>
+      <option *ngFor="let r of restaurants()" [value]="r.id">{{ r.name }}</option>
+    </select>
+    <a *ngIf="restaurants().length === 0" class="menu-list__setup-link" routerLink="/setup/restaurant">Set up your first restaurant</a>
+  </section>
+
+  <section class="menu-list__states">
+    <div *ngIf="pageState() === 'loading' || menusLoading()" class="menu-list__loading">
+      <app-loading-spinner></app-loading-spinner>
+    </div>
+
+    <div *ngIf="pageState() === 'error'" class="menu-list__empty menu-list__error">
+      <p>{{ errorMessage() }}</p>
+      <button app-button variant="secondary" (click)="retry()">Retry</button>
+    </div>
+
+    <div *ngIf="pageState() === 'forbidden'" class="menu-list__empty menu-list__forbidden">
+      <p>You do not have permission to view menus for this workspace.</p>
+    </div>
+
+    <div *ngIf="pageState() === 'no-workspace'" class="menu-list__empty menu-list__no-workspace">
+      <p>No active workspace. Switch tenants or set up a restaurant to manage menus.</p>
+    </div>
+
+    <div *ngIf="pageState() === 'empty' && restaurants().length === 0" class="menu-list__empty menu-list__empty-restaurants">
+      <p>No restaurants found. Set up your first restaurant to manage menus.</p>
+      <button app-button variant="primary" (click)="goToSetupRestaurant()">Set up restaurant</button>
+    </div>
+
+    <div *ngIf="pageState() === 'empty' && restaurants().length > 0 && !selectedRestaurantId()" class="menu-list__empty">
+      <p>Select a restaurant to see its menus.</p>
+    </div>
+
+    <div *ngIf="pageState() === 'empty' && selectedRestaurantId()" class="menu-list__empty menu-list__empty-menus">
+      <p>No menus yet for <strong>{{ restaurantName(selectedRestaurantId()!) }}</strong>.</p>
+      <button *ngIf="canCreateMenu()" app-button variant="primary" (click)="createMenu()">Create Menu</button>
+    </div>
+  </section>
+
+  <section *ngIf="pageState() === 'list'" class="menu-list__table-section">
+    <table class="menu-list__table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Restaurant</th>
+          <th>Status</th>
+          <th>Active</th>
+          <th>Updated</th>
+          <th class="menu-list__table-actions">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let menu of menus()">
+          <td class="menu-list__name">{{ menu.name }}</td>
+          <td>{{ restaurantName(menu.restaurantId) }}</td>
+          <td>
+            <span class="menu-list__badge" [class]="'menu-list__badge--' + (menu.status === 'Draft' ? 'draft' : menu.status === 'Published' ? 'published' : 'archived')">{{ statusLabel(menu.status) }}</span>
+          </td>
+          <td><span [class]="'menu-list__bool ' + (menu.isActive ? 'menu-list__bool--yes' : 'menu-list__bool--no')">{{ menu.isActive ? 'Yes' : 'No' }}</span></td>
+          <td>{{ menu.updatedAt | date:'medium' : 'Asia/Karachi' }}</td>
+          <td class="menu-list__table-actions">
+            <button app-button variant="outline" size="sm" [disabled]="!canViewMenu()" (click)="viewMenu(menu)">View</button>
+            <button app-button variant="outline" size="sm" [disabled]="!canUpdateMenu()" (click)="editMenu(menu)">Edit</button>
+            <button app-button variant="outline" size="sm" [disabled]="!canUpdateMenu() || menu.status === 'Archived'" (click)="setMenuActive(menu, !menu.isActive)">{{ menu.isActive ? 'Deactivate' : 'Activate' }}</button>
+            <button app-button variant="danger" size="sm" [disabled]="!canDeleteMenu() || menu.status === 'Archived'" (click)="openArchiveDialog(menu)">Archive</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <app-confirmation-dialog
+    [open]="archiveOpen()"
+    [title]="'Archive menu'"
+    [message]="archiveConfirmMessage()"
+    [confirmLabel]="'Archive'"
+    (confirmed)="confirmArchive()"
+    (cancelled)="cancelArchive()"
+  ></app-confirmation-dialog>
+</div>

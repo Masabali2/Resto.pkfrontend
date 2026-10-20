@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { forkJoin, Subject, takeUntil } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
+
 import { WebsiteService } from '../../services/website.service';
 import { HttpErrorHandlerService } from '../../../../core/services/http-error-handler.service';
 import { NotificationService } from '../../../../core/services/notification.service';
@@ -73,12 +73,7 @@ export class WebsiteEditor implements OnDestroy {
   protected readonly errorMessage = signal('');
 
   /** Public site URL, only meaningful while the website is published. */
-  protected readonly publicSiteUrl = computed(() => {
-    const site = this.website();
-    return site?.isPublished
-      ? buildPublicSiteUrl(environment.publicSiteBaseUrl, site.slug)
-      : null;
-  });
+  protected readonly publicSiteUrl = computed(() => null);
 
   /** Backend rejects publishing without a saved draft (verified in WebsiteService.PublishAsync). */
   protected readonly canPublish = computed(() => {

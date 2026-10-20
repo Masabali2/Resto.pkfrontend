@@ -1,0 +1,161 @@
+<div class="menu-detail">
+  <header class="menu-detail__header">
+    <div>
+      <h1>{{ menuName() }}</h1>
+      <p class="menu-detail__meta">
+        Status: <span class="menu-detail__status" [class]="'menu-detail__status--' + (menu()?.status ?? '').toLowerCase()">{{ menu()?.status ?? '—' }}</span>
+        &nbsp;|&nbsp;
+        Active: {{ menu()?.isActive ? 'Yes' : 'No' }}
+      </p>
+    </div>
+    <div class="menu-detail__actions">
+      <button
+        *ngIf="canCreateCategory() && !isArchived()"
+        app-button
+        variant="primary"
+        (click)="createCategory()"
+      >Add Category</button>
+      <button
+        *ngIf="canUpdateMenu() && !isArchived()"
+        app-button
+        variant="outline"
+        [disabled]="!menu()"
+        (click)="editMenu()"
+      >Edit Menu</button>
+<button
+        *ngIf="canUpdateMenu() && menu()"
+        app-button
+        variant="outline"
+        [disabled]="!menu()"
+        (click)="setMenuActive(!menu()!.isActive)"
+      >{{ menu()?.isActive ? 'Deactivate Menu' : 'Activate Menu' }}</button>
+    </div>
+  </header>
+
+  <section class="menu-detail__states">
+    <div *ngIf="pageState() === 'loading'" class="menu-detail__loading">
+      <app-loading-spinner></app-loading-spinner>
+    </div>
+
+    <div *ngIf="pageState() === 'error'" class="menu-detail__empty menu-detail__error">
+      <p>{{ errorMessage() }}</p>
+      <button app-button variant="secondary" (click)="retry()">Retry</button>
+    </div>
+
+    <div *ngIf="pageState() === 'not-found'" class="menu-detail__empty menu-detail__not-found">
+      <p>Menu not found.</p>
+    </div>
+
+    <div *ngIf="pageState() === 'forbidden'" class="menu-detail__empty menu-detail__forbidden">
+      <p>You do not have permission to view this menu.</p>
+    </div>
+
+    <div *ngIf="pageState() === 'no-workspace'" class="menu-detail__empty menu-detail__no-workspace">
+      <p>No active workspace.</p>
+    </div>
+  </section>
+
+  <section *ngIf="pageState() === 'list' && menu()" class="menu-detail__workspace">
+    <div class="menu-detail__intro">
+      {{ menu()?.categories?.length }} category{{ menu()?.categories?.length === 1 ? '' : 'ies' }}
+      <span *ngIf="isArchived()" class="menu-detail__archived-badge">Archived — read only</span>
+    </div>
+
+    <div class="menu-detail__categories">
+      <div *ngFor="let category of menu()?.categories; trackBy: trackByCategoryId" class="menu-detail__category">
+        <div class="menu-detail__category-header" (click)="toggleCategory(category.id)" role="button" tabindex="0" aria-expanded="{{ isCategoryExpanded(category.id) }}" aria-label="Toggle {{ category.name }}">
+          <h3>{{ category.name }}</h3>
+          <span class="menu-detail__category-meta">
+            {{ category.description ? category.description + ' · ' : '' }}Order {{
+              categoryDisplayOrder(getCategoryIndex(category.id))
+            }}
+          </span>          <span class="menu-detail__category-toggle" [class.expanded]="isCategoryExpanded(category.id)">{{
+            isCategoryExpanded(category.id) ? '▲' : '▼'
+          }}</span>
+          <div class="menu-detail__category-actions">
+            <button app-button variant="outline" size="sm" [disabled]="!canManageCategories() || isArchived()" (click)="editCategory(category)">Edit</button>
+            <button app-button variant="outline" size="sm" [disabled]="!canManageCategories() || isArchived()" (click)="toggleCategoryActive(category, !category.isActive)">{{ category.isActive ? 'Deactivate' : 'Activate' }}</button>
+            <button app-button variant="danger" size="sm" [disabled]="!canDeleteCategory() || isArchived()" (click)="openDeleteCategoryDialog(category)">Delete</button>
+            <button app-button variant="outline" size="sm" [disabled]="!canManageCategories() || isArchived()" (click)="moveCategory(category.id, 'up')" [class.disabled]="menu()!.categories.indexOf(category) === 0">↑</button>
+            <button app-button variant="outline" size="sm" [disabled]="!canManageCategories() || isArchived()" (click)="moveCategory(category.id, 'down')" [class.disabled]="menu()!.categories.indexOf(category) === menu()!.categories.length - 1">↓</button>
+          </div>
+        </div>
+
+        <div *ngIf="isCategoryExpanded(category.id)" class="menu-detail__category-panel">
+          <div class="menu-detail__category-toolbar">
+            <button
+              *ngIf="canCreateItem() && !isArchived()"
+              app-button
+              variant="secondary"
+              size="sm"
+              (click)="createItem(category.id)"
+            >Add Item</button>
+            <span class="menu-detail__item-count">{{ categoryItems(category.id).length }} item{{ categoryItems(category.id).length === 1 ? '' : 's' }}</span>
+          </div>
+
+          <div *ngIf="categoryItemsLoading(category.id)" class="menu-detail__loading">
+            <app-loading-spinner></app-loading-spinner>
+          </div>
+
+          <div *ngIf="categoryError(category.id)" class="menu-detail__error-inline">
+            {{ categoryError(category.id) }}
+            <button app-button variant="secondary" size="sm" (click)="loadCategoryItems(category.id, categoryPage(category.id)?.page ?? 1)">Retry</button>
+          </div>
+
+          <table *ngIf="categoryItems(category.id).length > 0" class="menu-detail__item-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Available</th>
+                <th>Active</th>
+                <th>Order</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of categoryItems(category.id); trackBy: trackByItemId">
+                <td>{{ item.name }}</td>
+                <td>{{ formatPrice(item.price) }} {{ item.currency }}</td>
+                <td><span [class]="'menu-detail__bool ' + (item.isAvailable ? 'menu-detail__bool--yes' : 'menu-detail__bool--no')">{{ item.isAvailable ? 'Yes' : 'No' }}</span></td>
+                <td><span [class]="'menu-detail__bool ' + (item.isActive ? 'menu-detail__bool--yes' : 'menu-detail__bool--no')">{{ item.isActive ? 'Yes' : 'No' }}</span></td>
+                <td>{{ item.displayOrder }}</td>
+                <td class="menu-detail__item-actions">
+                  <button app-button variant="outline" size="sm" [disabled]="!canManageItems() || isArchived()" (click)="editItem(category.id, item)">Edit</button>
+                  <button app-button variant="outline" size="sm" [disabled]="!canManageItems() || isArchived()" (click)="toggleItemAvailability(item, !item.isAvailable)">{{ item.isAvailable ? 'Unavailable' : 'Available' }}</button>
+                  <button app-button variant="outline" size="sm" [disabled]="!canManageItems() || isArchived()" (click)="toggleItemActive(item, !item.isActive)">{{ item.isActive ? 'Hide' : 'Show' }}</button>
+                  <button app-button variant="danger" size="sm" [disabled]="!canDeleteItem() || isArchived()" (click)="openDeleteItemDialog(item)">Delete</button>
+                  <button app-button variant="outline" size="sm" [disabled]="!canManageItems() || isArchived()" (click)="moveItem(category.id, item.id, 'up')" [class.disabled]="categoryItems(category.id).indexOf(item) === 0">↑</button>
+                  <button app-button variant="outline" size="sm" [disabled]="!canManageItems() || isArchived()" (click)="moveItem(category.id, item.id, 'down')" [class.disabled]="categoryItems(category.id).indexOf(item) === categoryItems(category.id).length - 1">↓</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div *ngIf="categoryItems(category.id).length === 0 && !categoryItemsLoading(category.id) && !categoryError(category.id)" class="menu-detail__empty-items">
+            No items yet. <button app-button variant="secondary" size="sm" *ngIf="canCreateItem() && !isArchived()" (click)="createItem(category.id)">Add one</button>.
+          </div>
+
+          <div *ngIf="categoryPage(category.id)" class="menu-detail__pager">
+            <button app-button variant="outline" size="sm" [disabled]="categoryPage(category.id)!.page <= 1 || categoryItemsLoading(category.id)" (click)="loadCategoryItems(category.id, categoryPage(category.id)!.page - 1)">Prev</button>
+            <span class="menu-detail__pager-label">Page {{ categoryPage(category.id)!.page }} of {{ totalPages(category.id) }}</span>
+            <button app-button variant="outline" size="sm" [disabled]="categoryPage(category.id)!.page * categoryPage(category.id)!.pageSize >= categoryPage(category.id)!.totalCount || categoryItemsLoading(category.id)" (click)="loadCategoryItems(category.id, categoryPage(category.id)!.page + 1)">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="menu()?.categories?.length === 0" class="menu-detail__empty-categories">
+      No categories yet. <button app-button variant="primary" *ngIf="canCreateCategory() && !isArchived()" (click)="createCategory()">Add a category</button> to get started.
+    </div>
+  </section>
+
+  <app-confirmation-dialog
+    [open]="dialogOpen()"
+    [title]="dialogKind() === 'category' ? 'Delete category' : 'Delete item'"
+    [message]="dialogConfirmMessage()"
+    [confirmLabel]="'Delete'"
+    (confirmed)="dialogKind() === 'category' ? deleteCategory() : deleteItem()"
+    (cancelled)="cancelDialog()"
+  ></app-confirmation-dialog>
+</div>
