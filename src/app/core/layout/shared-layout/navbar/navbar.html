@@ -3,7 +3,7 @@
     <button
       type="button"
       class="icon-btn menu-toggle"
-      aria-label="Toggle navigation menu"
+      aria-label="Open navigation menu"
       (click)="toggleMenu()"
     >
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
@@ -12,7 +12,7 @@
       </svg>
     </button>
 
-    <a class="brand" routerLink="/dashboard" aria-label="Resto.pk dashboard">
+    <a class="brand brand-mobile" routerLink="/dashboard" aria-label="Resto.pk dashboard">
       <span class="brand-mark" aria-hidden="true">R</span>
       <span class="brand-word">Resto<span class="brand-accent">.pk</span></span>
     </a>
@@ -27,6 +27,8 @@
   </div>
 
   <div class="navbar-right">
+    <app-restaurant-switcher />
+
     <div class="account" (keydown)="onAccountKeydown($event)">
       <button
         type="button"

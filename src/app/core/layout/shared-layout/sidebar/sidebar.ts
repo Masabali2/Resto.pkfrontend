@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthorizationService } from '../../../services/authorization.service';
 import { TenantContextService } from '../../../services/tenant-context.service';
@@ -32,7 +32,37 @@ export class Sidebar {
     })).filter(group => group.items.length > 0)
   );
 
+  /** Group headings are independently expandable; every group starts open. */
+  protected readonly expandedGroups = signal<ReadonlySet<string>>(
+    new Set(SIDEBAR_NAVIGATION.map(group => group.heading))
+  );
+
   protected readonly exactMatchOptions = { exact: true };
+
+  protected isGroupExpanded(heading: string): boolean {
+    return this.expandedGroups().has(heading);
+  }
+
+  protected toggleGroup(heading: string): void {
+    if (this.collapsed()) {
+      // In the icon rail a chevron button would be unusable; expand the rail
+      // instead so the user can reach the groups.
+      this.collapseToggle.emit();
+      return;
+    }
+
+    this.expandedGroups.update(headings => {
+      const next = new Set(headings);
+
+      if (next.has(heading)) {
+        next.delete(heading);
+      } else {
+        next.add(heading);
+      }
+
+      return next;
+    });
+  }
 
   protected onEscapeKey(event: KeyboardEvent): void {
     if (event.key === 'Escape' && this.mobileOpen()) {
