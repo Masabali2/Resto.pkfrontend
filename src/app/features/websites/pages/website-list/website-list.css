@@ -1,0 +1,224 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  font-family: var(--font-family-base);
+}
+
+.websites-page {
+  padding: clamp(24px, 5vw, 48px) clamp(16px, 4vw, 40px);
+  background:
+    radial-gradient(ellipse at 85% -10%, rgb(255 179 0 / 8%), transparent 45%),
+    var(--color-page);
+}
+
+.websites-shell {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: var(--color-primary);
+}
+
+.page-heading h1 {
+  margin: 0 0 6px;
+  color: var(--color-text);
+  font-size: clamp(24px, 3vw, 30px);
+  font-weight: 850;
+  letter-spacing: -0.6px;
+}
+
+.page-subtitle {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.create-link {
+  text-decoration: none;
+}
+
+.state-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(36px, 8vh, 64px) 24px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+
+.state-panel h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-lg);
+  font-weight: 800;
+}
+
+.state-panel p {
+  max-width: 420px;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+}
+
+.state-panel .empty-icon {
+  font-size: 40px;
+}
+
+.state-panel-error h2 {
+  color: var(--color-danger);
+}
+
+.website-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.website-card {
+  display: flex;
+  flex-direction: column;
+  padding: 22px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.website-card:hover {
+  border-color: var(--resto-orange-soft);
+  box-shadow: var(--shadow-dropdown);
+}
+
+.website-card-header {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.website-name {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.status-badge {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border: 1px solid var(--color-warning-border);
+  border-radius: var(--radius-full);
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.status-badge.status-published {
+  border-color: var(--color-success-border);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.website-details {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.detail-row {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  font-size: var(--font-size-sm);
+}
+
+.detail-row dt {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.detail-row dd {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-weight: 650;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.slug-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+}
+
+.website-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+}
+
+.creation-date {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.manage-link {
+  padding: 7px 16px;
+  border: 1px solid var(--resto-orange-soft);
+  border-radius: var(--radius-full);
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.manage-link:hover {
+  border-color: var(--resto-orange);
+  background: var(--resto-orange-soft);
+}
+
+.manage-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--color-focus-ring);
+}
+
+.builder-note {
+  margin: 22px 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  line-height: 1.6;
+}

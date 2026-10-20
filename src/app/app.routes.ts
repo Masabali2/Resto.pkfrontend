@@ -45,6 +45,54 @@ export const routes: Routes = [
         m => m.UnderConstruction
       )
    },
+  {
+    path: 'setup/restaurant',
+    canActivate: [authGuard],
+    title: 'Set Up Restaurant — Resto.pk',
+    loadComponent: () =>
+      import('./features/onboarding/pages/restaurant-setup/restaurant-setup').then(
+        m => m.RestaurantSetup
+      )
+  },
+  {
+    path: 'websites',
+    canActivate: [authGuard],
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        title: 'Websites — Resto.pk',
+        loadComponent: () =>
+          import('./features/websites/pages/website-list/website-list').then(
+            m => m.WebsiteList
+          )
+      },
+      {
+        path: 'new',
+        title: 'Create Website — Resto.pk',
+        loadComponent: () =>
+          import('./features/websites/pages/create-website/create-website').then(
+            m => m.CreateWebsite
+          )
+      },
+      {
+        path: ':id',
+        title: 'Website — Resto.pk',
+        loadComponent: () =>
+          import('./features/websites/pages/website-detail/website-detail').then(
+            m => m.WebsiteDetail
+          )
+      },
+      {
+        path: ':id/editor',
+        title: 'Website Editor — Resto.pk',
+        loadComponent: () =>
+          import('./features/websites/pages/website-editor/website-editor').then(
+            m => m.WebsiteEditor
+          )
+      }
+    ]
+  },
 //   {
 //     path: 'platform/dashboard',
 //     canActivate: [authGuard],
