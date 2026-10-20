@@ -15,6 +15,7 @@ import { provideClientHydration } from '@angular/platform-browser';
 import { routes } from './app.routes';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { credentialsInterceptor } from './core/interceptors/credentials.interceptor';
+import { tenantInterceptor } from './core/interceptors/tenant.interceptor';
 import { AuthStateService } from './core/services/auth-state.service';
 
 export const appConfig: ApplicationConfig = {
@@ -26,6 +27,7 @@ export const appConfig: ApplicationConfig = {
       withFetch(),
       withInterceptors([
         credentialsInterceptor,
+        tenantInterceptor,
         errorInterceptor
       ])
     ),

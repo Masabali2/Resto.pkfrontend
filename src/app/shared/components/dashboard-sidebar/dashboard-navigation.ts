@@ -5,6 +5,7 @@ export interface DashboardNavItem {
   icon: string;
   status: DashboardNavStatus;
   route?: string[];
+  setupRoute?: string[];
   requiredPermissions?: readonly string[];
   permissionMode?: 'all' | 'any';
 }
@@ -35,7 +36,9 @@ export const DASHBOARD_NAVIGATION: readonly DashboardNavGroup[] = [
       {
         label: 'Restaurants',
         icon: 'M12 3 3 8v13h6v-6h6v6h6V8l-9-5Z',
-        status: 'planned',
+        status: 'available',
+        route: ['/restaurants'],
+        setupRoute: ['/setup/restaurant'],
         requiredPermissions: ['Restaurant.View']
       }
     ]
@@ -81,7 +84,8 @@ export const DASHBOARD_NAVIGATION: readonly DashboardNavGroup[] = [
       {
         label: 'Staff & Members',
         icon: 'M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm-6 9a6 6 0 0 1 12 0M17 4a3 3 0 1 1 0 6m1 10a5.5 5.5 0 0 0-3-4.9',
-        status: 'planned',
+        status: 'available',
+        route: ['/staff'],
         requiredPermissions: ['Staff.View']
       }
     ]
