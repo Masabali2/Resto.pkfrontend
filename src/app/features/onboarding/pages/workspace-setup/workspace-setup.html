@@ -1,0 +1,86 @@
+
+<main class="workspace-setup-page">
+  <app-back-link label = "Back to dashboard" routerLink="/dashboard" class="back-link"/>
+  
+
+  <section class="setup-card">
+    <div class="setup-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M3 10L5 4H19L21 10M4 10V20H20V10M9 20V14H15V20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <span class="step-label">STEP 1 OF 4</span>
+    <h1>Create your workspace</h1>
+    <p class="intro">
+      Set up a home for your restaurant business. You can manage your restaurants,
+      team, and settings from this workspace.
+    </p>
+
+    @if (generalError()) {
+      <div class="form-error" role="alert">{{ generalError() }}</div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="form-field">
+        <label for="workspace-name">Workspace name</label>
+        <input
+          id="workspace-name"
+          type="text"
+          formControlName="name"
+          placeholder="e.g. Masab's Restaurant Group"
+          autocomplete="organization"
+          maxlength="150"
+          (input)="updateSlug()"
+        />
+        @if (form.controls.name.touched && form.controls.name.hasError('required')) {
+          <p class="field-error">Workspace name is required.</p>
+        }
+        @if (form.controls.name.touched && form.controls.name.hasError('maxlength')) {
+          <p class="field-error">Workspace name cannot exceed 150 characters.</p>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="workspace-slug">Workspace URL identifier</label>
+        <div class="slug-input">
+          <span aria-hidden="true">resto.pk/</span>
+          <input
+            id="workspace-slug"
+            type="text"
+            formControlName="slug"
+            placeholder="your-workspace"
+            autocomplete="off"
+            maxlength="80"
+          />
+        </div>
+        <p class="field-hint">
+          Use 3–80 lowercase letters, numbers, or hyphens. You can edit the suggested identifier.
+        </p>
+        @if (form.controls.slug.touched && form.controls.slug.invalid) {
+          <p class="field-error">
+            Enter a valid identifier with at least 3 characters. Use lowercase letters,
+            numbers, and single hyphens between words.
+          </p>
+        }
+      </div>
+
+     <app-button
+  type="submit"
+  variant="primary"
+  size="lg"
+  [fullWidth]="true"
+  [loading]="submitting()"
+  [disabled]="form.invalid"
+  loadingText="Creating workspace..."
+>
+  Create workspace
+  <span aria-hidden="true">→</span>
+</app-button>
+    </form>
+
+    <p class="privacy-note">
+      Your workspace will be associated with your account. You can invite team members later.
+    </p>
+  </section>
+</main>

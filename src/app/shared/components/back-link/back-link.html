@@ -1,0 +1,11 @@
+
+<a
+  class="back-link"
+  [routerLink]="route()"
+  [queryParams]="queryParams()"
+>
+  <span class="back-link-icon" aria-hidden="true">
+    <svg lucideArrowLeft [size]="18" [strokeWidth]="2"></svg>
+  </span>
+  <span class="back-link-label">{{ label() }}</span>
+</a>

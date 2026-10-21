@@ -1,3 +1,4 @@
+
 import { Component, inject, signal } from '@angular/core';
 import {
   FormBuilder,
@@ -51,7 +52,7 @@ export class RestaurantSetup {
 
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(150)]],
-    description: ['', [Validators.maxLength(2000)]],
+    description: ['', [Validators.maxLength(1000)]],
     phone: ['', [Validators.pattern(PHONE_PATTERN)]],
     email: ['', [Validators.email, Validators.maxLength(256)]],
     line1: ['', [Validators.required, Validators.maxLength(200)]],
@@ -59,7 +60,7 @@ export class RestaurantSetup {
     city: ['', [Validators.required, Validators.maxLength(100)]],
     country: ['', [Validators.required, Validators.maxLength(100)]],
     postalCode: ['', [Validators.maxLength(20)]],
-    timeZone: ['Asia/Karachi', [Validators.maxLength(64)]]
+    timeZone: ['Asia/Karachi', [Validators.required, Validators.maxLength(64)]]
   });
 
   protected readonly submitting = signal(false);
@@ -108,24 +109,26 @@ export class RestaurantSetup {
     }
 
     if (control.hasError('maxlength')) {
-      return `${this.fieldLabel(field)} is too long.`;
+      return `${this.fieldLabel(field)} exceeds the maximum allowed length.`;
     }
 
     return null;
   }
 
   protected submit(): void {
-    this.submitted.set(true);
-    this.generalError.set('');
-    this.fieldErrors.set({});
-
     if (this.submitting()) {
       return;
     }
 
+    this.submitted.set(true);
+    this.generalError.set('');
+    this.fieldErrors.set({});
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.generalError.set('Please complete the required fields before continuing.');
+      this.generalError.set(
+        'Please review the highlighted fields and correct the errors before continuing.'
+      );
       return;
     }
 
@@ -138,12 +141,12 @@ export class RestaurantSetup {
       email: orNull(value.email),
       address: {
         line1: value.line1.trim(),
-        line2: value.line2.trim().length > 0 ? value.line2.trim() : null,
+        line2: orNull(value.line2),
         city: value.city.trim(),
         country: value.country.trim(),
-        postalCode: value.postalCode.trim().length > 0 ? value.postalCode.trim() : null
+        postalCode: orNull(value.postalCode)
       },
-      timeZone: orNull(value.timeZone)
+      timeZone: value.timeZone
     };
 
     this.submitting.set(true);
@@ -169,9 +172,11 @@ export class RestaurantSetup {
           });
 
           this.fieldErrors.set(details.fieldErrors);
+
           this.generalError.set(
-            details.message || Object.values(details.fieldErrors)[0] ||
-              'The restaurant could not be created. Please try again.'
+            details.message ||
+            Object.values(details.fieldErrors)[0] ||
+            'The restaurant could not be created. Please try again.'
           );
         }
       });
@@ -189,6 +194,10 @@ export class RestaurantSetup {
     });
   }
 
+  protected goToWebsites(): void {
+    void this.router.navigate(['/websites']);
+  }
+
   private applyResponseErrors(response: ApiResponse<RestaurantDto>): void {
     const errors: Record<string, string> = {};
 
@@ -201,9 +210,11 @@ export class RestaurantSetup {
     }
 
     this.fieldErrors.set(errors);
+
     this.generalError.set(
-      response.message ?? Object.values(errors)[0] ??
-        'The restaurant could not be created. Please review the form and try again.'
+      response.message ||
+      Object.values(errors)[0] ||
+      'The restaurant could not be created. Please review the form and try again.'
     );
 
     if (Object.keys(errors).length === 0) {
@@ -236,7 +247,7 @@ export class RestaurantSetup {
   private fieldLabel(field: SetupField): string {
     const labels: Record<SetupField, string> = {
       name: 'Restaurant name',
-      description: 'Description',
+      description: 'Restaurant description',
       phone: 'Phone number',
       email: 'Contact email',
       line1: 'Address line 1',
