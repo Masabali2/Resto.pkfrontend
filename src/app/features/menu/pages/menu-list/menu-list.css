@@ -1,0 +1,191 @@
+.menu-list {
+  padding: 1rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.menu-list__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.menu-list__header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.menu-list__restaurant-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.menu-list__label {
+  font-size: 0.9rem;
+  color: #555;
+  margin: 0;
+  min-width: 90px;
+}
+
+.menu-list__select {
+  padding: 0.45rem 0.75rem;
+  border: 1px solid #bfbfbf;
+  border-radius: 6px;
+  background: #fff;
+  min-width: 220px;
+  font-size: 0.95rem;
+}
+
+.menu-list__setup-link {
+  margin-left: auto;
+  font-size: 0.95rem;
+  color: #16653a;
+  text-decoration: underline;
+}
+
+.menu-list__states {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.menu-list__empty {
+  padding: 2rem 1rem;
+  border: 1px dashed #d9d9d9;
+  border-radius: 8px;
+  text-align: center;
+  color: #555;
+}
+
+.menu-list__empty p {
+  margin: 0 0 1rem;
+}
+
+.menu-list__loading {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.menu-list__table-section {
+  overflow-x: auto;
+}
+
+.menu-list__table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.menu-list__table th,
+.menu-list__table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.95rem;
+  border-bottom: 1px solid #eee;
+}
+
+.menu-list__table th {
+  background: #f5f5f5;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 2px solid #d9d9d9;
+}
+
+.menu-list__table tr:last-child td {
+  border-bottom: none;
+}
+
+.menu-list__name {
+  font-weight: 500;
+}
+
+.menu-list__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.menu-list__badge--draft {
+  background: #e7e7e7;
+  color: #555;
+  border: 1px dashed #999;
+}
+
+.menu-list__badge--published {
+  background: #e7f7ea;
+  color: #16653a;
+}
+
+.menu-list__badge--archived {
+  background: #fbeaea;
+  color: #b91c1c;
+  text-decoration: line-through;
+}
+
+.menu-list__bool {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.menu-list__bool--yes {
+  color: #16653a;
+}
+
+.menu-list__bool--no {
+  color: #b91c1c;
+}
+
+.menu-list__table-actions {
+  display: flex;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.button {
+  font-size: 0.9rem;
+}
+
+@media (max-width: 640px) {
+  .menu-list__header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .menu-list__restaurant-picker {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .menu-list__setup-link {
+    margin-left: 0;
+    margin-top: 0.5rem;
+    align-self: flex-start;
+  }
+
+  .menu-list__table-actions {
+    flex-direction: column;
+  }
+
+  .menu-list__table-actions button {
+    width: 100%;
+  }
+}

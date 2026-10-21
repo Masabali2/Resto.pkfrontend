@@ -1,0 +1,99 @@
+<main class="websites-page">
+  <div class="websites-shell">
+    <header class="page-header">
+      <div class="page-heading">
+        <a class="back-link" routerLink="/dashboard">
+          <span aria-hidden="true">&larr;</span> Dashboard
+        </a>
+        <h1>Websites</h1>
+        @if (!loading() && !loadError()) {
+          <p class="page-subtitle">
+            {{ totalCount() === 0
+              ? 'You have no websites yet. Create your first one to get started.'
+              : (totalCount() === 1 ? '1 website' : totalCount() + ' websites') + ' in your workspace.' }}
+          </p>
+        }
+      </div>
+
+      <a class="create-link" routerLink="/websites/new">
+        <app-button variant="primary" size="md" [fullWidth]="false">
+          + New Website
+        </app-button>
+      </a>
+    </header>
+
+    @if (loading()) {
+      <section class="state-panel" role="status" aria-live="polite">
+        <app-loading-spinner [size]="32" />
+        <p>Loading your websites&hellip;</p>
+      </section>
+    } @else if (loadError()) {
+      <section class="state-panel state-panel-error" role="alert">
+        <h2>Websites could not be loaded</h2>
+        <p>{{ loadError() }}</p>
+        <app-button variant="outline" size="md" [fullWidth]="false" (click)="retry()">
+          Try again
+        </app-button>
+      </section>
+    } @else if (websites().length === 0) {
+      <section class="state-panel">
+        <span class="empty-icon" aria-hidden="true">&#127758;</span>
+        <h2>No websites yet</h2>
+        <p>Create a website from one of our templates and start building your restaurant's online presence.</p>
+        <a routerLink="/websites/new">
+          <app-button variant="primary" size="md" [fullWidth]="false">
+            Create your first website
+          </app-button>
+        </a>
+      </section>
+    } @else {
+      <section class="website-grid" aria-label="Your websites">
+        @for (website of websites(); track website.id) {
+          <article class="website-card">
+            <header class="website-card-header">
+              <h2 class="website-name">{{ website.name }}</h2>
+              <span class="status-badge" [class.status-published]="website.isPublished">
+                {{ publicationLabel(website) }}
+              </span>
+            </header>
+
+            <dl class="website-details">
+              <div class="detail-row">
+                <dt>Restaurant</dt>
+                <dd>{{ website.restaurantName ?? '—' }}</dd>
+              </div>
+              <div class="detail-row">
+                <dt>Template</dt>
+                <dd>{{ website.templateName ?? '—' }}</dd>
+              </div>
+              <div class="detail-row">
+                <dt>URL slug</dt>
+                <dd class="slug-value">{{ website.slug }}</dd>
+              </div>
+              <div class="detail-row">
+                <dt>Status</dt>
+                <dd>{{ website.status }}</dd>
+              </div>
+            </dl>
+
+            <footer class="website-card-footer">
+              <span class="creation-date">Created {{ website.createdAt | date: 'mediumDate' }}</span>
+              <a
+                class="manage-link"
+                [routerLink]="['/websites', website.id]"
+                [attr.aria-label]="'Manage the ' + website.name + ' website'"
+              >
+                Manage
+              </a>
+            </footer>
+          </article>
+        }
+      </section>
+
+      <p class="builder-note">
+        Creating a website registers it with a template. Design configuration and
+        publishing will be available in the website builder soon.
+      </p>
+    }
+  </div>
+</main>

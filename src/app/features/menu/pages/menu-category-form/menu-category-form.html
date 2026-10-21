@@ -1,0 +1,68 @@
+<div class="menu-form">
+  <header class="menu-form__header">
+    <h1>{{ pageTitle() }}</h1>
+    <p class="menu-form__menu">Menu: <strong>{{ menuName() }}</strong></p>
+  </header>
+
+  @if(loading()) {
+    <div class="menu-form__loading">
+      <app-loading-spinner></app-loading-spinner>
+    </div>
+  }
+  @else if (!loading()) {
+  <form  class="menu-form__form" (ngSubmit)="submit()">
+    <div class="menu-form__field">
+      <label for="name">Category name <span class="menu-form__required">*</span></label>
+      <input
+        id="name"
+        type="text"
+        formControlName="name"
+        maxlength="100"
+        [aria-describedby]="'name-error'"
+        [class.input-error]="showFieldError('name')"
+      />
+      @if(showFieldError('name')) {
+        <span id="name-error" class="menu-form__inline-error">{{ getFieldError('name') }}</span>
+      }
+    </div>
+
+    <div class="menu-form__field">
+      <label for="description">Description</label>
+      <textarea
+        id="description"
+        formControlName="description"
+        maxlength="500"
+        rows="3"
+        [aria-describedby]="'description-error'"
+        [class.input-error]="showFieldError('description')"
+      ></textarea>
+      @if(showFieldError('description')) {
+        <span id="description-error" class="menu-form__inline-error">{{ getFieldError('description') }}</span>
+      }
+      <p class="menu-form__hint">Up to 500 characters.</p>
+    </div>
+
+    <div class="menu-form__field">
+      <label for="displayOrder">Display order</label>
+      <input
+        id="displayOrder"
+        type="text"
+        formControlName="displayOrder"
+        [aria-describedby]="'displayOrder-error'"
+        [class.input-error]="showFieldError('displayOrder')"
+      />
+      @if(showFieldError('displayOrder')) {
+        <span id="displayOrder-error" class="menu-form__inline-error">{{ getFieldError('displayOrder') }}</span>
+      }
+      <p class="menu-form__hint">Whole number (0, 1, 2...). Categories appear in ascending order.</p>
+    </div>
+    @if(generalError()){
+      <div class="menu-form__general-error" role="alert">{{ generalError() }}</div>
+    }
+    <div class="menu-form__actions">
+      <app-button type="button" variant="secondary" (click)="cancel()">Cancel</app-button>
+      <app-button type="submit" variant="primary" [disabled]="submitting()">{{ submitting() ? 'Saving...' : (isEdit ? 'Save Category' : 'Create Category') }}</app-button>
+    </div>
+  </form>
+}
+</div>

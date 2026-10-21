@@ -1,0 +1,100 @@
+<main class="restaurants-page">
+  <div class="restaurants-shell">
+    <header class="page-header">
+      <div class="page-heading">
+        <a class="back-link" routerLink="/dashboard">
+          <span aria-hidden="true">&larr;</span> Dashboard
+        </a>
+        <h1>Restaurants</h1>
+        @if (pageState() !== 'loading' && pageState() !== 'no-workspace' && pageState() !== 'forbidden' && !errorMessage()) {
+          <p class="page-subtitle">
+            {{ restaurants().length === 0
+              ? 'You have no restaurants yet. Create your first one to get started.'
+              : (restaurants().length === 1 ? '1 restaurant' : restaurants().length + ' restaurants') + ' in your workspace.' }}
+          </p>
+        }
+      </div>
+
+      <a class="create-link" routerLink="/restaurants/new">
+        <app-button variant="primary" size="md" [fullWidth]="false">
+          + New Restaurant
+        </app-button>
+      </a>
+    </header>
+
+    @if (pageState() === 'loading') {
+      <section class="state-panel" role="status" aria-live="polite">
+        <app-loading-spinner [size]="32" />
+        <p>Loading your restaurants&hellip;</p>
+      </section>
+    } @else if (pageState() === 'no-workspace') {
+      <section class="state-panel state-panel-error" role="alert">
+        <h2>No active workspace</h2>
+        <p>Select or create a workspace to view its restaurants.</p>
+      </section>
+    } @else if (pageState() === 'forbidden') {
+      <section class="state-panel state-panel-error" role="alert">
+        <h2>Access denied</h2>
+        <p>You do not have permission to view restaurants in this workspace.</p>
+      </section>
+    } @else if (pageState() === 'error') {
+      <section class="state-panel state-panel-error" role="alert">
+        <h2>Restaurants could not be loaded</h2>
+        <p>{{ errorMessage() }}</p>
+        <app-button variant="outline" size="md" [fullWidth]="false" (click)="retry()">
+          Try again
+        </app-button>
+      </section>
+    } @else if (restaurants().length === 0) {
+      <section class="state-panel">
+        <span class="empty-icon" aria-hidden="true">&#127758;</span>
+        <h2>No restaurants yet</h2>
+        <p>Create a restaurant to start building menus and managing your online presence.</p>
+        <a routerLink="/restaurants/new">
+          <app-button variant="primary" size="md" [fullWidth]="false">
+            Create your first restaurant
+          </app-button>
+        </a>
+      </section>
+    } @else {
+      <section class="restaurant-grid" aria-label="Your restaurants">
+        @for (restaurant of restaurants(); track restaurant.id) {
+          <article class="restaurant-card">
+            <header class="restaurant-card-header">
+              <h2 class="restaurant-name">{{ restaurant.name }}</h2>
+              <span class="status-badge" [class.status-active]="restaurant.status === 'Active'">
+                {{ restaurant.status }}
+              </span>
+            </header>
+
+            <dl class="restaurant-details">
+              <div class="detail-row">
+                <dt>City</dt>
+                <dd>{{ restaurant.city }}</dd>
+              </div>
+              <div class="detail-row">
+                <dt>Country</dt>
+                <dd>{{ restaurant.country }}</dd>
+              </div>
+              <div class="detail-row">
+                <dt>Created</dt>
+                <dd>{{ restaurant.createdAt | date: 'mediumDate' }}</dd>
+              </div>
+            </dl>
+
+            <footer class="restaurant-card-footer">
+              <span class="creation-date">Updated {{ restaurant.updatedAt | date: 'mediumDate' }}</span>
+              <a
+                class="manage-link"
+                [routerLink]="['/restaurants', restaurant.id]"
+                [attr.aria-label]="'Manage the ' + restaurant.name + ' restaurant'"
+              >
+                Manage
+              </a>
+            </footer>
+          </article>
+        }
+      </section>
+    }
+  </div>
+</main>

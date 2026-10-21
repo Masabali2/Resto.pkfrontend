@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { permissionGuard } from './core/guards/permission.guard';
+import { unsavedChangesGuard } from './core/guards/unsaved-changes.guard';
 
 export const routes: Routes = [
   {
@@ -41,30 +43,171 @@ export const routes: Routes = [
     path: 'dashboard',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./features/dashboard/pages/under-construction/under-construction').then(
-        m => m.UnderConstruction
+      import('./core/layout/shared-layout/shared-layout').then(
+        m => m.SharedLayout
+      ),
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        title: 'Dashboard — Resto.pk',
+       loadComponent: () =>
+  import('./features/dashboard/page/dashboard/dashboard').then(
+    m => m.Dashboard
+  )
+      }
+    ]
+  },
+  {
+    path: 'setup/restaurant',
+    canActivate: [authGuard],
+    title: 'Set Up Restaurant — Resto.pk',
+    loadComponent: () =>
+      import('./features/onboarding/pages/restaurant-setup/restaurant-setup').then(
+        m => m.RestaurantSetup
       )
-   },
+  },
+  {
+    path: 'websites',
+    canActivate: [authGuard],
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        title: 'Websites — Resto.pk',
+        canActivate: [permissionGuard],
+        data: { permission: 'Website.View' },
+        loadComponent: () =>
+          import('./features/websites/pages/website-list/website-list').then(
+            m => m.WebsiteList
+          )
+      },
+      {
+        path: 'new',
+        title: 'Create Website — Resto.pk',
+        canActivate: [permissionGuard],
+        data: { permissions: ['Website.View', 'Website.Update'], mode: 'any' },
+        loadComponent: () =>
+          import('./features/websites/pages/create-website/create-website').then(
+            m => m.CreateWebsite
+          )
+      },
+      {
+        path: ':id',
+        title: 'Website — Resto.pk',
+        loadComponent: () =>
+          import('./features/websites/pages/website-detail/website-detail').then(
+            m => m.WebsiteDetail
+          )
+      },
+      {
+        path: ':id/editor',
+        title: 'Website Editor — Resto.pk',
+        loadComponent: () =>
+          import('./features/websites/pages/website-editor/website-editor').then(
+            m => m.WebsiteEditor
+          )
+      }
+    ]
+  },
 //   {
 //     path: 'platform/dashboard',
 //     canActivate: [authGuard],
 //     redirectTo: 'dashboard'
 //   },
-//   {
-//     path: 'tenant/dashboard',
-//     canActivate: [authGuard],
-//     redirectTo: 'dashboard'
-//   },
-//   {
-//     path: 'manager/dashboard',
-//     canActivate: [authGuard],
-//     redirectTo: 'dashboard'
-//   },
-//   {
-//     path: 'staff/dashboard',
-//     canActivate: [authGuard],
-//     redirectTo: 'dashboard'
-//   },
+  {
+    path: 'menus',
+    canActivate: [authGuard],
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        title: 'Menus — Resto.pk',
+        canActivate: [permissionGuard],
+        data: { permission: 'Menu.View' },
+        loadComponent: () =>
+          import('./features/menu/pages/menu-list/menu-list').then(
+            m => m.MenuList
+          )
+      },
+      {
+        path: 'new',
+        title: 'Create Menu — Resto.pk',
+        canActivate: [permissionGuard],
+        canDeactivate: [unsavedChangesGuard],
+        data: { permission: 'Menu.Create' },
+        loadComponent: () =>
+          import('./features/menu/pages/menu-form/menu-form').then(
+            m => m.MenuForm
+          )
+      },
+      {
+        path: ':menuId/edit',
+        title: 'Edit Menu — Resto.pk',
+        canActivate: [permissionGuard],
+        canDeactivate: [unsavedChangesGuard],
+        data: { permission: 'Menu.Update' },
+        loadComponent: () =>
+          import('./features/menu/pages/menu-form/menu-form').then(
+            m => m.MenuForm
+          )
+      },
+      {
+        path: ':menuId',
+        title: 'Menu — Resto.pk',
+        canActivate: [permissionGuard],
+        data: { permission: 'Menu.View' },
+        loadComponent: () =>
+          import('./features/menu/pages/menu-detail/menu-detail').then(
+            m => m.MenuDetail
+          )
+      },
+      {
+        path: ':menuId/categories/new',
+        title: 'Create Category — Resto.pk',
+        canActivate: [permissionGuard],
+        canDeactivate: [unsavedChangesGuard],
+        data: { permission: 'MenuCategory.Create' },
+        loadComponent: () =>
+          import('./features/menu/pages/menu-category-form/menu-category-form').then(
+            m => m.MenuCategoryForm
+          )
+      },
+      {
+        path: ':menuId/categories/:categoryId/edit',
+        title: 'Edit Category — Resto.pk',
+        canActivate: [permissionGuard],
+        canDeactivate: [unsavedChangesGuard],
+        data: { permission: 'MenuCategory.Update' },
+        loadComponent: () =>
+          import('./features/menu/pages/menu-category-form/menu-category-form').then(
+            m => m.MenuCategoryForm
+          )
+      },
+      {
+        path: ':menuId/categories/:categoryId/items/new',
+        title: 'Create Item — Resto.pk',
+        canActivate: [permissionGuard],
+        canDeactivate: [unsavedChangesGuard],
+        data: { permission: 'MenuItem.Create' },
+        loadComponent: () =>
+          import('./features/menu/pages/menu-item-form/menu-item-form').then(
+            m => m.MenuItemForm
+          )
+      },
+      {
+        path: ':menuId/categories/:categoryId/items/:itemId/edit',
+        title: 'Edit Item — Resto.pk',
+        canActivate: [permissionGuard],
+        canDeactivate: [unsavedChangesGuard],
+        data: { permission: 'MenuItem.Update' },
+        loadComponent: () =>
+          import('./features/menu/pages/menu-item-form/menu-item-form').then(
+            m => m.MenuItemForm
+          )
+      }
+    ]
+  },
   {
     path: '',
     loadComponent: () =>

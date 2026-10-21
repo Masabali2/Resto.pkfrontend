@@ -1,0 +1,145 @@
+<main class="detail-page">
+  <div class="detail-shell">
+    <a class="back-link" routerLink="/websites">
+      <span aria-hidden="true">&larr;</span> My websites
+    </a>
+
+    @switch (state()) {
+      @case ('loading') {
+        <section class="state-panel" role="status" aria-live="polite">
+          <app-loading-spinner [size]="32" />
+          <p>Loading website&hellip;</p>
+        </section>
+      }
+      @case ('error') {
+        <section class="state-panel" role="alert">
+          <h1>Website could not be loaded</h1>
+          <p>{{ errorMessage() }}</p>
+          <app-button variant="outline" size="md" [fullWidth]="false" (click)="load()">
+            Try again
+          </app-button>
+        </section>
+      }
+      @case ('missing') {
+        <section class="state-panel">
+          <h1>Website not found</h1>
+          <p>
+            This website does not exist in your current workspace, or you no longer
+            have access to it.
+          </p>
+          <a routerLink="/websites">
+            <app-button variant="primary" size="md" [fullWidth]="false">
+              Back to websites
+            </app-button>
+          </a>
+        </section>
+      }
+      @case ('ready') {
+        @if (website(); as site) {
+          <header class="detail-header">
+            <div>
+              <h1 class="detail-title">{{ site.name }}</h1>
+              <p class="detail-slug">resto.pk/<span>{{ site.slug }}</span></p>
+            </div>
+            <span class="status-badge" [class.status-published]="site.isPublished">
+              {{ publicationLabel() }}
+            </span>
+          </header>
+
+          <section class="detail-card" aria-label="Website summary">
+            <h2 class="card-title">Summary</h2>
+            <dl class="detail-list">
+              <div class="detail-row">
+                <dt>Restaurant</dt>
+                <dd>{{ site.restaurantName ?? '—' }}</dd>
+              </div>
+              <div class="detail-row">
+                <dt>Template</dt>
+                <dd>{{ site.templateName ?? '—' }}</dd>
+              </div>
+              <div class="detail-row">
+                <dt>Status</dt>
+                <dd>{{ site.status }}</dd>
+              </div>
+              <div class="detail-row">
+                <dt>Draft version</dt>
+                <dd>{{ site.draftVersion ?? '—' }}</dd>
+              </div>
+              <div class="detail-row">
+                <dt>Published version</dt>
+                <dd>{{ site.publishedVersion ?? '—' }}</dd>
+              </div>
+              <div class="detail-row">
+                <dt>Created</dt>
+                <dd>{{ site.createdAt | date: 'medium' }}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section class="builder-placeholder" aria-labelledby="builder-title">
+            <h2 id="builder-title" class="card-title">Website builder</h2>
+            <p>
+              Use the editor to adjust this website's theme and save a draft.
+              Saving a draft never publishes the site &mdash; publishing is a
+              separate, explicit step below.
+            </p>
+            <a [routerLink]="['/websites', site.id, 'editor']">
+              <app-button variant="primary" size="md" [fullWidth]="false">
+                Edit Website
+              </app-button>
+            </a>
+          </section>
+
+          <section class="publish-section" aria-label="Publication">
+            <h2 class="card-title">Publication</h2>
+
+            @if (site.isPublished) {
+              @if (publicSiteUrl(); as url) {
+                <p class="live-url-row">
+                  Live at
+                  <a [href]="url" target="_blank" rel="noopener noreferrer">{{ url }}</a>
+                </p>
+              } @else {
+                <p class="live-url-row">
+                  Live path: <code>/{{ site.slug }}</code>
+                  (set <code>publicSiteBaseUrl</code> in the environment to get a clickable URL).
+                </p>
+              }
+              <app-button
+                variant="outline"
+                size="md"
+                [fullWidth]="false"
+                [disabled]="publishAction() !== 'idle'"
+                [loading]="publishAction() === 'unpublishing'"
+                (click)="unpublish()"
+              >
+                Unpublish
+              </app-button>
+            } @else {
+              <p>
+                This site is not published yet. Publishing freezes the last saved
+                draft into the live public site.
+              </p>
+              <app-button
+                variant="secondary"
+                size="md"
+                [fullWidth]="false"
+                [disabled]="!canPublish()"
+                [loading]="publishAction() === 'publishing'"
+                (click)="publish()"
+              >
+                Publish Draft v{{ site.draftVersion }}
+              </app-button>
+              @if (site.draftVersion == null) {
+                <p class="publish-hint">
+                  There is no saved draft configuration to publish yet. Open the
+                  editor and save a draft first.
+                </p>
+              }
+            }
+          </section>
+        }
+      }
+    }
+  </div>
+</main>

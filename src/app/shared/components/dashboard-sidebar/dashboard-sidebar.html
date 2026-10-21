@@ -1,0 +1,59 @@
+<nav class="sidebar" aria-label="Dashboard navigation">
+  <a class="brand" routerLink="/" (click)="navigateRequested.emit()">
+    <span class="brand-mark" aria-hidden="true">R</span>
+    <span class="brand-name">Resto<span class="brand-accent">.pk</span></span>
+  </a>
+
+  <div class="nav-scroll">
+    @for (group of navGroups(); track group.heading) {
+      <section class="nav-group" [attr.aria-label]="group.heading">
+        <h2 class="nav-heading">{{ group.heading }}</h2>
+        <ul class="nav-list">
+          @for (item of group.items; track item.label) {
+            <li>
+              @if (item.route) {
+                <a
+                  class="nav-link"
+                  [routerLink]="item.route"
+                  routerLinkActive="is-active"
+                  [routerLinkActiveOptions]="{ exact: item.route[0] === '/dashboard' }"
+                  (click)="navigateRequested.emit()"
+                >
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path [attr.d]="item.icon" />
+                  </svg>
+                  <span>{{ item.label }}</span>
+                </a>
+              } @else if (item.setupRoute) {
+                <a
+                  class="nav-link"
+                  [routerLink]="item.setupRoute"
+                  (click)="navigateRequested.emit()"
+                >
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path [attr.d]="item.icon" />
+                  </svg>
+                  <span>{{ item.label }}</span>
+                  <span class="setup-badge">Set up</span>
+                </a>
+              } @else {
+                <button type="button" class="nav-link is-planned" disabled>
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path [attr.d]="item.icon" />
+                  </svg>
+                  <span>{{ item.label }}</span>
+                  <span class="soon-badge">Soon</span>
+                </button>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  </div>
+
+  <p class="sidebar-note">More modules are on the way.</p>
+</nav>

@@ -1,0 +1,184 @@
+
+<div
+  class="backdrop"
+  [class.is-visible]="mobileOpen()"
+  (click)="closeMobile.emit()"
+></div>
+
+<aside
+  id="app-sidebar"
+  class="sidebar"
+  [class.is-collapsed]="collapsed()"
+  [class.is-open]="mobileOpen()"
+  [attr.role]="mobileOpen() ? 'dialog' : 'navigation'"
+  [attr.aria-modal]="mobileOpen() ? 'true' : null"
+  aria-label="Dashboard navigation"
+  tabindex="-1"
+  (keydown)="onEscapeKey($event)"
+>
+  <header class="sidebar-header">
+    <a
+      class="brand"
+      routerLink="/dashboard"
+      [attr.aria-label]="collapsed() ? 'Resto.pk dashboard' : null"
+    >
+      <span class="brand-mark" aria-hidden="true">R</span>
+      @if (!collapsed()) {
+        <span class="brand-name">Resto<span class="brand-accent">.pk</span></span>
+      }
+    </a>
+
+    <button
+      type="button"
+      class="icon-btn collapse-btn desktop-only"
+      [attr.aria-label]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+      [attr.title]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+      (click)="collapseToggle.emit()"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        @if (collapsed()) {
+          <path d="m9 6 6 6-6 6M4 4v16" />
+        } @else {
+          <path d="m15 6-6 6 6 6M20 4v16" />
+        }
+      </svg>
+    </button>
+
+    <button
+      type="button"
+      class="icon-btn close-btn mobile-only"
+      aria-label="Close navigation menu"
+      (click)="closeMobile.emit()"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path d="m6 6 12 12M18 6 6 18" />
+      </svg>
+    </button>
+  </header>
+
+  <nav class="nav-scroll" aria-label="Sections">
+    @for (group of navGroups(); track group.heading) {
+      <section class="nav-group" [attr.aria-label]="group.heading">
+        <button
+          type="button"
+          class="nav-heading"
+          [class.is-expanded]="isGroupExpanded(group.heading)"
+          [class.is-collapsed-sidebar]="collapsed()"
+          [attr.aria-expanded]="isGroupExpanded(group.heading)"
+          [attr.aria-controls]="groupId(group.heading)"
+          [attr.title]="collapsed() ? group.heading : null"
+          (click)="toggleGroup(group.heading)"
+        >
+          <span class="nav-heading-label">{{ group.heading }}</span>
+
+          <svg
+            class="group-chevron"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="m9 18 6-6-6-6" />
+          </svg>
+        </button>
+
+        <div
+          class="nav-group-content"
+          [class.is-expanded]="isGroupExpanded(group.heading)"
+          [id]="groupId(group.heading)"
+          [attr.aria-hidden]="!isGroupExpanded(group.heading)"
+          [attr.inert]="!isGroupExpanded(group.heading) ? '' : null"
+        >
+          <ul class="nav-list">
+            @for (item of group.items; track item.label) {
+              <li>
+                @if (item.route) {
+                  <a
+                    class="nav-link"
+                    [routerLink]="item.route"
+                    [attr.title]="collapsed() ? item.label : null"
+                    routerLinkActive="is-active"
+                    [routerLinkActiveOptions]="item.exactMatch ? exactMatchOptions : undefined"
+                  >
+                    <svg
+                      class="nav-icon"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path [attr.d]="item.icon" />
+                    </svg>
+                    @if (!collapsed()) {
+                      <span>{{ item.label }}</span>
+                    }
+                  </a>
+                } @else if (item.setupRoute) {
+                  <a
+                    class="nav-link"
+                    [routerLink]="item.setupRoute"
+                    [attr.title]="collapsed() ? item.label : null"
+                  >
+                    <svg
+                      class="nav-icon"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path [attr.d]="item.icon" />
+                    </svg>
+                    @if (!collapsed()) {
+                      <span>{{ item.label }}</span>
+                      <span class="setup-badge">Set up</span>
+                    }
+                  </a>
+                } @else {
+                  <button
+                    type="button"
+                    class="nav-link is-planned"
+                    [attr.title]="item.label + ' — coming soon'"
+                    disabled
+                  >
+                    <svg
+                      class="nav-icon"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path [attr.d]="item.icon" />
+                    </svg>
+                    @if (!collapsed()) {
+                      <span>{{ item.label }}</span>
+                      <span class="soon-badge">Soon</span>
+                    }
+                  </button>
+                }
+              </li>
+            }
+          </ul>
+        </div>
+      </section>
+    }
+  </nav>
+
+  <footer class="sidebar-footer">
+    <p class="sidebar-note">More modules are on the way.</p>
+  </footer>
+</aside>

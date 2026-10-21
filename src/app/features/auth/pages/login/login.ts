@@ -86,31 +86,8 @@ export class Login {
       });
   }
 
-private getDashboardRoute(result: AuthResult): string {
-  const platformRoles = result.user.platformRoles ?? [];
-  const tenantRole = result.activeTenant?.roleName;
-
-  if (platformRoles.includes('PlatformAdmin')) {
-    return '/platform/dashboard';
-  }
-
-  if (tenantRole === 'Owner') {
-    return '/tenant/dashboard';
-  }
-
-  if (tenantRole === 'Manager') {
-    return '/manager/dashboard';
-  }
-
-  if (tenantRole === 'Staff') {
-    return '/staff/dashboard';
-  }
-
-  if (result.memberships.length > 0 && !result.activeTenant) {
-    return '/select-restaurant';
-  }
-
-  return '/unauthorized';
+private getDashboardRoute(_result: AuthResult): string {
+  return '/dashboard';
 }
 
   private handleLoginError(error: unknown): void {
