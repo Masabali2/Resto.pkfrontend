@@ -51,10 +51,10 @@ export const routes: Routes = [
         path: '',
         pathMatch: 'full',
         title: 'Dashboard — Resto.pk',
-        loadComponent: () =>
-          import('./features/dashboard/page/testing').then(
-            m => m.Testing
-          )
+       loadComponent: () =>
+  import('./features/dashboard/page/dashboard/dashboard').then(
+    m => m.Dashboard
+  )
       }
     ]
   },
