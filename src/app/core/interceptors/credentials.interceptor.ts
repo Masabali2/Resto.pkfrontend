@@ -11,7 +11,7 @@ export const credentialsInterceptor: HttpInterceptorFn = (request, next) => {
 
   return next(
     request.clone({
-      withCredentials: true
+      credentials: 'include'
     })
   );
 };

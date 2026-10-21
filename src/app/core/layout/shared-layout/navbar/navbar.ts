@@ -1,3 +1,4 @@
+
 import {
   ChangeDetectionStrategy,
   Component,
@@ -11,12 +12,11 @@ import { catchError, finalize, of } from 'rxjs';
 import { AuthStateService } from '../../../services/auth-state.service';
 import { AuthService } from '../../../services/auth.service';
 import { NotificationService } from '../../../services/notification.service';
-import { RestaurantSwitcher } from './restaurant-switcher';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink, RestaurantSwitcher],
+  imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './navbar.html',
   styleUrl: './navbar.css'
@@ -28,9 +28,18 @@ export class Navbar {
   private readonly router = inject(Router);
 
   readonly menuClick = output<void>();
+  readonly globalSearch = output<string>();
 
   protected readonly accountOpen = signal(false);
   protected readonly signingOut = signal(false);
+  protected readonly searchQuery = signal('');
+
+  protected readonly restaurant = {
+    name: 'Brewed & Co.',
+    category: 'Restaurant workspace',
+    initials: 'BC',
+    status: 'Active'
+  };
 
   protected readonly user = computed(
     () => this.authState.authResult()?.user ?? null
@@ -60,6 +69,7 @@ export class Navbar {
       .slice(0, 2)
       .map(part => part.charAt(0).toUpperCase())
       .join('');
+
     return letters || 'R';
   });
 
@@ -80,6 +90,36 @@ export class Navbar {
       event.preventDefault();
       this.closeAccount();
     }
+  }
+
+  protected onSearchInput(value: string): void {
+    this.searchQuery.set(value);
+  }
+
+  protected submitSearch(event: SubmitEvent): void {
+    event.preventDefault();
+
+    const query = this.searchQuery().trim();
+
+    if (!query) {
+      return;
+    }
+
+    this.globalSearch.emit(query);
+  }
+
+  protected clearSearch(): void {
+    this.searchQuery.set('');
+  }
+
+  protected openProfileSettings(): void {
+    this.closeAccount();
+    void this.router.navigateByUrl('/settings/profile');
+  }
+
+  protected openSettings(): void {
+    this.closeAccount();
+    void this.router.navigateByUrl('/settings');
   }
 
   protected signOut(): void {

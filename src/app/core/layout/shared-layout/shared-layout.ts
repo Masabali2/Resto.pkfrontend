@@ -1,3 +1,4 @@
+
 import {
   ChangeDetectionStrategy,
   Component,
@@ -26,12 +27,17 @@ export class SharedLayout {
   protected readonly collapsed = signal(false);
   protected readonly mobileOpen = signal(false);
   protected readonly isMobile = signal(
-    typeof window !== 'undefined' && window.matchMedia(MOBILE_BREAKPOINT).matches
+    typeof window !== 'undefined' &&
+      window.matchMedia(MOBILE_BREAKPOINT).matches
   );
 
-  protected readonly contentShift = computed(() =>
-    this.isMobile() ? '0px' : this.collapsed() ? '76px' : '264px'
-  );
+  protected readonly contentShift = computed(() => {
+    if (this.isMobile()) {
+      return '0px';
+    }
+
+    return this.collapsed() ? '76px' : '264px';
+  });
 
   constructor() {
     if (typeof window === 'undefined') {
@@ -39,15 +45,17 @@ export class SharedLayout {
     }
 
     const query = window.matchMedia(MOBILE_BREAKPOINT);
+
     const onChange = (): void => {
       this.isMobile.set(query.matches);
-      if (query.matches) {
-        this.mobileOpen.set(false);
-      }
+      this.mobileOpen.set(false);
     };
 
     query.addEventListener('change', onChange);
-    this.destroyRef.onDestroy(() => query.removeEventListener('change', onChange));
+
+    this.destroyRef.onDestroy(() => {
+      query.removeEventListener('change', onChange);
+    });
   }
 
   protected onMenuClick(): void {
@@ -60,7 +68,9 @@ export class SharedLayout {
   }
 
   protected onCollapseToggle(): void {
-    this.collapsed.update(collapsed => !collapsed);
+    if (!this.isMobile()) {
+      this.collapsed.update(collapsed => !collapsed);
+    }
   }
 
   protected openMobile(): void {
@@ -73,9 +83,12 @@ export class SharedLayout {
     }
 
     this.mobileOpen.set(false);
-    window.setTimeout(() =>
-      document.querySelector<HTMLElement>('.menu-toggle')?.focus()
-    );
+
+    if (typeof document !== 'undefined') {
+      window.setTimeout(() => {
+        document.querySelector<HTMLElement>('.menu-toggle')?.focus();
+      });
+    }
   }
 
   protected onDocumentKeydown(event: KeyboardEvent): void {

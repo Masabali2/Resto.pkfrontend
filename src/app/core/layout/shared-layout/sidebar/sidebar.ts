@@ -1,3 +1,4 @@
+
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthorizationService } from '../../../services/authorization.service';
@@ -25,6 +26,8 @@ export class Sidebar {
   readonly collapseToggle = output<void>();
   readonly closeMobile = output<void>();
 
+  protected readonly expandedGroups = signal<Record<string, boolean>>({});
+
   protected readonly navGroups = computed<readonly SidebarNavGroup[]>(() =>
     SIDEBAR_NAVIGATION.map(group => ({
       ...group,
@@ -32,36 +35,24 @@ export class Sidebar {
     })).filter(group => group.items.length > 0)
   );
 
-  /** Group headings are independently expandable; every group starts open. */
-  protected readonly expandedGroups = signal<ReadonlySet<string>>(
-    new Set(SIDEBAR_NAVIGATION.map(group => group.heading))
-  );
-
   protected readonly exactMatchOptions = { exact: true };
 
   protected isGroupExpanded(heading: string): boolean {
-    return this.expandedGroups().has(heading);
+    return this.expandedGroups()[heading] ?? true;
   }
 
   protected toggleGroup(heading: string): void {
-    if (this.collapsed()) {
-      // In the icon rail a chevron button would be unusable; expand the rail
-      // instead so the user can reach the groups.
-      this.collapseToggle.emit();
-      return;
-    }
+    this.expandedGroups.update(groups => ({
+      ...groups,
+      [heading]: !(groups[heading] ?? true)
+    }));
+  }
 
-    this.expandedGroups.update(headings => {
-      const next = new Set(headings);
-
-      if (next.has(heading)) {
-        next.delete(heading);
-      } else {
-        next.add(heading);
-      }
-
-      return next;
-    });
+  protected groupId(heading: string): string {
+    return `sidebar-group-${heading
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')}`;
   }
 
   protected onEscapeKey(event: KeyboardEvent): void {
@@ -79,10 +70,6 @@ export class Sidebar {
       return true;
     }
 
-    // Restaurant.View is granted by the backend only once an active
-    // restaurant exists in the tenant. Members of a tenant without one still
-    // need the entry point so they can reach the setup journey; without an
-    // active tenant no tenant-scoped item is shown.
     return item.setupRoute !== undefined && this.tenantContext.activeTenantId() !== null;
   }
 }

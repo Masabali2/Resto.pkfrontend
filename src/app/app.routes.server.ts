@@ -1,17 +1,57 @@
+
 import { RenderMode, ServerRoute } from '@angular/ssr';
 
 export const serverRoutes: ServerRoute[] = [
-  // Authenticated, dynamic management routes cannot be prerendered.
+  {
+    path: '',
+    renderMode: RenderMode.Prerender
+  },
+  {
+    path: 'login',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'register',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'verify-email',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'forgot-password',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'reset-password',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'dashboard',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'setup/restaurant',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'websites',
+    renderMode: RenderMode.Client
+  },
   {
     path: 'websites/**',
-    renderMode: RenderMode.Server
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'menus',
+    renderMode: RenderMode.Client
   },
   {
     path: 'menus/**',
-    renderMode: RenderMode.Server
+    renderMode: RenderMode.Client
   },
   {
     path: '**',
-    renderMode: RenderMode.Prerender
+    renderMode: RenderMode.Client
   }
 ];

@@ -4,11 +4,13 @@
     <p class="menu-form__menu">Menu: <strong>{{ menuName() }}</strong></p>
   </header>
 
-  <div *ngIf="loading()" class="menu-form__loading">
-    <app-loading-spinner></app-loading-spinner>
-  </div>
-
-  <form *ngIf="!loading()" class="menu-form__form" (ngSubmit)="submit()">
+  @if(loading()) {
+    <div class="menu-form__loading">
+      <app-loading-spinner></app-loading-spinner>
+    </div>
+  }
+  @else if (!loading()) {
+  <form  class="menu-form__form" (ngSubmit)="submit()">
     <div class="menu-form__field">
       <label for="name">Category name <span class="menu-form__required">*</span></label>
       <input
@@ -19,7 +21,9 @@
         [aria-describedby]="'name-error'"
         [class.input-error]="showFieldError('name')"
       />
-      <span id="name-error" class="menu-form__inline-error" *ngIf="showFieldError('name')">{{ getFieldError('name') }}</span>
+      @if(showFieldError('name')) {
+        <span id="name-error" class="menu-form__inline-error">{{ getFieldError('name') }}</span>
+      }
     </div>
 
     <div class="menu-form__field">
@@ -32,7 +36,9 @@
         [aria-describedby]="'description-error'"
         [class.input-error]="showFieldError('description')"
       ></textarea>
-      <span id="description-error" class="menu-form__inline-error" *ngIf="showFieldError('description')">{{ getFieldError('description') }}</span>
+      @if(showFieldError('description')) {
+        <span id="description-error" class="menu-form__inline-error">{{ getFieldError('description') }}</span>
+      }
       <p class="menu-form__hint">Up to 500 characters.</p>
     </div>
 
@@ -45,15 +51,18 @@
         [aria-describedby]="'displayOrder-error'"
         [class.input-error]="showFieldError('displayOrder')"
       />
-      <span id="displayOrder-error" class="menu-form__inline-error" *ngIf="showFieldError('displayOrder')">{{ getFieldError('displayOrder') }}</span>
+      @if(showFieldError('displayOrder')) {
+        <span id="displayOrder-error" class="menu-form__inline-error">{{ getFieldError('displayOrder') }}</span>
+      }
       <p class="menu-form__hint">Whole number (0, 1, 2...). Categories appear in ascending order.</p>
     </div>
-
-    <div *ngIf="generalError()" class="menu-form__general-error" role="alert">{{ generalError() }}</div>
-
+    @if(generalError()){
+      <div class="menu-form__general-error" role="alert">{{ generalError() }}</div>
+    }
     <div class="menu-form__actions">
-      <button app-button type="button" variant="secondary" (click)="cancel()">Cancel</button>
-      <button app-button type="submit" variant="primary" [disabled]="submitting()">{{ submitting() ? 'Saving...' : (isEdit ? 'Save Category' : 'Create Category') }}</button>
+      <app-button type="button" variant="secondary" (click)="cancel()">Cancel</app-button>
+      <app-button type="submit" variant="primary" [disabled]="submitting()">{{ submitting() ? 'Saving...' : (isEdit ? 'Save Category' : 'Create Category') }}</app-button>
     </div>
   </form>
+}
 </div>
