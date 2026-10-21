@@ -13,6 +13,7 @@ import { NotificationService } from '../../../../core/services/notification.serv
 import { Button } from '../../../../shared/components/button/button';
 import { InlineError } from '../../../../shared/components/inline-error/inline-error/inline-error';
 import type { ApiResponse } from '../../../../core/models/api-response.model';
+import {BackLink} from '../../../../shared/components/back-link/back-link';
 import type {
   CreateRestaurantRequest,
   RestaurantDto
@@ -39,7 +40,7 @@ function orNull(value: string): string | null {
 @Component({
   selector: 'app-restaurant-setup',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, Button, InlineError],
+  imports: [ReactiveFormsModule, RouterLink, Button, InlineError, BackLink],
   templateUrl: './restaurant-setup.html',
   styleUrl: './restaurant-setup.css'
 })

@@ -1,10 +1,8 @@
 
 <main class="setup-page">
   <div class="setup-shell">
-    <a class="back-link" routerLink="/dashboard">
-      <span aria-hidden="true">←</span>
-      <span>Back to dashboard</span>
-    </a>
+    <app-back-link label="Back To Dashboard" class="back-link" routerLink="/dashboard"/>
+      
 
     @if (createdRestaurant(); as restaurant) {
       <section class="success-panel" role="status" aria-live="polite">
