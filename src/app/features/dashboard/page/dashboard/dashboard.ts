@@ -53,6 +53,9 @@ export class Dashboard {
   createRestaurant(): void {
     void this.router.navigate(['/setup/restaurant']);
   }
+  createWorkspace():void {
+    void this.router.navigate(['/setup/workspace'])
+  }
 
   selectTenant(tenantId: string): void {
     if (this.switching()) {

@@ -1,185 +1,498 @@
+
 <main class="setup-page">
   <div class="setup-shell">
-    <a class="back-link" routerLink="/dashboard">
-      <span aria-hidden="true">&larr;</span> Dashboard
-    </a>
+    <app-back-link label="Back To Dashboard" class="back-link" routerLink="/dashboard"/>
+      
 
     @if (createdRestaurant(); as restaurant) {
       <section class="success-panel" role="status" aria-live="polite">
-        <h1>{{ restaurant.name }} is set up</h1>
+        <span class="success-eyebrow">
+          <span class="success-status-dot" aria-hidden="true"></span>
+          RESTAURANT CREATED SUCCESSFULLY
+        </span>
+
+        <h1>{{ restaurant.name }} is ready to go!</h1>
+
         <p>
-          Your restaurant has been created. You can add more restaurants at any
-          time, and now you can create your first website for this restaurant.
+          Your restaurant has been added to your workspace. Continue by creating
+          its website, or visit your websites area to manage your online presence.
         </p>
-        <div class="success-actions">
-          <app-button variant="primary" size="md" [fullWidth]="false" (click)="goToCreateWebsite()">
-            Create Website for {{ restaurant.name }}
-          </app-button>
-          <a routerLink="/websites">
-            <app-button variant="outline" size="md" [fullWidth]="false">
-              Go to Websites
-            </app-button>
-          </a>
+
+        <div class="success-restaurant-details">
+          <span class="success-restaurant-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M3 10L5 4H19L21 10M4 10V20H20V10M9 20V14H15V20"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+
+          <div>
+            <span class="success-detail-label">YOUR RESTAURANT</span>
+            <strong>{{ restaurant.name }}</strong>
+            <span class="success-detail-description">
+              Ready for the next step
+            </span>
+          </div>
+
+          <span class="success-check" aria-label="Created">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M5 12.5L9.5 17L19 7"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
         </div>
+
+        <div class="success-actions">
+          <app-button
+            variant="primary"
+            size="md"
+            [fullWidth]="false"
+            (click)="goToCreateWebsite()"
+          >
+            Create website
+            <span aria-hidden="true">→</span>
+          </app-button>
+
+          <app-button
+            variant="outline"
+            size="md"
+            [fullWidth]="false"
+            (click)="goToWebsites()"
+          >
+            Go to websites
+          </app-button>
+        </div>
+
+        <p class="success-footer-note">
+          You can manage your restaurant details as your business grows.
+        </p>
       </section>
     } @else {
       <header class="setup-header">
-        <h1>Set up your restaurant</h1>
-        <p>
-          Tell us about your restaurant so Resto.pk can tailor your website.
-          This information stays inside your workspace.
-        </p>
+        <div class="setup-header-copy">
+          <span class="setup-eyebrow">
+            <span class="setup-eyebrow-dot" aria-hidden="true"></span>
+            RESTAURANT SETUP
+          </span>
+
+          <h1>Let's bring your restaurant online.</h1>
+
+          <p>
+            Add your restaurant's details to get started. You can use this
+            information when building your website and managing your business.
+          </p>
+        </div>
+
+        <div class="setup-header-illustration" aria-hidden="true">
+          <div class="setup-illustration-orbit setup-illustration-orbit-one"></div>
+          <div class="setup-illustration-orbit setup-illustration-orbit-two"></div>
+
+          <div class="setup-illustration-icon">
+            <svg viewBox="0 0 64 64" fill="none">
+              <path
+                d="M10 27L16 11H48L54 27"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M12 27V53H52V27"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M8 27H56V30C56 34 53 37 49 37C45 37 42 34 42 30C42 34 38 37 32 37C26 37 22 34 22 30C22 34 19 37 15 37C11 37 8 34 8 30V27Z"
+                fill="currentColor"
+                fill-opacity="0.15"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M25 53V42H39V53M19 20H45"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+
+          <span class="setup-illustration-sparkle setup-sparkle-one">✦</span>
+          <span class="setup-illustration-sparkle setup-sparkle-two">✧</span>
+        </div>
       </header>
 
+      <div class="setup-progress-heading">
+        <div>
+          <span class="setup-section-kicker">STEP 1</span>
+          <h2>Restaurant information</h2>
+          <p>Complete the details below to create your restaurant.</p>
+        </div>
+
+        <span class="required-note">
+          <span class="req">*</span>
+          Required fields
+        </span>
+      </div>
+
       @if (generalError()) {
-        <div class="form-alert" role="alert">{{ generalError() }}</div>
+        <div class="form-alert" role="alert" aria-live="assertive">
+          <span class="form-alert-icon" aria-hidden="true">!</span>
+          <span>{{ generalError() }}</span>
+        </div>
       }
 
-      <form class="setup-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <form
+        class="setup-form"
+        [formGroup]="form"
+        (ngSubmit)="submit()"
+        novalidate
+      >
         <fieldset class="form-section">
-          <legend>Restaurant details</legend>
+          <div class="form-section-heading">
+            <span class="form-section-icon form-section-icon-orange" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M3 10L5 4H19L21 10M4 10V20H20V10M9 20V14H15V20"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </span>
+
+            <div>
+              <legend>Restaurant details</legend>
+              <p>Tell us what your restaurant is called and what it offers.</p>
+            </div>
+          </div>
 
           <div class="field">
-            <label for="restaurant-name">Restaurant name <span class="req">*</span></label>
+            <label for="restaurant-name">
+              Restaurant name <span class="req">*</span>
+            </label>
+
             <input
               id="restaurant-name"
               type="text"
               formControlName="name"
               maxlength="150"
               autocomplete="organization"
+              placeholder="e.g. The Urban Kitchen"
               [attr.aria-invalid]="showFieldError('name')"
+              [attr.aria-describedby]="showFieldError('name') ? 'restaurant-name-error' : null"
             />
+
             @if (getFieldError('name'); as error) {
-              <app-inline-error [message]="error" />
+              <app-inline-error
+                id="restaurant-name-error"
+                [message]="error"
+              />
             }
           </div>
 
           <div class="field">
-            <label for="restaurant-description">Description</label>
+            <label for="restaurant-description">
+              Restaurant description
+              <span class="opt">(optional)</span>
+            </label>
+
             <textarea
               id="restaurant-description"
               formControlName="description"
               rows="4"
               maxlength="1000"
+              placeholder="Tell customers about your food, atmosphere, or specialty."
               [attr.aria-invalid]="showFieldError('description')"
+              [attr.aria-describedby]="showFieldError('description') ? 'restaurant-description-error' : null"
             ></textarea>
+
             @if (getFieldError('description'); as error) {
-              <app-inline-error [message]="error" />
+              <app-inline-error
+                id="restaurant-description-error"
+                [message]="error"
+              />
             }
+
+            <span class="field-hint">
+              A short introduction helps customers understand your restaurant.
+            </span>
           </div>
         </fieldset>
 
         <fieldset class="form-section">
-          <legend>Contact</legend>
+          <div class="form-section-heading">
+            <span class="form-section-icon form-section-icon-purple" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M7 3H5C3.9 3 3 3.9 3 5C3 13.8 10.2 21 19 21C20.1 21 21 20.1 21 19V17L16 14L13.5 16.5C10.8 15.3 8.7 13.2 7.5 10.5L10 8L7 3Z"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </span>
+
+            <div>
+              <legend>Contact information</legend>
+              <p>Give customers a way to get in touch with your business.</p>
+            </div>
+          </div>
 
           <div class="field-row">
             <div class="field">
-              <label for="restaurant-phone">Phone number</label>
+              <label for="restaurant-phone">
+                Phone number <span class="opt">(optional)</span>
+              </label>
+
               <input
                 id="restaurant-phone"
                 type="tel"
                 formControlName="phone"
                 autocomplete="tel"
+                maxlength="20"
                 placeholder="+92 300 1234567"
                 [attr.aria-invalid]="showFieldError('phone')"
+                [attr.aria-describedby]="showFieldError('phone') ? 'restaurant-phone-error' : null"
               />
+
               @if (getFieldError('phone'); as error) {
-                <app-inline-error [message]="error" />
+                <app-inline-error
+                  id="restaurant-phone-error"
+                  [message]="error"
+                />
               }
             </div>
 
             <div class="field">
-              <label for="restaurant-email">Contact email</label>
+              <label for="restaurant-email">
+                Contact email <span class="opt">(optional)</span>
+              </label>
+
               <input
                 id="restaurant-email"
                 type="email"
                 formControlName="email"
                 autocomplete="email"
+                maxlength="256"
+                placeholder="hello@example.com"
                 [attr.aria-invalid]="showFieldError('email')"
+                [attr.aria-describedby]="showFieldError('email') ? 'restaurant-email-error' : null"
               />
+
               @if (getFieldError('email'); as error) {
-                <app-inline-error [message]="error" />
+                <app-inline-error
+                  id="restaurant-email-error"
+                  [message]="error"
+                />
               }
             </div>
           </div>
         </fieldset>
 
         <fieldset class="form-section">
-          <legend>Location</legend>
+          <div class="form-section-heading">
+            <span class="form-section-icon form-section-icon-green" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M20 10C20 15 12 22 12 22S4 15 4 10A8 8 0 1 1 20 10Z"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linejoin="round"
+                />
+                <circle
+                  cx="12"
+                  cy="10"
+                  r="2.5"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                />
+              </svg>
+            </span>
+
+            <div>
+              <legend>Restaurant location</legend>
+              <p>Add your business address and operating time zone.</p>
+            </div>
+          </div>
 
           <div class="field">
-            <label for="address-line1">Address line 1 <span class="req">*</span></label>
+            <label for="address-line1">
+              Address line 1 <span class="req">*</span>
+            </label>
+
             <input
               id="address-line1"
               type="text"
               formControlName="line1"
+              maxlength="200"
               autocomplete="address-line1"
+              placeholder="Street address or building"
               [attr.aria-invalid]="showFieldError('line1')"
+              [attr.aria-describedby]="showFieldError('line1') ? 'address-line1-error' : null"
             />
+
             @if (getFieldError('line1'); as error) {
-              <app-inline-error [message]="error" />
+              <app-inline-error
+                id="address-line1-error"
+                [message]="error"
+              />
             }
           </div>
 
           <div class="field">
-            <label for="address-line2">Address line 2 <span class="opt">(optional)</span></label>
+            <label for="address-line2">
+              Address line 2 <span class="opt">(optional)</span>
+            </label>
+
             <input
               id="address-line2"
               type="text"
               formControlName="line2"
+              maxlength="200"
               autocomplete="address-line2"
+              placeholder="Apartment, suite, floor, etc."
             />
           </div>
 
           <div class="field-row">
             <div class="field">
-              <label for="address-city">City <span class="req">*</span></label>
+              <label for="address-city">
+                City <span class="req">*</span>
+              </label>
+
               <input
                 id="address-city"
                 type="text"
                 formControlName="city"
+                maxlength="100"
                 autocomplete="address-level2"
+                placeholder="e.g. Lahore"
                 [attr.aria-invalid]="showFieldError('city')"
+                [attr.aria-describedby]="showFieldError('city') ? 'address-city-error' : null"
               />
+
               @if (getFieldError('city'); as error) {
-                <app-inline-error [message]="error" />
+                <app-inline-error
+                  id="address-city-error"
+                  [message]="error"
+                />
               }
             </div>
 
             <div class="field">
-              <label for="address-country">Country <span class="req">*</span></label>
+              <label for="address-country">
+                Country <span class="req">*</span>
+              </label>
+
               <input
                 id="address-country"
                 type="text"
                 formControlName="country"
+                maxlength="100"
                 autocomplete="country-name"
+                placeholder="e.g. Pakistan"
                 [attr.aria-invalid]="showFieldError('country')"
+                [attr.aria-describedby]="showFieldError('country') ? 'address-country-error' : null"
               />
+
               @if (getFieldError('country'); as error) {
-                <app-inline-error [message]="error" />
+                <app-inline-error
+                  id="address-country-error"
+                  [message]="error"
+                />
               }
             </div>
 
             <div class="field">
-              <label for="address-postal">Postal code <span class="opt">(optional)</span></label>
-              <input id="address-postal" type="text" formControlName="postalCode" autocomplete="postal-code" />
+              <label for="address-postal">
+                Postal code <span class="opt">(optional)</span>
+              </label>
+
+              <input
+                id="address-postal"
+                type="text"
+                formControlName="postalCode"
+                maxlength="20"
+                autocomplete="postal-code"
+                placeholder="Postal code"
+              />
             </div>
           </div>
 
           <div class="field">
-            <label for="restaurant-timezone">Time zone <span class="req">*</span></label>
-            <select id="restaurant-timezone" formControlName="timeZone" [attr.aria-invalid]="showFieldError('timeZone')">
+            <label for="restaurant-timezone">
+              Time zone <span class="req">*</span>
+            </label>
+
+            <select
+              id="restaurant-timezone"
+              formControlName="timeZone"
+              [attr.aria-invalid]="showFieldError('timeZone')"
+              [attr.aria-describedby]="showFieldError('timeZone') ? 'restaurant-timezone-error' : null"
+            >
               @for (zone of supportedTimeZones; track zone) {
                 <option [value]="zone">{{ zone }}</option>
               }
             </select>
+
             @if (getFieldError('timeZone'); as error) {
-              <app-inline-error [message]="error" />
+              <app-inline-error
+                id="restaurant-timezone-error"
+                [message]="error"
+              />
             }
+
+            <span class="field-hint">
+              Used for restaurant-specific dates and operating times.
+            </span>
           </div>
         </fieldset>
 
         <div class="form-footer">
+          <div class="form-footer-copy">
+            <span class="footer-secure-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <rect
+                  x="5"
+                  y="10"
+                  width="14"
+                  height="11"
+                  rx="2"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                />
+                <path
+                  d="M8 10V7A4 4 0 0 1 16 7V10M12 14V17"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </span>
+
+            <p class="footer-note">
+              Your restaurant belongs to your active workspace. You can update
+              its details later.
+            </p>
+          </div>
+
           <app-button
             variant="primary"
             size="lg"
@@ -187,13 +500,11 @@
             type="submit"
             [disabled]="submitting()"
             [loading]="submitting()"
-            loadingText="Creating restaurant&hellip;"
+            loadingText="Creating restaurant..."
           >
-            Create Restaurant
+            Create restaurant
+            <span aria-hidden="true">→</span>
           </app-button>
-          <p class="footer-note">
-            You can manage and add more restaurants later from the Restaurants area.
-          </p>
         </div>
       </form>
     }
