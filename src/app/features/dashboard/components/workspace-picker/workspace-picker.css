@@ -1,0 +1,105 @@
+:host {
+  display: block;
+}
+
+.workspace-selection {
+  max-width: 850px;
+  margin: 24px auto;
+}
+
+.eyebrow {
+  display: block;
+  color: var(--dashboard-primary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+}
+
+.workspace-selection h1 {
+  margin: 12px 0;
+  color: var(--dashboard-text);
+  font-size: clamp(26px, 3vw, 34px);
+  font-weight: 800;
+  letter-spacing: -0.8px;
+}
+
+.workspace-selection > p {
+  margin: 0;
+  color: var(--dashboard-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.workspace-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.workspace-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: var(--dashboard-radius);
+  background: var(--dashboard-surface);
+  box-shadow: var(--dashboard-shadow);
+}
+
+.workspace-avatar {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--dashboard-primary-soft);
+  color: var(--dashboard-primary);
+}
+
+.workspace-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.workspace-details h2 {
+  margin: 0 0 4px;
+  overflow-wrap: anywhere;
+  color: var(--dashboard-text);
+  font-size: 15px;
+  font-weight: 750;
+}
+
+.workspace-details p {
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
+  color: var(--dashboard-muted);
+  font-size: 12px;
+}
+
+.role-label {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #f3f4f6;
+  color: #4b5563;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.workspace-card app-button {
+  width: auto;
+}
+
+@media (max-width: 520px) {
+  .workspace-card {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .workspace-details {
+    flex-basis: calc(100% - 62px);
+  }
+}

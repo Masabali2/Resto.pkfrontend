@@ -1,0 +1,45 @@
+<section class="overview-grid" aria-label="Workspace overview">
+  <article class="overview-card">
+    <div class="overview-card-icon workspace-overview-icon" aria-hidden="true">
+      <svg lucideBuilding2 [size]="23" [strokeWidth]="1.8"></svg>
+    </div>
+
+    <div class="overview-card-content">
+      <span class="overview-label">Active workspace</span>
+
+      @if (tenant(); as workspace) {
+        <h2>{{ workspace.name }}</h2>
+        <p>{{ workspace.slug }}</p>
+      } @else {
+        <h2>No workspace selected</h2>
+        <p>Choose a workspace to continue.</p>
+      }
+    </div>
+
+    <app-tenant-selector class="workspace-switcher" />
+  </article>
+
+  <article class="overview-card">
+    <div class="overview-card-icon role-overview-icon" aria-hidden="true">
+      <svg lucideUser [size]="23" [strokeWidth]="1.8"></svg>
+    </div>
+
+    <div class="overview-card-content">
+      <span class="overview-label">Your role</span>
+      <h2>{{ tenant()?.roleName ?? '—' }}</h2>
+      <p>Your workspace access</p>
+    </div>
+  </article>
+
+  <article class="overview-card">
+    <div class="overview-card-icon team-overview-icon" aria-hidden="true">
+      <svg lucideUsers [size]="23" [strokeWidth]="1.8"></svg>
+    </div>
+
+    <div class="overview-card-content">
+      <span class="overview-label">Your workspaces</span>
+      <h2>{{ membershipCount() }}</h2>
+      <p>Available to your account</p>
+    </div>
+  </article>
+</section>

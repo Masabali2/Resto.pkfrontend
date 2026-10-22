@@ -1,0 +1,51 @@
+<article class="workspace-prompt">
+  <div class="prompt-top">
+    <span class="prompt-icon" aria-hidden="true">
+      <svg lucideBuilding2 [size]="26" [strokeWidth]="1.8"></svg>
+    </span>
+
+    <span class="step-badge">STEP 1 OF 4</span>
+  </div>
+
+  <h2>Create your workspace</h2>
+
+  <p class="prompt-description">
+    Start with your organization. Your workspace keeps your restaurants, team,
+    and business settings together.
+  </p>
+
+  <ul class="benefit-list">
+    <li>
+      <span class="check-icon" aria-hidden="true">
+        <svg lucideCheck [size]="12" [strokeWidth]="3"></svg>
+      </span>
+      One place for your restaurant business
+    </li>
+    <li>
+      <span class="check-icon" aria-hidden="true">
+        <svg lucideCheck [size]="12" [strokeWidth]="3"></svg>
+      </span>
+      Manage team access as you grow
+    </li>
+    <li>
+      <span class="check-icon" aria-hidden="true">
+        <svg lucideCheck [size]="12" [strokeWidth]="3"></svg>
+      </span>
+      Ready for multiple restaurants
+    </li>
+  </ul>
+
+  <app-button
+    variant="primary"
+    size="lg"
+    [fullWidth]="false"
+    (click)="createWorkspace.emit()"
+  >
+    Create workspace
+    <svg lucideArrowRight [size]="15" [strokeWidth]="2.2" aria-hidden="true"></svg>
+  </app-button>
+
+  <p class="prompt-hint">
+    Your first step toward building your restaurant online.
+  </p>
+</article>

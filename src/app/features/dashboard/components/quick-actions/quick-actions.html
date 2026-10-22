@@ -1,0 +1,69 @@
+<ng-template #actionIcon let-icon>
+  @switch (icon) {
+    @case ('workspace') {
+      <svg lucideLayers [size]="19" [strokeWidth]="1.8"></svg>
+    }
+    @case ('restaurant') {
+      <svg lucideChefHat [size]="19" [strokeWidth]="1.8"></svg>
+    }
+    @case ('website') {
+      <svg lucideGlobe [size]="19" [strokeWidth]="1.8"></svg>
+    }
+    @case ('menu') {
+      <svg lucideUtensils [size]="19" [strokeWidth]="1.8"></svg>
+    }
+  }
+</ng-template>
+
+<section class="actions-section" aria-label="Quick actions">
+  <div class="section-heading">
+    <div>
+      <span class="section-kicker">QUICK ACTIONS</span>
+      <h2>Keep building</h2>
+      <p>Jump straight into the part of Resto.pk you need next.</p>
+    </div>
+  </div>
+
+  <ul class="actions-grid">
+    @for (action of actions(); track action.id) {
+      <li>
+        @if (action.disabledReason) {
+          <div class="action-card is-disabled" aria-disabled="true">
+            <span class="action-icon" aria-hidden="true">
+              <ng-container
+                *ngTemplateOutlet="actionIcon; context: { $implicit: action.icon }"
+              />
+            </span>
+
+            <span class="action-copy">
+              <span class="action-label">{{ action.label }}</span>
+              <span class="action-description">{{ action.description }}</span>
+              <span class="action-hint">{{ action.disabledReason }}</span>
+            </span>
+          </div>
+        } @else {
+          <a class="action-card" [routerLink]="action.route">
+            <span class="action-icon" aria-hidden="true">
+              <ng-container
+                *ngTemplateOutlet="actionIcon; context: { $implicit: action.icon }"
+              />
+            </span>
+
+            <span class="action-copy">
+              <span class="action-label">{{ action.label }}</span>
+              <span class="action-description">{{ action.description }}</span>
+            </span>
+
+            <svg
+              class="action-arrow"
+              lucideArrowRight
+              [size]="16"
+              [strokeWidth]="2"
+              aria-hidden="true"
+            ></svg>
+          </a>
+        }
+      </li>
+    }
+  </ul>
+</section>

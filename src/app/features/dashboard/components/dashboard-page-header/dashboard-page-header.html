@@ -1,0 +1,27 @@
+<header class="page-header">
+  <div class="page-header-copy">
+    @if (eyebrow(); as label) {
+      <span class="eyebrow">
+        <span class="eyebrow-dot" aria-hidden="true"></span>
+        {{ label }}
+      </span>
+    }
+
+    <h1>{{ title() }}</h1>
+
+    @if (subtitle(); as copy) {
+      <p>{{ copy }}</p>
+    }
+  </div>
+
+  <div class="page-header-actions">
+    @if (badge(); as status) {
+      <span class="status-badge">
+        <span class="status-dot" aria-hidden="true"></span>
+        {{ status }}
+      </span>
+    }
+
+    <ng-content select="[dashboardPageHeaderActions]" />
+  </div>
+</header>

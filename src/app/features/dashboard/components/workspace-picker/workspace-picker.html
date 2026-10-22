@@ -1,0 +1,34 @@
+<section class="workspace-selection">
+  <span class="eyebrow">WORKSPACE SELECTION</span>
+  <h1>Select your workspace</h1>
+  <p>Choose a workspace to continue to its dashboard.</p>
+
+  <app-inline-error [message]="error()" />
+
+  <div class="workspace-list">
+    @for (tenant of memberships(); track tenant.tenantId) {
+      <article class="workspace-card">
+        <span class="workspace-avatar" aria-hidden="true">
+          <svg lucideBuilding2 [size]="22" [strokeWidth]="1.8"></svg>
+        </span>
+
+        <div class="workspace-details">
+          <h2>{{ tenant.name }}</h2>
+          <p>{{ tenant.slug }}</p>
+          <span class="role-label">{{ tenant.roleName }}</span>
+        </div>
+
+        <app-button
+          variant="primary"
+          size="md"
+          [fullWidth]="false"
+          [loading]="switching()"
+          [loadingText]="'Switching...'"
+          (click)="select.emit(tenant.tenantId)"
+        >
+          Select workspace
+        </app-button>
+      </article>
+    }
+  </div>
+</section>
