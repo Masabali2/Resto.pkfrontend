@@ -112,6 +112,17 @@
   margin-top: 18px;
 }
 
+/* The trial offer is shown inline so a freshly created workspace immediately
+   explains what happens next. */
+.trial-offer-card {
+  margin-bottom: 24px;
+  padding: 22px 24px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: var(--dashboard-radius);
+  background: var(--dashboard-surface);
+  box-shadow: var(--dashboard-shadow);
+}
+
 /* The header action is projected from the container, so it carries the
    container styles instead of the header component ones. */
 .dashboard-page app-dashboard-page-header app-button {

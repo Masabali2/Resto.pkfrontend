@@ -1,3 +1,4 @@
+
 <ng-template #actionIcon let-icon>
   @switch (icon) {
     @case ('workspace') {
@@ -41,6 +42,31 @@
               <span class="action-hint">{{ action.disabledReason }}</span>
             </span>
           </div>
+        } @else if (action.handledByContainer) {
+          <button
+            type="button"
+            class="action-card"
+            (click)="selectAction(action)"
+          >
+            <span class="action-icon" aria-hidden="true">
+              <ng-container
+                *ngTemplateOutlet="actionIcon; context: { $implicit: action.icon }"
+              />
+            </span>
+
+            <span class="action-copy">
+              <span class="action-label">{{ action.label }}</span>
+              <span class="action-description">{{ action.description }}</span>
+            </span>
+
+            <svg
+              class="action-arrow"
+              lucideArrowRight
+              [size]="16"
+              [strokeWidth]="2"
+              aria-hidden="true"
+            ></svg>
+          </button>
         } @else {
           <a class="action-card" [routerLink]="action.route">
             <span class="action-icon" aria-hidden="true">
@@ -67,3 +93,4 @@
     }
   </ul>
 </section>
+

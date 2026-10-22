@@ -1,0 +1,55 @@
+<section class="status-card" aria-labelledby="subscription-status-title">
+  <div class="status-head">
+    <span class="status-icon" aria-hidden="true">
+      <svg lucideCreditCard [size]="18" [strokeWidth]="1.9"></svg>
+    </span>
+
+    <div class="status-copy">
+      <span class="status-kicker">SUBSCRIPTION</span>
+
+      <h3 id="subscription-status-title">{{ status().title }}</h3>
+    </div>
+
+    <span class="status-badge" [attr.data-kind]="status().kind">
+      {{ badgeLabel() }}
+    </span>
+  </div>
+
+  @if (loading() && !state()) {
+    <div class="status-loading" role="status" aria-live="polite">
+      <app-loading-spinner [size]="18" />
+      <span>Checking your subscription…</span>
+    </div>
+  } @else {
+    <p class="status-detail">{{ status().detail }}</p>
+
+    @if (status().daysRemaining !== null) {
+      <p class="status-remaining">
+        @if (status().daysRemaining === 0) {
+          Your access ends today.
+        } @else if (status().daysRemaining === 1) {
+          1 day of access left.
+        } @else {
+          {{ status().daysRemaining }} days of access left.
+        }
+      </p>
+    }
+
+    @if (status().kind !== 'active' && status().kind !== 'trial') {
+      <app-button
+        variant="outline"
+        size="sm"
+        [fullWidth]="false"
+        (click)="manage.emit()"
+      >
+        {{ status().canStartTrial ? 'Start free trial' : 'Choose a plan' }}
+        <svg
+          lucideArrowRight
+          [size]="15"
+          [strokeWidth]="2.2"
+          aria-hidden="true"
+        ></svg>
+      </app-button>
+    }
+  }
+</section>

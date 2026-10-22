@@ -18,4 +18,11 @@ export interface QuickAction {
   readonly route: string[];
   /** Set when the action cannot run right now; explains why to the user. */
   readonly disabledReason?: string;
+  /**
+   * Set when the action must be handled by the container instead of
+   * navigating on its own. Used for actions that are guarded by the
+   * workspace subscription state: the container decides whether the action
+   * opens the guarded page or the shared subscription experience.
+   */
+  readonly handledByContainer?: boolean;
 }

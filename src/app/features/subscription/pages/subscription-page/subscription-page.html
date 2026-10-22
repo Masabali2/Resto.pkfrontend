@@ -1,0 +1,43 @@
+<main class="subscription-page">
+  <div class="subscription-shell">
+    <app-back-link
+      label="Back To Dashboard"
+      class="back-link"
+      routerLink="/dashboard"
+    />
+
+    <header class="page-header">
+      <span class="page-kicker">SUBSCRIPTION &amp; BILLING</span>
+      <h1>Plan your workspace</h1>
+      <p>
+        A workspace becomes active once it has a subscription. Start your free
+        trial to unlock restaurant setup, menus and your public website.
+      </p>
+    </header>
+
+    <app-subscription-status-card
+      [state]="state()"
+      [loading]="loading()"
+    />
+
+    <section class="panel" aria-label="Subscription offer">
+      <app-subscription-offer
+        [state]="state()"
+        [loading]="subscriptionFlow.trialLoading()"
+        [error]="subscriptionFlow.trialError()"
+        planLink="none"
+        (startTrial)="startTrial()"
+      />
+    </section>
+
+    <section class="panel" aria-label="Available plans">
+      <app-subscription-plan-list [plans]="state()?.availablePlans ?? []" />
+    </section>
+
+    <footer class="page-footer">
+      <button type="button" class="link-button" (click)="backToDashboard()">
+        Back to the dashboard
+      </button>
+    </footer>
+  </div>
+</main>

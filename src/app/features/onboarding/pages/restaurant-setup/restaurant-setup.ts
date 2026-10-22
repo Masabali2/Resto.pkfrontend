@@ -1,5 +1,5 @@
 
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import {
   FormBuilder,
   ReactiveFormsModule,
@@ -10,6 +10,8 @@ import { finalize } from 'rxjs';
 import { RestaurantService } from '../../../websites/services/restaurant.service';
 import { HttpErrorHandlerService } from '../../../../core/services/http-error-handler.service';
 import { NotificationService } from '../../../../core/services/notification.service';
+import { SubscriptionFlowService } from '../../../subscription/services/subscription-flow.service';
+import { SubscriptionRequiredDialog } from '../../../subscription/components/subscription-required-dialog/subscription-required-dialog';
 import { Button } from '../../../../shared/components/button/button';
 import { InlineError } from '../../../../shared/components/inline-error/inline-error/inline-error';
 import type { ApiResponse } from '../../../../core/models/api-response.model';
@@ -40,7 +42,14 @@ function orNull(value: string): string | null {
 @Component({
   selector: 'app-restaurant-setup',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, Button, InlineError, BackLink],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    Button,
+    InlineError,
+    BackLink,
+    SubscriptionRequiredDialog
+  ],
   templateUrl: './restaurant-setup.html',
   styleUrl: './restaurant-setup.css'
 })
@@ -50,6 +59,9 @@ export class RestaurantSetup {
   private readonly notificationService = inject(NotificationService);
   private readonly httpErrorHandler = inject(HttpErrorHandlerService);
   private readonly router = inject(Router);
+
+  /** Shared subscription flow — the same one the dashboard uses. */
+  protected readonly subscriptionFlow = inject(SubscriptionFlowService);
 
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(150)]],
@@ -167,6 +179,22 @@ export class RestaurantSetup {
           );
         },
         error: (error: unknown) => {
+          // The subscription can lapse between loading this page and sending
+          // the form. The backend stays the authority: when it reports that
+          // the workspace has no eligible subscription the shared
+          // subscription experience is opened instead of a generic failure.
+          if (this.subscriptionFlow.isSubscriptionRequiredError(error)) {
+            this.generalError.set(
+              'Your workspace needs an active subscription to add a restaurant.'
+            );
+
+            this.subscriptionFlow.open(
+              'Adding a restaurant needs an active workspace subscription.'
+            );
+
+            return;
+          }
+
           const details = this.httpErrorHandler.handle(error, {
             unauthorizedMessage: 'Your session has expired. Please sign in again.',
             fallbackMessage: 'The restaurant could not be created. Please try again.'
@@ -198,6 +226,29 @@ export class RestaurantSetup {
   protected goToWebsites(): void {
     void this.router.navigate(['/websites']);
   }
+
+  protected startTrial(): void {
+    this.subscriptionFlow.startTrial();
+  }
+
+  protected viewPlans(): void {
+    this.subscriptionFlow.viewPlans();
+  }
+
+  protected closeSubscription(): void {
+    this.subscriptionFlow.close();
+  }
+
+  /** True when the backend says the workspace may not use this feature. */
+  protected readonly subscriptionBlocked = computed(() => {
+    const state = this.subscriptionFlow.state();
+
+    if (!state) {
+      return false;
+    }
+
+    return !this.subscriptionFlow.canUseProtectedFeatures(state);
+  });
 
   private applyResponseErrors(response: ApiResponse<RestaurantDto>): void {
     const errors: Record<string, string> = {};

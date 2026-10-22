@@ -75,6 +75,27 @@ a.action-card:focus-visible {
   outline-offset: 3px;
 }
 
+/* The container handled variant is a real button, so it needs the neutral
+   button reset before it can look exactly like the link variant. */
+button.action-card {
+  width: 100%;
+  font-family: inherit;
+  font-size: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+button.action-card:hover {
+  border-color: var(--dashboard-primary-border);
+  box-shadow: 0 8px 24px rgb(31 36 48 / 5%);
+  transform: translateY(-2px);
+}
+
+button.action-card:focus-visible {
+  outline: 3px solid #ffd3c1;
+  outline-offset: 3px;
+}
+
 .action-card.is-disabled {
   border-style: dashed;
   box-shadow: none;
@@ -133,6 +154,10 @@ a.action-card:focus-visible {
 }
 
 a.action-card:hover .action-arrow {
+  transform: translateX(3px);
+}
+
+button.action-card:hover .action-arrow {
   transform: translateX(3px);
 }
 

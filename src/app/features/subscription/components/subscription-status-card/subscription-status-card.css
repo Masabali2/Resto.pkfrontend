@@ -1,0 +1,128 @@
+:host {
+  display: block;
+}
+
+.status-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 20px;
+  border: 1px solid var(--subscription-border);
+  border-radius: var(--subscription-radius);
+  background: var(--subscription-surface);
+  box-shadow: var(--subscription-shadow);
+}
+
+.status-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  place-items: center;
+  border-radius: var(--subscription-radius-sm);
+  background: var(--subscription-primary-soft);
+  color: var(--subscription-primary);
+}
+
+.status-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.status-kicker {
+  color: var(--subscription-muted);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 1.2px;
+}
+
+.status-copy h3 {
+  margin: 0;
+  color: var(--subscription-text);
+  font-size: 14.5px;
+  font-weight: 750;
+  letter-spacing: -0.2px;
+  line-height: 1.4;
+}
+
+.status-badge {
+  margin-left: auto;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--subscription-surface-secondary, #f1f5f9);
+  color: var(--subscription-muted);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-badge[data-kind='trial'] {
+  background: var(--subscription-primary-soft);
+  color: var(--subscription-primary);
+}
+
+.status-badge[data-kind='active'] {
+  background: var(--subscription-success-soft);
+  color: var(--subscription-success);
+}
+
+.status-badge[data-kind='expired'] {
+  background: var(--subscription-danger-soft);
+  color: var(--subscription-danger);
+}
+
+.status-badge[data-kind='pending'] {
+  background: var(--subscription-warning-soft);
+  color: var(--subscription-warning);
+}
+
+.status-detail {
+  margin: 0;
+  color: var(--subscription-muted);
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+.status-remaining {
+  margin: 0;
+  color: var(--subscription-text);
+  font-size: 12.5px;
+  font-weight: 650;
+}
+
+.status-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--subscription-muted);
+  font-size: 12.5px;
+}
+
+.status-card app-button {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 7px;
+}
+
+@media (max-width: 520px) {
+  .status-card {
+    padding: 16px;
+  }
+
+  .status-badge {
+    display: none;
+  }
+
+  .status-card app-button {
+    align-self: stretch;
+    width: 100%;
+  }
+}

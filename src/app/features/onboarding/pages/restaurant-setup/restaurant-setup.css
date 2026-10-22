@@ -999,3 +999,52 @@
     transition: none !important;
   }
 }
+.subscription-alert {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+  padding: 16px 18px;
+  border: 1px solid var(--setup-warning-border, #fde68a);
+  border-radius: var(--radius-md, 10px);
+  background: var(--setup-warning-soft, #fffbeb);
+  color: var(--setup-text, #1e293b);
+  animation: setup-section-enter 250ms ease both;
+}
+
+.subscription-alert-icon {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--setup-warning, #f59e0b);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.subscription-alert-copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+  flex: 1 1 auto;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.subscription-alert-copy span {
+  color: var(--setup-muted, #64748b);
+}
+
+@media (max-width: 640px) {
+  .subscription-alert {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .subscription-alert app-button {
+    width: 100%;
+  }
+}

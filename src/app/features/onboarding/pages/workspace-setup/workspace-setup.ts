@@ -93,21 +93,21 @@ export class WorkspaceSetup {
             next: refreshed => {
               if (!refreshed?.success || !refreshed.data) {
                 this.generalError.set(
-                  'Your workspace was created, but we could not activate it. Please reload the dashboard.'
+                  'Your workspace was created, but we could not switch to it. Please reload the dashboard.'
                 );
                 this.notificationService.error(this.generalError());
                 return;
               }
 
               this.notificationService.success(
-                `${createdTenant.name} workspace created successfully.`
+                `${createdTenant.name} workspace created. Start your free trial to activate it.`
               );
 
               void this.router.navigate(['/dashboard']);
             },
             error: () => {
               this.generalError.set(
-                'Your workspace was created, but we could not activate it. Please reload the dashboard.'
+                'Your workspace was created, but we could not switch to it. Please reload the dashboard.'
               );
               this.notificationService.error(this.generalError());
             }

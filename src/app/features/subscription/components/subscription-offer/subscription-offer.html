@@ -1,0 +1,169 @@
+<section class="offer" aria-labelledby="offer-title">
+  <header class="offer-header">
+    <h2 id="offer-title">Activate your workspace</h2>
+    <p class="offer-intro">
+      A workspace becomes active once it has a subscription. Start your
+      {{ trialDuration() }}-day free trial to unlock restaurant setup, menus and
+      your public website.
+    </p>
+  </header>
+
+  @if (error(); as message) {
+    <app-inline-error [message]="message" />
+  }
+
+  @if (canStartTrial()) {
+    <article class="trial-card">
+      <div class="trial-card-head">
+        <span class="trial-kicker">
+          <svg
+            lucideClock
+            [size]="14"
+            [strokeWidth]="2.2"
+            aria-hidden="true"
+          ></svg>
+          {{ trialDuration() }}-day free trial
+        </span>
+
+        <span class="trial-price">Free</span>
+      </div>
+
+      <h3 class="trial-title">Start with the full experience, on us</h3>
+
+      <p class="trial-copy">
+        Your trial starts the moment you activate it and runs for
+        {{ trialDuration() }} days. It covers restaurants, menus, staff and
+        your public website for the whole period.
+      </p>
+
+      <ul class="trial-facts">
+        <li>
+          <svg
+            lucideShieldCheck
+            [size]="15"
+            [strokeWidth]="2.2"
+            aria-hidden="true"
+          ></svg>
+          <span>
+            No card, no payment details and no charge — Resto.pk does not take
+            any payment during the trial.
+          </span>
+        </li>
+        <li>
+          <svg
+            lucideClock
+            [size]="15"
+            [strokeWidth]="2.2"
+            aria-hidden="true"
+          ></svg>
+          <span>
+            Your workspace activates immediately and stays active for the whole
+            trial.
+          </span>
+        </li>
+      </ul>
+
+      <div class="offer-actions">
+        <app-button
+          variant="primary"
+          size="md"
+          [fullWidth]="false"
+          [loading]="loading()"
+          [disabled]="loading()"
+          loadingText="Activating your workspace…"
+          (click)="startTrial.emit()"
+        >
+          Start my {{ trialDuration() }}-day free trial
+          <svg
+            lucideArrowRight
+            [size]="16"
+            [strokeWidth]="2.2"
+            aria-hidden="true"
+          ></svg>
+        </app-button>
+
+        @if (planLink() !== 'none') {
+          <button
+            type="button"
+            class="link-button"
+            (click)="togglePlans()"
+          >
+            {{ plansVisible() ? 'Hide available plans' : 'View other available plans' }}
+          </button>
+        }
+      </div>
+    </article>
+  } @else {
+    <article class="trial-card is-unavailable">
+      <div class="trial-card-head">
+        <span class="trial-kicker">
+          <svg
+            lucideClock
+            [size]="14"
+            [strokeWidth]="2.2"
+            aria-hidden="true"
+          ></svg>
+          Free trial
+        </span>
+      </div>
+
+      <h3 class="trial-title">
+        {{ trial()?.trialUsed ? 'Your free trial has been used' : 'The free trial is not available' }}
+      </h3>
+
+      <p class="trial-copy">
+        {{
+          trialUnavailableReason() ??
+            'This workspace cannot start a free trial. Choose an available plan to restore access.'
+        }}
+      </p>
+
+      @if (subscription(); as current) {
+        <p class="trial-copy">
+          Your workspace currently runs on the
+          <strong>{{ current.planName }}</strong> plan
+          @if (current.status === 'Trial') {
+            and its trial is no longer active.
+          } @else {
+            (status: {{ current.status }}).
+          }
+        </p>
+
+        @if (trialExpiry(); as expiry) {
+          <p class="trial-copy">
+            @if (trialDaysRemaining() !== null) {
+              @if (trialDaysRemaining() === 0) {
+                Your access ended on {{ expiry }}.
+              } @else {
+                {{ trialDaysRemaining() }} day{{ trialDaysRemaining() === 1 ? '' : 's' }} of access left, ending on
+                {{ expiry }}.
+              }
+            } @else {
+              Your access ended on {{ expiry }}.
+            }
+          </p>
+        }
+      }
+
+      <div class="offer-actions">
+        @if (planLink() !== 'none') {
+          <button
+            type="button"
+            class="link-button"
+            (click)="togglePlans()"
+          >
+            {{ plansVisible() ? 'Hide available plans' : 'View available plans' }}
+          </button>
+        }
+      </div>
+    </article>
+  }
+
+  @if (plansVisible()) {
+    <div class="offer-plans">
+      <app-subscription-plan-list
+        [plans]="state()?.availablePlans ?? []"
+      />
+    </div>
+  }
+</section>

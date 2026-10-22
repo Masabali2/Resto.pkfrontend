@@ -67,6 +67,23 @@
         [membershipCount]="memberships().length"
       />
 
+      <app-subscription-status-card
+        [state]="subscriptionState()"
+        [loading]="subscriptionLoading()"
+        (manage)="openSubscription('Manage the subscription of this workspace.')"
+      />
+
+      @if (showTrialOffer()) {
+        <section class="trial-offer-card" aria-label="Subscription offer">
+          <app-subscription-offer
+            [state]="subscriptionState()"
+            [loading]="subscriptionFlow.trialLoading()"
+            [error]="subscriptionFlow.trialError()"
+            (startTrial)="startTrial()"
+          />
+        </section>
+      }
+
       <app-dashboard-stats [metrics]="metrics()" />
 
       @if (snapshotError(); as message) {
@@ -93,7 +110,10 @@
         />
       }
 
-      <app-quick-actions [actions]="quickActions()" />
+      <app-quick-actions
+        [actions]="quickActions()"
+        (actionSelected)="onQuickAction($event)"
+      />
 
       <app-restaurant-overview
         [restaurants]="restaurants()"
@@ -102,4 +122,16 @@
       />
     }
   }
+
+  <app-subscription-required-dialog
+    [open]="subscriptionFlow.dialogOpen()"
+    [state]="subscriptionState()"
+    [loading]="subscriptionFlow.trialLoading()"
+    [error]="subscriptionFlow.trialError()"
+    [title]="subscriptionFlow.reason() ?? 'Subscription required'"
+    message="Start your free trial to unlock restaurant setup, menus and your public website."
+    (startTrial)="startTrial()"
+    (viewPlans)="viewPlans()"
+    (closed)="closeSubscription()"
+  />
 </section>

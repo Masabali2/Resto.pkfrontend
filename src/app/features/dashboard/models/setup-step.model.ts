@@ -9,7 +9,12 @@
 export type SetupStepStatus = 'completed' | 'current' | 'upcoming' | 'unavailable';
 
 /** Stable identifiers of the onboarding journey steps. */
-export type SetupStepId = 'workspace' | 'restaurant' | 'website' | 'menu';
+export type SetupStepId =
+  | 'workspace'
+  | 'subscription'
+  | 'restaurant'
+  | 'website'
+  | 'menu';
 
 /**
  * A single step of the "bring your restaurant online" journey.

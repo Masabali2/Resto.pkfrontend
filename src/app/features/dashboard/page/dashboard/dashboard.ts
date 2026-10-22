@@ -13,6 +13,11 @@ import { AuthStateService } from '../../../../core/services/auth-state.service';
 import { AuthorizationService } from '../../../../core/services/authorization.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { TenantContextService } from '../../../../core/services/tenant-context.service';
+import { SubscriptionFlowService } from '../../../subscription/services/subscription-flow.service';
+import { SubscriptionOffer } from '../../../subscription/components/subscription-offer/subscription-offer';
+import { SubscriptionRequiredDialog } from '../../../subscription/components/subscription-required-dialog/subscription-required-dialog';
+import { SubscriptionStatusCard } from '../../../subscription/components/subscription-status-card/subscription-status-card';
+import { resolveSubscriptionStatus } from '../../../subscription/utils/subscription-status.util';
 import { DashboardService } from '../../services/dashboard.service';
 import { DashboardPageHeader } from '../../components/dashboard-page-header/dashboard-page-header';
 import { DashboardStats } from '../../components/dashboard-stats/dashboard-stats';
@@ -36,6 +41,7 @@ import type {
 } from '../../models/dashboard-snapshot.model';
 import type { QuickAction } from '../../models/quick-action.model';
 import type { SetupStep } from '../../models/setup-step.model';
+import type { ResolvedSubscriptionStatus } from '../../../subscription/models/subscription-status.model';
 
 type DashboardPageState =
   | 'loading'
@@ -66,6 +72,9 @@ type DashboardPageState =
     QuickActions,
     RestaurantOverview,
     SetupProgress,
+    SubscriptionOffer,
+    SubscriptionRequiredDialog,
+    SubscriptionStatusCard,
     WorkspaceOverview,
     WorkspacePicker
   ],
@@ -81,9 +90,40 @@ export class Dashboard {
   private readonly tenantContext = inject(TenantContextService);
   private readonly dashboardService = inject(DashboardService);
 
+  /** Shared subscription flow — the single plan-selection experience. */
+  protected readonly subscriptionFlow = inject(SubscriptionFlowService);
+
   protected readonly memberships = computed(
     () => this.authState.authResult()?.memberships ?? []
   );
+
+  /** Verified subscription state of the active workspace. */
+  protected readonly subscriptionState = this.subscriptionFlow.state;
+
+  protected readonly subscriptionLoading = this.subscriptionFlow.loading;
+
+  protected readonly subscriptionStatus = computed(() =>
+    resolveSubscriptionStatus(
+      this.subscriptionState(),
+      this.subscriptionLoading()
+    )
+  );
+
+  /**
+   * True when the workspace is waiting for its trial. The offer is shown
+   * inline on the dashboard so a freshly created workspace immediately
+   * explains what happens next.
+   */
+  protected readonly showTrialOffer = computed(() => {
+    const state = this.subscriptionState();
+
+    return (
+      !!state &&
+      state.tenantStatus === 'Pending' &&
+      state.trial.eligible &&
+      !state.hasSubscription
+    );
+  });
 
   protected readonly activeTenant = computed(
     () => this.authState.authResult()?.activeTenant ?? null
@@ -180,7 +220,8 @@ export class Dashboard {
         label: 'Set up a restaurant',
         description: 'Add your restaurant details, location and contact info.',
         icon: 'restaurant',
-        route: ['/setup/restaurant']
+        route: ['/setup/restaurant'],
+        handledByContainer: true
       },
       {
         id: 'website',
@@ -221,6 +262,7 @@ export class Dashboard {
     const restaurants = this.restaurants();
     const websites = this.websites();
     const menus = this.menus();
+    const subscription = this.subscriptionStatus();
 
     const steps: SetupStep[] = [
       {
@@ -232,6 +274,15 @@ export class Dashboard {
         status: workspaceReady ? 'completed' : 'current',
         actionLabel: 'Create workspace',
         actionRoute: ['/setup/workspace']
+      },
+      {
+        id: 'subscription',
+        title: 'Activate your workspace',
+        description: subscription.detail,
+        status: this.resolveSubscriptionStepStatus(subscription),
+        actionLabel: subscription.canStartTrial
+          ? 'Start free trial'
+          : 'Choose a plan'
       },
       {
         id: 'restaurant',
@@ -266,9 +317,31 @@ export class Dashboard {
     toObservable(this.tenantContext.activeTenantId)
       .pipe(takeUntilDestroyed())
       .subscribe(tenantId => this.loadSnapshot(tenantId));
+
+    // The trial activation changes what the workspace is allowed to do, so the
+    // dashboard data is read again once the backend accepted it.
+    this.subscriptionFlow.trialActivated
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.reload());
   }
 
+  /**
+   * Opens the restaurant setup when the workspace is entitled to use it and
+   * opens the shared subscription experience otherwise.
+   *
+   * The decision is made from the verified backend state. While the state is
+   * still unknown the user is sent to the setup page, which reports the
+   * access problem itself if the workspace is not entitled.
+   */
   protected createRestaurant(): void {
+    const state = this.subscriptionState();
+
+    if (state && !this.subscriptionFlow.canUseProtectedFeatures(state)) {
+      this.openSubscription('Adding a restaurant needs an active workspace subscription.');
+
+      return;
+    }
+
     void this.router.navigate(['/setup/restaurant']);
   }
 
@@ -276,7 +349,25 @@ export class Dashboard {
     void this.router.navigate(['/setup/workspace']);
   }
 
+  protected onQuickAction(action: QuickAction): void {
+    if (action.id === 'restaurant') {
+      this.createRestaurant();
+    }
+  }
+
   protected onStepAction(step: SetupStep): void {
+    if (step.id === 'subscription') {
+      this.openSubscription('Activate your workspace to unlock restaurant setup.');
+
+      return;
+    }
+
+    if (step.id === 'restaurant') {
+      this.createRestaurant();
+
+      return;
+    }
+
     const route = step.actionRoute;
 
     if (!route) {
@@ -284,6 +375,22 @@ export class Dashboard {
     }
 
     void this.router.navigate(route);
+  }
+
+  protected openSubscription(reason: string): void {
+    this.subscriptionFlow.open(reason);
+  }
+
+  protected startTrial(): void {
+    this.subscriptionFlow.startTrial();
+  }
+
+  protected viewPlans(): void {
+    this.subscriptionFlow.viewPlans();
+  }
+
+  protected closeSubscription(): void {
+    this.subscriptionFlow.close();
   }
 
   protected selectTenant(tenantId: string): void {
@@ -313,8 +420,34 @@ export class Dashboard {
   }
 
   protected retry(): void {
+    this.reload();
+  }
+
+  private reload(): void {
     this.loadedTenantId = null;
     this.loadSnapshot(this.tenantContext.activeTenantId());
+  }
+
+  /**
+   * Derives the checklist state of the subscription step from the verified
+   * subscription state.
+   */
+  private resolveSubscriptionStepStatus(
+    subscription: ResolvedSubscriptionStatus
+  ): SetupStep['status'] {
+    if (subscription.kind === 'unavailable') {
+      return 'unavailable';
+    }
+
+    if (subscription.canUseProtectedFeatures) {
+      return 'completed';
+    }
+
+    if (subscription.canStartTrial) {
+      return 'current';
+    }
+
+    return 'upcoming';
   }
 
   private loadSnapshot(tenantId: string | null): void {

@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import {
@@ -10,13 +11,6 @@ import {
 } from '@lucide/angular';
 import type { QuickAction } from '../../models/quick-action.model';
 
-/**
- * Shortcuts to the next meaningful action of the workspace.
- *
- * Every action points at a route that exists in app.routes.ts. Actions the
- * account cannot use yet stay visible but are disabled with a reason, so the
- * dashboard never links to a page the user cannot open.
- */
 @Component({
   selector: 'app-quick-actions',
   standalone: true,
@@ -34,5 +28,10 @@ import type { QuickAction } from '../../models/quick-action.model';
   styleUrl: './quick-actions.css'
 })
 export class QuickActions {
-  readonly actions = input<readonly QuickAction[]>([]);
+  readonly actions = input.required<QuickAction[]>();
+  readonly actionSelected = output<QuickAction>();
+
+  protected selectAction(action: QuickAction): void {
+    this.actionSelected.emit(action);
+  }
 }
