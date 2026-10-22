@@ -1,0 +1,46 @@
+@if (open()) {
+  <div
+    class="dialog-overlay"
+    role="presentation"
+    (click)="onBackdropClick()"
+  >
+    <div
+      #panel
+      class="dialog-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="subscription-dialog-title"
+      aria-describedby="subscription-dialog-message"
+      tabindex="-1"
+      (click)="$event.stopPropagation()"
+      (keydown)="onKeydown($event)"
+    >
+      <header class="dialog-header">
+        <div>
+          <h2 id="subscription-dialog-title">{{ title() }}</h2>
+          <p id="subscription-dialog-message">{{ message() }}</p>
+        </div>
+
+        <button
+          type="button"
+          class="dialog-close"
+          aria-label="Close"
+          (click)="closed.emit()"
+        >
+          <svg lucideX [size]="18" [strokeWidth]="2" aria-hidden="true"></svg>
+        </button>
+      </header>
+
+      <div class="dialog-body">
+        <app-subscription-offer
+          [state]="state()"
+          [loading]="loading()"
+          [error]="error()"
+          planLink="page"
+          (startTrial)="startTrial.emit()"
+          (viewPlans)="viewPlans.emit()"
+        />
+      </div>
+    </div>
+  </div>
+}

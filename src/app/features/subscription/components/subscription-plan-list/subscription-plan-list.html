@@ -1,0 +1,80 @@
+<section class="plan-list" aria-labelledby="plan-list-title">
+  <header class="plan-list-header">
+    <h3 id="plan-list-title">Available plans</h3>
+    <p>These are the plans currently offered to Resto.pk workspaces.</p>
+  </header>
+
+  @if (loading()) {
+    <p class="plan-list-state" role="status" aria-live="polite">
+      Loading the available plans…
+    </p>
+  } @else if (isEmpty()) {
+    <p class="plan-list-state">
+      No plan is currently published. Your free trial still works — start it to
+      activate this workspace.
+    </p>
+  } @else {
+    <ul class="plan-grid">
+      @for (entry of presented(); track entry.plan.id) {
+        <li class="plan-card" [class.is-free]="entry.isFree">
+          <div class="plan-card-head">
+            <h4>{{ entry.plan.name }}</h4>
+
+            @if (entry.isFree) {
+              <span class="plan-badge">
+                <svg
+                  lucideSparkles
+                  [size]="13"
+                  [strokeWidth]="2.2"
+                  aria-hidden="true"
+                ></svg>
+                Free trial
+              </span>
+            }
+          </div>
+
+          @if (entry.plan.description) {
+            <p class="plan-description">{{ entry.plan.description }}</p>
+          }
+
+          <p class="plan-price">
+            <span class="plan-price-value">{{ entry.formattedPrice }}</span>
+
+            @if (!entry.isFree) {
+              <span class="plan-price-period">
+                {{ billingLabel(entry.plan.billingInterval) }}
+              </span>
+            }
+          </p>
+
+          <ul class="plan-limits">
+            @for (limit of entry.limits; track limit) {
+              <li>
+                <svg
+                  lucideCheck
+                  [size]="14"
+                  [strokeWidth]="2.4"
+                  aria-hidden="true"
+                ></svg>
+                <span>{{ limit }}</span>
+              </li>
+            }
+          </ul>
+
+          @if (!entry.isFree) {
+            <p class="plan-note">
+              Requires a payment method. Resto.pk does not process payments
+              yet, so this plan cannot be activated from here.
+            </p>
+          }
+        </li>
+      }
+    </ul>
+
+    @if (hasPaidPlans()) {
+      <p class="plan-list-footnote">
+        Your free trial is the way to activate this workspace today.
+      </p>
+    }
+  }
+</section>

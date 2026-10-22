@@ -1,0 +1,68 @@
+<section class="progress-card" aria-labelledby="setup-progress-title">
+  <div class="progress-header">
+    <div class="progress-heading">
+      <span class="section-kicker">{{ kicker() }}</span>
+      <h2 id="setup-progress-title">{{ title() }}</h2>
+
+      @if (description(); as copy) {
+        <p>{{ copy }}</p>
+      }
+    </div>
+
+    <div class="progress-summary">
+      <span class="progress-number">
+        {{ completedCount() }} <span>/ {{ totalCount() }}</span>
+      </span>
+      <span class="progress-label">STEPS COMPLETED</span>
+    </div>
+  </div>
+
+  <div
+    class="progress-track"
+    role="progressbar"
+    aria-label="Getting started progress"
+    aria-valuemin="0"
+    [attr.aria-valuemax]="totalCount()"
+    [attr.aria-valuenow]="completedCount()"
+  >
+    <span class="progress-fill" [style.width.%]="progressPercent()"></span>
+  </div>
+
+  <ol class="steps">
+    @for (step of steps(); track step.id; let index = $index) {
+      <li class="step" [attr.data-status]="step.status">
+        <div class="step-marker">
+          @if (step.status === 'completed') {
+            <svg lucideCheck [size]="16" [strokeWidth]="2.6" aria-hidden="true"></svg>
+          } @else {
+            <span>{{ index + 1 }}</span>
+          }
+        </div>
+
+        <div class="step-content">
+          @if (step.status === 'completed') {
+            <span class="step-status">COMPLETED</span>
+          } @else if (step.status === 'current') {
+            <span class="step-status">UP NEXT</span>
+          } @else if (step.status === 'unavailable') {
+            <span class="step-status">UNAVAILABLE</span>
+          }
+
+          <h3>{{ step.title }}</h3>
+          <p>{{ step.description }}</p>
+
+          @if (step.status === 'current' && step.actionLabel) {
+            <button
+              type="button"
+              class="step-action"
+              (click)="stepAction.emit(step)"
+            >
+              {{ step.actionLabel }}
+              <svg lucideArrowRight [size]="14" [strokeWidth]="2.2" aria-hidden="true"></svg>
+            </button>
+          }
+        </div>
+      </li>
+    }
+  </ol>
+</section>

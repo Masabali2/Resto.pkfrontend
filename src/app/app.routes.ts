@@ -83,6 +83,14 @@ export const routes: Routes = [
           )
       },
       {
+        path: 'subscription',
+        title: 'Subscription — Resto.pk',
+        loadComponent: () =>
+          import('./features/subscription/pages/subscription-page/subscription-page').then(
+            m => m.SubscriptionPage
+          )
+      },
+      {
         path: 'websites',
         canActivate: [permissionGuard],
         children: [

@@ -1,0 +1,28 @@
+<section class="stats-grid" aria-label="Workspace statistics">
+  @for (metric of metrics(); track metric.id) {
+    <article class="stat-card" [attr.data-status]="metric.status">
+      <div class="stat-icon" aria-hidden="true">
+        @switch (metric.icon) {
+          @case ('workspace') {
+            <svg lucideBuilding2 [size]="20" [strokeWidth]="1.8"></svg>
+          }
+          @case ('restaurant') {
+            <svg lucideChefHat [size]="20" [strokeWidth]="1.8"></svg>
+          }
+          @case ('website') {
+            <svg lucideGlobe [size]="20" [strokeWidth]="1.8"></svg>
+          }
+          @case ('menu') {
+            <svg lucideUtensils [size]="20" [strokeWidth]="1.8"></svg>
+          }
+        }
+      </div>
+
+      <div class="stat-content">
+        <span class="stat-label">{{ metric.label }}</span>
+        <strong class="stat-value">{{ metric.value }}</strong>
+        <span class="stat-hint">{{ metric.hint }}</span>
+      </div>
+    </article>
+  }
+</section>

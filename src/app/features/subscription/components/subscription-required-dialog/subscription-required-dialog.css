@@ -1,0 +1,134 @@
+:host {
+  display: contents;
+}
+
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgb(31 36 48 / 55%);
+  animation: dialog-fade 200ms ease both;
+  overflow-y: auto;
+}
+
+.dialog-panel {
+  width: min(620px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  border-radius: var(--subscription-radius);
+  background: var(--subscription-surface);
+  box-shadow: var(--subscription-shadow-lg);
+  animation: dialog-enter 240ms ease both;
+}
+
+.dialog-panel:focus {
+  outline: none;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 22px 24px 0;
+}
+
+.dialog-header h2 {
+  margin: 0 0 6px;
+  color: var(--subscription-text);
+  font-size: 18px;
+  font-weight: 780;
+  letter-spacing: -0.35px;
+  line-height: 1.4;
+}
+
+.dialog-header p {
+  margin: 0;
+  color: var(--subscription-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.dialog-close {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  margin-left: auto;
+  place-items: center;
+  border: 1px solid var(--subscription-border);
+  border-radius: 10px;
+  background: var(--subscription-surface);
+  color: var(--subscription-muted);
+  cursor: pointer;
+  transition:
+    border-color var(--subscription-transition),
+    color var(--subscription-transition),
+    background var(--subscription-transition);
+}
+
+.dialog-close:hover {
+  border-color: var(--subscription-primary-border);
+  background: var(--subscription-primary-soft);
+  color: var(--subscription-primary);
+}
+
+.dialog-close:focus-visible {
+  outline: 3px solid var(--subscription-primary-border);
+  outline-offset: 2px;
+}
+
+.dialog-body {
+  padding: 18px 24px 24px;
+}
+
+@keyframes dialog-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialog-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 520px) {
+  .dialog-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .dialog-panel {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: var(--subscription-radius) var(--subscription-radius) 0 0;
+  }
+
+  .dialog-header,
+  .dialog-body {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog-overlay,
+  .dialog-panel {
+    animation: none;
+  }
+}

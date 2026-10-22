@@ -230,7 +230,14 @@ describe('MenuService', () => {
   });
 
   it('updateItem puts a partial item payload', () => {
-    service.updateItem('item-1', { price: 13.0, isAvailable: false }).subscribe();
+    service
+      .updateItem('item-1', {
+        price: 13.0,
+        imageFileId: null,
+        clearImage: false,
+        displayOrder: null
+      })
+      .subscribe();
 
     const req = expectRequest(httpMock, 'PUT', `${API_ROOT}/menu-items/item-1`);
 

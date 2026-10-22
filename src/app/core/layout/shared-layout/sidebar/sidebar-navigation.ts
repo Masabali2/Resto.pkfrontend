@@ -128,7 +128,8 @@ export const SIDEBAR_NAVIGATION: readonly SidebarNavGroup[] = [
       {
         label: 'Subscription & Billing',
         icon: 'M3 7h18v13H3V7Zm0 4h18M7 4h10',
-        status: 'planned'
+        status: 'available',
+        route: ['/subscription']
       },
       {
         label: 'Settings',

@@ -149,6 +149,29 @@
         </span>
       </div>
 
+      @if (subscriptionBlocked()) {
+        <div class="subscription-alert" role="status" aria-live="polite">
+          <span class="subscription-alert-icon" aria-hidden="true">!</span>
+
+          <div class="subscription-alert-copy">
+            <strong>Your workspace is not active yet.</strong>
+            <span>
+              Adding a restaurant needs an active workspace subscription. Start
+              your free trial to continue.
+            </span>
+          </div>
+
+          <app-button
+            variant="outline"
+            size="sm"
+            [fullWidth]="false"
+            (click)="subscriptionFlow.open('Adding a restaurant needs an active workspace subscription.')"
+          >
+            View subscription options
+          </app-button>
+        </div>
+      }
+
       @if (generalError()) {
         <div class="form-alert" role="alert" aria-live="assertive">
           <span class="form-alert-icon" aria-hidden="true">!</span>
@@ -509,4 +532,16 @@
       </form>
     }
   </div>
+
+  <app-subscription-required-dialog
+    [open]="subscriptionFlow.dialogOpen()"
+    [state]="subscriptionFlow.state()"
+    [loading]="subscriptionFlow.trialLoading()"
+    [error]="subscriptionFlow.trialError()"
+    title="Subscription required"
+    message="Start your free trial to unlock restaurant setup, menus and your public website."
+    (startTrial)="startTrial()"
+    (viewPlans)="viewPlans()"
+    (closed)="closeSubscription()"
+  />
 </main>

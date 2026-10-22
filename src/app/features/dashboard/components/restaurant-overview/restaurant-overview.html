@@ -1,0 +1,90 @@
+<section class="restaurant-section" aria-labelledby="restaurant-section-title">
+  <div class="section-heading">
+    <div>
+      <span class="section-kicker">YOUR RESTAURANT BUSINESS</span>
+      <h2 id="restaurant-section-title">Restaurant management</h2>
+
+      @if (!loading() && restaurants(); as collection) {
+        @if (collection.status === 'ready') {
+          <p>
+            @if (collection.totalCount === 0) {
+              Your restaurant will appear here once you create it.
+            } @else if (collection.totalCount === 1) {
+              1 restaurant in your workspace.
+            } @else {
+              {{ collection.totalCount }} restaurants in your workspace.
+            }
+          </p>
+        } @else {
+          <p>Restaurant information is unavailable right now.</p>
+        }
+      }
+    </div>
+
+    @if (restaurants(); as collection) {
+      @if (collection.status === 'ready') {
+        <span class="count-badge">
+          {{ collection.totalCount }} {{ collection.totalCount === 1 ? 'restaurant' : 'restaurants' }}
+        </span>
+      }
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="state-panel" role="status" aria-live="polite">
+      <app-loading-spinner [size]="30" />
+      <p>Loading your restaurants&hellip;</p>
+    </div>
+  } @else if (restaurants(); as collection) {
+    @if (collection.status === 'unavailable') {
+      <div class="state-panel is-warning" role="status">
+        <svg lucideCircleAlert [size]="26" [strokeWidth]="1.8" aria-hidden="true"></svg>
+        <h3>Restaurants could not be loaded</h3>
+        <p>We could not read the restaurants of this workspace. Try again in a moment.</p>
+      </div>
+    } @else if (collection.totalCount === 0) {
+      <div class="empty-card">
+        <span class="empty-icon" aria-hidden="true">
+          <svg lucideChefHat [size]="34" [strokeWidth]="1.6"></svg>
+        </span>
+
+        <div class="empty-copy">
+          <h3>Let&rsquo;s put your restaurant on the map.</h3>
+          <p>
+            Create your first restaurant to start building your online presence.
+            Add your business details now, then move on to your website and menu.
+          </p>
+        </div>
+
+        <app-button
+          variant="primary"
+          size="md"
+          [fullWidth]="false"
+          (click)="createRestaurant.emit()"
+        >
+          <svg lucidePlus [size]="16" [strokeWidth]="2.4" aria-hidden="true"></svg>
+          Create your first restaurant
+        </app-button>
+      </div>
+    } @else {
+      <ul class="restaurant-list">
+        @for (restaurant of collection.items; track restaurant.id) {
+          <li>
+            <article class="restaurant-card">
+              <span class="restaurant-icon" aria-hidden="true">
+                <svg lucideChefHat [size]="20" [strokeWidth]="1.8"></svg>
+              </span>
+
+              <div class="restaurant-copy">
+                <h3>{{ restaurant.name }}</h3>
+                <p>{{ restaurantLocation(restaurant) }}</p>
+              </div>
+
+              <span class="status-badge">{{ restaurant.status }}</span>
+            </article>
+          </li>
+        }
+      </ul>
+    }
+  }
+</section>
