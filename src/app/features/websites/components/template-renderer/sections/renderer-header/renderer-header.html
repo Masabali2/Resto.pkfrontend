@@ -1,0 +1,24 @@
+<header
+  class="tpl-header"
+  [class.tpl-header--centered]="layout() === 'centered'"
+  [class.tpl-header--left]="layout() === 'left'"
+  [class.tpl-header--split]="layout() === 'split'"
+>
+  <span class="tpl-brand">{{ brandName() }}</span>
+
+  <nav class="tpl-nav" aria-label="Restaurant sections">
+    @for (item of navItems(); track item.target) {
+      @if (mode() === 'full') {
+        <a class="tpl-nav-link" href="#{{ item.target }}">{{ item.label }}</a>
+      } @else {
+        <span class="tpl-nav-link">{{ item.label }}</span>
+      }
+    }
+  </nav>
+
+  @if (mode() === 'full') {
+    <button type="button" class="tpl-pill">Order</button>
+  } @else {
+    <span class="tpl-pill">Order</span>
+  }
+</header>

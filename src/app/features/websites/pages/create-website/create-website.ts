@@ -13,18 +13,21 @@ import {
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { WebsiteService } from '../../services/website.service';
-import { RestaurantService } from '../../services/restaurant.service';
+import { RestaurantService } from '../../../../core/services/restaurant.service';
 import { HttpErrorHandlerService } from '../../../../core/services/http-error-handler.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { Button } from '../../../../shared/components/button/button';
 import { InlineError } from '../../../../shared/components/inline-error/inline-error/inline-error';
 import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
-import { TemplatePickerCard } from '../../components/template-picker-card/template-picker-card';
+import { TemplateGallery } from '../../components/template-gallery/template-gallery';
+import { TemplatePreviewDialog } from '../../components/template-preview-dialog/template-preview-dialog';
 import type { ApiResponse } from '../../../../core/models/api-response.model';
 import type { ValidationError } from '../../../../core/models/api-response.model';
+import type { WebsiteTemplateCatalogueItem } from '../../models/website-template-catalogue.model';
 import type { WebsiteTemplateDto } from '../../models/website-template.model';
 import type { RestaurantDto, RestaurantsPage } from '../../models/restaurant.model';
 import type { CreateWebsiteRequest, WebsiteDto } from '../../models/website.model';
+import { buildCatalogueItem } from '../../utils/website-template-catalogue.util';
 
 const SLUG_PATTERN = '^[a-z0-9]+(?:-[a-z0-9]+)*$';
 
@@ -45,7 +48,8 @@ interface SectionState<T> {
     Button,
     InlineError,
     LoadingSpinner,
-    TemplatePickerCard
+    TemplateGallery,
+    TemplatePreviewDialog
   ],
   templateUrl: './create-website.html',
   styleUrl: './create-website.css'
@@ -77,6 +81,34 @@ export class CreateWebsite {
 
   protected readonly selectedTemplateId = signal<string | null>(null);
   protected readonly selectedRestaurantId = signal<string | null>(null);
+
+  /**
+   * Catalogue entries prepared for the gallery (design configuration parsed once).
+   * Ordered by the `displayOrder` declared in the design configuration so the
+   * curated platform order is preserved, then alphabetically by name.
+   */
+  protected readonly catalogue = computed<WebsiteTemplateCatalogueItem[]>(() =>
+    this.templates()
+      .items.map(item => buildCatalogueItem(item))
+      .sort(
+        (left, right) =>
+          left.displayOrder - right.displayOrder ||
+          left.template.name.localeCompare(right.template.name)
+      )
+  );
+
+  /** Template currently shown in the larger preview dialog. */
+  protected readonly previewTemplateId = signal<string | null>(null);
+
+  protected readonly previewItem = computed<WebsiteTemplateCatalogueItem | null>(() => {
+    const id = this.previewTemplateId();
+
+    if (!id) {
+      return null;
+    }
+
+    return this.catalogue().find(item => item.template.id === id) ?? null;
+  });
 
   protected readonly submitting = signal(false);
   protected readonly submitted = signal(false);
@@ -161,8 +193,29 @@ export class CreateWebsite {
     });
   }
 
-  protected selectTemplate(template: WebsiteTemplateDto): void {
-    this.selectedTemplateId.set(template.id);
+  /** Selects a template by its catalogue id (the database GUID). */
+  protected selectTemplateById(templateId: string): void {
+    this.selectedTemplateId.set(templateId);
+  }
+
+  /** Opens the larger preview. This never creates a website. */
+  protected openPreview(templateId: string): void {
+    this.previewTemplateId.set(templateId);
+  }
+
+  protected closePreview(): void {
+    this.previewTemplateId.set(null);
+  }
+
+  /** Applies the previewed design and closes the dialog without submitting. */
+  protected applyPreviewedTemplate(): void {
+    const item = this.previewItem();
+
+    if (item) {
+      this.selectedTemplateId.set(item.template.id);
+    }
+
+    this.previewTemplateId.set(null);
   }
 
   /** Honors /websites/new?restaurantId={guid} from the onboarding flow. */

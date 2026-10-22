@@ -1,0 +1,42 @@
+:host {
+  --tpl-scale: 1;
+  --tpl-section-gap: calc(56px * var(--tpl-scale));
+
+  display: block;
+  overflow: hidden;
+  background: var(--tpl-background);
+  color: var(--tpl-text);
+  font-family: var(--tpl-body-font);
+  font-size: calc(16px * var(--tpl-scale));
+  line-height: 1.6;
+}
+
+:host(.tpl-renderer--card) {
+  --tpl-scale: 0.58;
+}
+
+:host(.tpl-renderer--full) {
+  --tpl-scale: 1;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  color: var(--tpl-text);
+  font-family: var(--tpl-heading-font);
+  font-weight: var(--tpl-heading-weight);
+  letter-spacing: var(--tpl-heading-tracking);
+  line-height: 1.15;
+}
+
+p {
+  margin: 0;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

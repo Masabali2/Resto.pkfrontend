@@ -11,7 +11,7 @@ import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
-import { RestaurantService } from '../../../websites/services/restaurant.service';
+import { RestaurantService } from '../../../../core/services/restaurant.service';
 import { AuthStateService } from '../../../../core/services/auth-state.service';
 import { AuthorizationService } from '../../../../core/services/authorization.service';
 import { TenantContextService } from '../../../../core/services/tenant-context.service';

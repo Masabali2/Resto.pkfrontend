@@ -1,32 +1,66 @@
-<button
-  type="button"
-  class="picker-card"
-  [class.picker-card-selected]="selected()"
-  [attr.aria-pressed]="selected()"
-  [attr.aria-label]="'Select the ' + template().name + ' template'"
-  (click)="onSelect()"
->
-  <div class="picker-media">
-    @if (previewImageUrl()) {
-      <img
-        class="picker-img"
-        [src]="previewImageUrl()"
-        [alt]="'Preview of the ' + template().name + ' template'"
-        loading="lazy"
-        decoding="async"
-      />
-    } @else {
-      <span class="picker-placeholder" aria-hidden="true">&#127869;</span>
-    }
+<article class="picker-card" [class.picker-card-selected]="selected()">
+  <button
+    type="button"
+    class="picker-select"
+    [attr.aria-pressed]="selected()"
+    [attr.aria-label]="'Select the ' + template().name + ' template'"
+    (click)="onSelect()"
+  >
+    <span class="picker-media">
+      @if (design(); as viewModel) {
+        <span class="picker-frame" aria-hidden="true">
+          <app-template-renderer [viewModel]="viewModel" mode="card" />
+        </span>
+      } @else {
+        <span class="picker-fallback" aria-hidden="true">
+          <span class="picker-fallback-mark"></span>
+          <span class="picker-fallback-text">Preview unavailable</span>
+        </span>
+      }
+    </span>
 
-    @if (selected()) {
-      <span class="picker-check" aria-hidden="true">&#10003;</span>
-    }
+    <span class="picker-body">
+      <span class="picker-topline">
+        <span class="picker-name">{{ template().name }}</span>
+        @if (featured()) {
+          <span class="picker-featured">Featured</span>
+        }
+      </span>
+
+      <span class="picker-desc">{{ description() }}</span>
+
+      <span class="picker-tags">
+        @if (category()) {
+          <span class="picker-tag picker-tag-category">{{ category() }}</span>
+        }
+        @for (tag of tags(); track tag) {
+          <span class="picker-tag">{{ tag }}</span>
+        }
+      </span>
+    </span>
+  </button>
+
+  <div class="picker-actions">
+    <span class="picker-state" [class.picker-state-selected]="selected()">
+      @if (selected()) {
+        <span class="picker-check" aria-hidden="true">&#10003;</span>
+        <span>Selected</span>
+      } @else {
+        <span class="picker-state-hint">Tap the card to select</span>
+      }
+    </span>
+
+    <button
+      type="button"
+      class="picker-preview"
+      [attr.aria-label]="'Preview the ' + template().name + ' design'"
+      (click)="onPreview()"
+    >
+      Preview
+    </button>
   </div>
 
-  <div class="picker-body">
-    <h3 class="picker-name">{{ template().name }}</h3>
-    <p class="picker-desc">{{ template().description || 'No description provided.' }}</p>
-    <span class="picker-key">{{ template().templateKey }}</span>
-  </div>
-</button>
+  @if (designError(); as message) {
+    <p class="picker-warning">{{ message }}</p>
+  }
+</article>

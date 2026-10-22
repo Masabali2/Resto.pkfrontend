@@ -1,0 +1,49 @@
+<div class="preview-backdrop" (click)="onBackdrop($event)">
+  <div
+    #panel
+    class="preview-panel"
+    role="dialog"
+    aria-modal="true"
+    tabindex="-1"
+    [attr.aria-labelledby]="titleId()"
+    (keydown)="onKeydown($event)"
+  >
+    <header class="preview-head">
+      <div class="preview-headings">
+        @if (category()) {
+          <p class="preview-category">{{ category() }}</p>
+        }
+        <h2 [id]="titleId()" class="preview-title">{{ template().name }}</h2>
+        @if (template().description) {
+          <p class="preview-subtitle">{{ template().description }}</p>
+        }
+      </div>
+
+      <button
+        type="button"
+        class="preview-close"
+        aria-label="Close preview"
+        (click)="close()"
+      >
+        &#10005;
+      </button>
+    </header>
+
+    <div class="preview-stage">
+      @if (design(); as viewModel) {
+        <app-template-renderer [viewModel]="viewModel" mode="full" />
+      } @else {
+        <p class="preview-empty">
+          {{ designError() || 'This design does not provide a preview yet.' }}
+        </p>
+      }
+    </div>
+
+    <footer class="preview-actions">
+      <button type="button" class="preview-secondary" (click)="close()">Close</button>
+      <button type="button" class="preview-primary" (click)="use()">
+        Use this template
+      </button>
+    </footer>
+  </div>
+</div>

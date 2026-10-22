@@ -7,7 +7,7 @@ import {
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
-import { RestaurantService } from '../../../websites/services/restaurant.service';
+import { RestaurantService } from '../../../../core/services/restaurant.service';
 import { HttpErrorHandlerService } from '../../../../core/services/http-error-handler.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { SubscriptionFlowService } from '../../../subscription/services/subscription-flow.service';

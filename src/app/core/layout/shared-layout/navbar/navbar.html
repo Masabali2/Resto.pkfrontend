@@ -18,21 +18,18 @@
       <span class="brand-word">Resto<span class="brand-accent">.pk</span></span>
     </a>
 
-    <div class="restaurant-card" [attr.title]="restaurant.name">
-      <div class="restaurant-logo" aria-hidden="true">
-        {{ restaurant.initials }}
-      </div>
-
-      <div class="restaurant-details">
-        <span class="restaurant-name">{{ restaurant.name }}</span>
-        <span class="restaurant-subtitle">{{ restaurant.category }}</span>
-      </div>
-
-      <span class="restaurant-status">
-        <span class="status-dot" aria-hidden="true"></span>
-        {{ restaurant.status }}
-      </span>
-    </div>
+    @if (hasActiveTenant()) {
+      <app-restaurant-context
+        [restaurant]="restaurant()"
+        [restaurants]="restaurants()"
+        [state]="restaurantState()"
+        [loading]="restaurantLoading()"
+        [errorMessage]="restaurantError()"
+        [canCreateRestaurant]="canCreateRestaurant()"
+        (restaurantSelected)="onRestaurantSelected($event)"
+        (retry)="retryRestaurant()"
+      />
+    }
 
     @if (activeTenantName(); as tenantName) {
       <span class="tenant-divider" aria-hidden="true"></span>

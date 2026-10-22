@@ -1,0 +1,51 @@
+
+<div class="restaurant-selector" (keydown)="onKeydown($event)">
+  <button
+    type="button"
+    class="selector-trigger"
+    aria-haspopup="listbox"
+    [attr.aria-expanded]="open()"
+    aria-label="Switch restaurant"
+    [disabled]="options().length < 2"
+    (click)="toggle()"
+  >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  </button>
+
+  @if (open()) {
+    <ul class="selector-menu" role="listbox" aria-label="Restaurants">
+      @for (option of options(); track option.id) {
+        <li>
+          <button
+            type="button"
+            role="option"
+            class="selector-option"
+            [class.is-selected]="option.selected"
+            [attr.aria-selected]="option.selected"
+            (click)="choose(option.id)"
+          >
+            <span class="option-initials" aria-hidden="true">{{ option.initials }}</span>
+
+            <span class="option-copy">
+              <span class="option-name">{{ option.name }}</span>
+              @if (option.meta) {
+                <span class="option-meta">{{ option.meta }}</span>
+              }
+            </span>
+
+            @if (option.selected) {
+              <svg class="option-check" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2.4"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="m5 13 4 4L19 7" />
+              </svg>
+            }
+          </button>
+        </li>
+      }
+    </ul>
+  }
+</div>

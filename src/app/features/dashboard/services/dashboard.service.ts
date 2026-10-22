@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { catchError, forkJoin, map, Observable, of, switchMap } from 'rxjs';
 import { MenuService } from '../../menu/services/menu.service';
-import { RestaurantService } from '../../websites/services/restaurant.service';
+import { RestaurantService } from '../../../core/services/restaurant.service';
 import { WebsiteService } from '../../websites/services/website.service';
 import type { ApiResponse } from '../../../core/models/api-response.model';
 import type { MenuDto } from '../../menu/models/menu.model';

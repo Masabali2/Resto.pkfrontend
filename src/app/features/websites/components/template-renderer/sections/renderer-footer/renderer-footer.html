@@ -1,0 +1,25 @@
+<footer
+  class="tpl-footer"
+  [class.tpl-footer--multi-column]="layout() === 'multi-column'"
+  [class.tpl-footer--simple]="layout() === 'simple'"
+  [class.tpl-footer--centered]="layout() === 'centered'"
+>
+  <div class="tpl-footer-brand">
+    <span class="tpl-footer-name">{{ brandName() }}</span>
+    <span class="tpl-footer-tagline">Made with Resto.pk</span>
+  </div>
+
+  @if (layout() === 'multi-column') {
+    <nav class="tpl-footer-nav" aria-label="Footer links">
+      @for (link of links(); track link.target) {
+        @if (mode() === 'full') {
+          <a class="tpl-footer-link" href="#{{ link.target }}">{{ link.label }}</a>
+        } @else {
+          <span class="tpl-footer-link">{{ link.label }}</span>
+        }
+      }
+    </nav>
+  }
+
+  <p class="tpl-footer-legal">&copy; 2026 {{ brandName() }}. All rights reserved.</p>
+</footer>

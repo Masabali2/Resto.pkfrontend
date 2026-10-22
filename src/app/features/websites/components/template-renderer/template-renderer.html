@@ -1,0 +1,29 @@
+@for (section of viewModel().sections; track section.type) {
+  @switch (section.type) {
+    @case ('header') {
+      <app-renderer-header
+        [viewModel]="viewModel()"
+        [mode]="mode()"
+        [brandName]="brandName()"
+      />
+    }
+    @case ('hero') {
+      <app-renderer-hero [viewModel]="viewModel()" [mode]="mode()" />
+    }
+    @case ('menu') {
+      <app-renderer-menu [viewModel]="viewModel()" [mode]="mode()" />
+    }
+    @case ('about') {
+      <app-renderer-about [viewModel]="viewModel()" [mode]="mode()" />
+    }
+    @case ('gallery') {
+      <app-renderer-gallery [viewModel]="viewModel()" [mode]="mode()" />
+    }
+    @case ('contact') {
+      <app-renderer-contact [viewModel]="viewModel()" [mode]="mode()" />
+    }
+    @case ('footer') {
+      <app-renderer-footer [viewModel]="viewModel()" [mode]="mode()" [brandName]="brandName()" />
+    }
+  }
+}

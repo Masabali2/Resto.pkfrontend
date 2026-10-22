@@ -92,12 +92,12 @@ export const routes: Routes = [
       },
       {
         path: 'websites',
-        canActivate: [permissionGuard],
         children: [
           {
             path: '',
             pathMatch: 'full',
             title: 'Websites — Resto.pk',
+            canActivate: [permissionGuard],
             data: { permission: 'Website.View' },
             loadComponent: () =>
               import('./features/websites/pages/website-list/website-list').then(
@@ -107,6 +107,7 @@ export const routes: Routes = [
           {
             path: 'new',
             title: 'Create Website — Resto.pk',
+            canActivate: [permissionGuard],
             data: { permissions: ['Website.View', 'Website.Update'], mode: 'any' },
             loadComponent: () =>
               import('./features/websites/pages/create-website/create-website').then(
@@ -116,6 +117,8 @@ export const routes: Routes = [
           {
             path: ':id',
             title: 'Website — Resto.pk',
+            canActivate: [permissionGuard],
+            data: { permission: 'Website.View' },
             loadComponent: () =>
               import('./features/websites/pages/website-detail/website-detail').then(
                 m => m.WebsiteDetail
@@ -124,6 +127,8 @@ export const routes: Routes = [
           {
             path: ':id/editor',
             title: 'Website Editor — Resto.pk',
+            canActivate: [permissionGuard],
+            data: { permission: 'Website.Update' },
             loadComponent: () =>
               import('./features/websites/pages/website-editor/website-editor').then(
                 m => m.WebsiteEditor
@@ -133,12 +138,12 @@ export const routes: Routes = [
       },
       {
         path: 'menus',
-        canActivate: [permissionGuard],
         children: [
           {
             path: '',
             pathMatch: 'full',
             title: 'Menus — Resto.pk',
+            canActivate: [permissionGuard],
             data: { permission: 'Menu.View' },
             loadComponent: () =>
               import('./features/menu/pages/menu-list/menu-list').then(
@@ -148,6 +153,7 @@ export const routes: Routes = [
           {
             path: 'new',
             title: 'Create Menu — Resto.pk',
+            canActivate: [permissionGuard],
             canDeactivate: [unsavedChangesGuard],
             data: { permission: 'Menu.Create' },
             loadComponent: () =>
@@ -158,6 +164,7 @@ export const routes: Routes = [
           {
             path: ':menuId/edit',
             title: 'Edit Menu — Resto.pk',
+            canActivate: [permissionGuard],
             canDeactivate: [unsavedChangesGuard],
             data: { permission: 'Menu.Update' },
             loadComponent: () =>
@@ -168,6 +175,7 @@ export const routes: Routes = [
           {
             path: ':menuId',
             title: 'Menu — Resto.pk',
+            canActivate: [permissionGuard],
             data: { permission: 'Menu.View' },
             loadComponent: () =>
               import('./features/menu/pages/menu-detail/menu-detail').then(
@@ -177,6 +185,7 @@ export const routes: Routes = [
           {
             path: ':menuId/categories/new',
             title: 'Create Category — Resto.pk',
+            canActivate: [permissionGuard],
             canDeactivate: [unsavedChangesGuard],
             data: { permission: 'MenuCategory.Create' },
             loadComponent: () =>
@@ -187,6 +196,7 @@ export const routes: Routes = [
           {
             path: ':menuId/categories/:categoryId/edit',
             title: 'Edit Category — Resto.pk',
+            canActivate: [permissionGuard],
             canDeactivate: [unsavedChangesGuard],
             data: { permission: 'MenuCategory.Update' },
             loadComponent: () =>
@@ -195,8 +205,9 @@ export const routes: Routes = [
               )
           },
           {
-            path: ':menuId/categories/:categoryId/items/new',
+            path: ':menuId/categories/:menuId/items/new',
             title: 'Create Item — Resto.pk',
+            canActivate: [permissionGuard],
             canDeactivate: [unsavedChangesGuard],
             data: { permission: 'MenuItem.Create' },
             loadComponent: () =>
@@ -207,6 +218,7 @@ export const routes: Routes = [
           {
             path: ':menuId/categories/:categoryId/items/:itemId/edit',
             title: 'Edit Item — Resto.pk',
+            canActivate: [permissionGuard],
             canDeactivate: [unsavedChangesGuard],
             data: { permission: 'MenuItem.Update' },
             loadComponent: () =>

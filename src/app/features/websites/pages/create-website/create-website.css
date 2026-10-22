@@ -12,7 +12,7 @@
 }
 
 .create-shell {
-  max-width: 980px;
+  max-width: 1120px;
   margin: 0 auto;
 }
 
@@ -124,6 +124,12 @@
   font-weight: 400 !important;
 }
 
+.section-hint-lead {
+  margin: -6px 0 16px !important;
+  max-width: 68ch;
+  line-height: 1.6;
+}
+
 .option-list {
   display: grid;
   gap: 10px;
@@ -208,12 +214,6 @@
   color: var(--color-text-muted);
   font-size: var(--font-size-xs);
   font-weight: 650;
-}
-
-.template-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 16px;
 }
 
 .field-grid {
