@@ -22,6 +22,10 @@ export interface BulkPricePreviewRow {
   name: string;
   currentPrice: number;
   newPrice: number;
+  /** Current image reference, preserved verbatim by the PUT partial update. */
+  imageFileId: string | null;
+  /** Current position in the category, preserved verbatim by the PUT partial update. */
+  displayOrder: number;
 }
 
 export interface BulkPriceResultRow {

@@ -67,7 +67,9 @@ export class BulkPriceDialog {
       itemId: item.id,
       name: item.name,
       currentPrice: item.price,
-      newPrice: computeAdjustedPrice(item.price, this.form())
+      newPrice: computeAdjustedPrice(item.price, this.form()),
+      imageFileId: item.imageFileId,
+      displayOrder: item.displayOrder
     }))
   );
 
@@ -115,8 +117,9 @@ export class BulkPriceDialog {
       this.menuService
         .updateItem(row.itemId, {
           price: row.newPrice,
-          imageFileId: null,
-          clearImage: false
+          imageFileId: row.imageFileId,
+          clearImage: false,
+          displayOrder: row.displayOrder
         })
         .pipe(
           map(response => {

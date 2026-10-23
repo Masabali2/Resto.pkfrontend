@@ -295,6 +295,11 @@
                       }
                       @if (!item.isAvailable) {
                         <span class="item__badge item__badge--out">Out of stock</span>
+                      } @else if (item.isActive) {
+                        <span class="item__badge item__badge--live">
+                          <svg lucideCheck [size]="12" [strokeWidth]="3" aria-hidden="true"></svg>
+                          Live
+                        </span>
                       }
                       <span class="item__order">#{{ item.displayOrder }}</span>
                     </div>
