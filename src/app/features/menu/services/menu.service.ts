@@ -168,7 +168,7 @@ export class MenuService {
   getCategoryItems(
     categoryId: string,
     page = 1,
-    pageSize = 20
+    pageSize = 50
   ): Observable<ApiResponse<PagedResult<MenuItemDto>>> {
     const params = new HttpParams().set('page', page).set('pageSize', pageSize);
 

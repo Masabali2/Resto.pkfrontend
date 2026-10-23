@@ -1,0 +1,153 @@
+@if (open()) {
+  <div class="bulk-backdrop" role="presentation" (click)="close()">
+    <div
+      class="bulk-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="bulk-price-title"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="bulk-dialog__header">
+        <div class="bulk-dialog__title-wrap">
+          <span class="bulk-dialog__icon" aria-hidden="true">
+            <lucide-percent />
+          </span>
+          <div>
+            <h2 id="bulk-price-title" class="bulk-dialog__title">Bulk Price Adjustment</h2>
+            <p class="bulk-dialog__subtitle">
+              Live price calibration for "{{ categoryName() }}" — {{ previewRows().length }} items
+            </p>
+          </div>
+        </div>
+        <button type="button" class="bulk-dialog__close" aria-label="Close" (click)="close()">
+          <lucide-x />
+        </button>
+      </header>
+
+        @if (!results()) {
+          <section class="bulk-dialog__controls">
+            <div class="bulk-dialog__segmented" role="group" aria-label="Adjustment mode">
+              <button
+                type="button"
+                class="bulk-dialog__segment"
+                [class.bulk-dialog__segment--active]="mode() === 'percentage'"
+                (click)="setMode('percentage')"
+              >
+                Percentage
+              </button>
+              <button
+                type="button"
+                class="bulk-dialog__segment"
+                [class.bulk-dialog__segment--active]="mode() === 'fixed'"
+                (click)="setMode('fixed')"
+              >
+                Fixed amount
+              </button>
+            </div>
+
+            <label class="bulk-dialog__field">
+              <span class="bulk-dialog__label">
+                {{ mode() === 'percentage' ? 'Adjust by (%)' : 'Add to each price (PKR)' }}
+              </span>
+              @if (mode() === 'percentage') {
+                <input
+                  type="number"
+                  class="bulk-dialog__input"
+                  [value]="percentValue()"
+                  step="0.5"
+                  (input)="onPercentChange($any($event.target).value)"
+                  aria-label="Percentage adjustment"
+                />
+              } @else {
+                <input
+                  type="number"
+                  class="bulk-dialog__input"
+                  [value]="amountValue()"
+                  step="1"
+                  (input)="onAmountChange($any($event.target).value)"
+                  aria-label="Fixed amount adjustment"
+                />
+              }
+            </label>
+
+            <button
+              type="button"
+              class="bulk-dialog__round"
+              [class.bulk-dialog__round--on]="roundToWhole()"
+              role="switch"
+              [attr.aria-checked]="roundToWhole()"
+              (click)="toggleRound()"
+            >
+              <span class="bulk-dialog__round-track" aria-hidden="true">
+                <span class="bulk-dialog__round-thumb" />
+              </span>
+              Round to whole rupees
+            </button>
+          </section>
+
+          <section class="bulk-dialog__preview" aria-label="Price preview">
+            <div class="bulk-dialog__preview-head">
+              <span>Item</span>
+              <span>Current</span>
+              <span>New price</span>
+            </div>
+            <ul class="bulk-dialog__preview-list">
+              @for (row of previewRows(); track row.itemId) {
+                <li class="bulk-dialog__preview-row">
+                  <span class="bulk-dialog__preview-name">{{ row.name }}</span>
+                  <span class="bulk-dialog__preview-current">{{ formatMoney(row.currentPrice) }}</span>
+                  <span class="bulk-dialog__preview-new">{{ formatMoney(row.newPrice) }}</span>
+                </li>
+              }
+            </ul>
+          </section>
+
+          <footer class="bulk-dialog__footer">
+            <button type="button" class="bulk-dialog__btn bulk-dialog__btn--ghost" (click)="close()">
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="bulk-dialog__btn bulk-dialog__btn--primary"
+              [disabled]="!isValid() || applying()"
+              (click)="apply()"
+            >
+              @if (applying()) {
+                Applying…
+              } @else {
+                Apply to {{ previewRows().length }} items
+              }
+            </button>
+          </footer>
+        } @else {
+          <section class="bulk-dialog__results">
+            <p class="bulk-dialog__summary">
+              <strong>{{ succeededCount() }}</strong> updated
+              @if (failedCount() > 0) {
+                · <strong>{{ failedCount() }}</strong> failed
+              }
+            </p>
+            <ul class="bulk-dialog__result-list">
+              @for (row of results(); track row.item.itemId) {
+                <li class="bulk-dialog__result-row" [class.bulk-dialog__result-row--failed]="!row.success">
+                  <span class="bulk-dialog__result-name">
+                    {{ row.item.name }} → {{ formatMoney(row.item.newPrice) }}
+                  </span>
+                  @if (row.success) {
+                    <span class="bulk-dialog__result-ok">Saved</span>
+                  } @else {
+                    <span class="bulk-dialog__result-error">{{ row.error }}</span>
+                  }
+                </li>
+              }
+            </ul>
+            <footer class="bulk-dialog__footer">
+              <button type="button" class="bulk-dialog__btn bulk-dialog__btn--primary" (click)="close()">
+                Done
+              </button>
+            </footer>
+          </section>
+        }
+    </div>
+  </div>
+}
