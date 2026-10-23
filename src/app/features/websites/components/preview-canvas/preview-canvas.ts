@@ -55,16 +55,20 @@ export class PreviewCanvas {
     });
   }
 
+  /**
+   * Canonical theme location (backend schema): `theme.colors.<name>` hex map
+   * and a single allow-listed `theme.font`. Unknown/legacy top-level keys are
+   * intentionally NOT read here so there is exactly one mapping between the
+   * settings panel, the persisted draft, and this preview.
+   */
   protected readonly previewStyle = computed<Record<string, string>>(() => {
-    const theme = this.config()?.theme ?? {};
-    const color = (key: string, fallback: string): string => {
-      const value = theme[key];
+    const theme = this.config()?.theme;
+    const colors = theme?.colors ?? {};
+    const color = (key: keyof typeof colors | string, fallback: string): string => {
+      const value = (colors as Record<string, unknown>)[key];
       return typeof value === 'string' && value.startsWith('#') ? value : fallback;
     };
-    const font = (key: string): string => {
-      const value = theme[key];
-      return typeof value === 'string' ? value : 'inherit';
-    };
+    const font = theme?.font && typeof theme.font === 'string' ? theme.font : 'system-ui';
 
     return {
       '--pv-primary': color('primary', '#b3261e'),
@@ -72,8 +76,8 @@ export class PreviewCanvas {
       '--pv-accent': color('accent', '#ff8f00'),
       '--pv-bg': color('background', '#ffffff'),
       '--pv-text': color('text', '#1c1b1f'),
-      '--pv-heading-font': `"${font('font')}", sans-serif`,
-      '--pv-body-font': `"${font('font')}", sans-serif`
+      '--pv-heading-font': `"${font}", sans-serif`,
+      '--pv-body-font': `"${font}", sans-serif`
     };
   });
 

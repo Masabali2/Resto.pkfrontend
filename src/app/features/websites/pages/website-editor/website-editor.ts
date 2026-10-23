@@ -9,7 +9,8 @@ import {
   OnInit
 } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Observable, Subject, takeUntil, switchMap, map, of, type Observer } from 'rxjs';
+import { Observable, Subject, takeUntil, switchMap, map, of, combineLatest, type Observer } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
 import { MenuService } from '../../../menu/services/menu.service';
 import { RestaurantService } from '../../../../core/services/restaurant.service';
 import { WebsiteService } from '../../services/website.service';
@@ -40,7 +41,7 @@ import type { TemplateSectionType } from '../../models/website-template-design.m
 import type { RestaurantDto } from '../../../../core/models/restaurant.model';
 import type { MenuItemDto } from '../../../menu/models/menu-item.model';
 
-import { environment } from '../../../../environments/environment';
+import { environment } from '../../../../../environments/environment';
 
 const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -235,14 +236,14 @@ export class WebsiteEditor implements OnInit, OnDestroy {
             return of(null);
           }
 
-          return this.loadWebsite(id);
+          return this.loadWebsiteAndApply(id);
         })
       )
       .subscribe({
         next: loaded => {
           if (loaded === null) return;
           if (!loaded.ok) {
-            this.errorMessage.set(loaded.message);
+            this.errorMessage.set(loaded.message ?? 'Unable to load this website.');
             this.state.set(loaded.notFound ? 'missing' : 'error');
           }
         },
@@ -273,6 +274,19 @@ export class WebsiteEditor implements OnInit, OnDestroy {
     if (!type) return null;
     const mapped = WebsiteEditor.WEBSITE_TO_TEMPLATE_SECTION[type];
     return mapped ?? (type as TemplateSectionType);
+  }
+
+  /**
+   * Inverse of `WEBSITE_TO_TEMPLATE_SECTION`: maps a template design section
+   * type onto the website draft vocabulary used by the parser, renderer
+   * switch, and settings panel. Types that are identical in both vocabularies
+   * pass through unchanged.
+   */
+  private static toWebsiteSectionType(type: TemplateSectionType | string): string {
+    for (const [websiteType, templateType] of Object.entries(WebsiteEditor.WEBSITE_TO_TEMPLATE_SECTION)) {
+      if (templateType === type) return websiteType;
+    }
+    return type;
   }
 
   protected onThemeChange(change: ThemeChange): void {
@@ -385,8 +399,7 @@ export class WebsiteEditor implements OnInit, OnDestroy {
       .filter(s => s.enabled)
       .sort((a, b) => a.order - b.order)
       .map(s => {
-        const templateType = WebsiteEditor.toTemplateSectionType(s.type);
-        const websiteType = templateType === 'menu' ? 'menu-preview' : s.type;
+        const websiteType = WebsiteEditor.toWebsiteSectionType(s.type);
         const existing = previousSettingsByType.get(websiteType);
         const defaults = this.getDefaultSectionSettings(websiteType);
         return {
@@ -583,18 +596,40 @@ export class WebsiteEditor implements OnInit, OnDestroy {
   }
 
   protected openPreview(): void {
-    this.showPreviewDialog.set(true);
+    // Live preview of the CURRENT editor configuration — never depends on a
+    // separately-tracked template id that could be unset.
+    this.showLivePreview.set(true);
   }
 
   protected closePreview(): void {
-    this.showPreviewDialog.set(false);
+    this.showLivePreview.set(false);
   }
 
   protected retry(): void {
     const id = this.id().trim();
-    if (GUID_PATTERN.test(id)) {
-      this.loadWebsite(id);
+    if (!GUID_PATTERN.test(id)) {
+      this.state.set('missing');
+      return;
     }
+    this.loadWebsiteAndApply(id).pipe(
+      tap({
+        next: loaded => {
+          if (loaded === null) return;
+          if (!loaded.ok) {
+            this.errorMessage.set(loaded.message);
+            this.state.set(loaded.notFound ? 'missing' : 'error');
+          }
+        },
+        error: (error: unknown) => {
+          this.errorMessage.set(
+            this.httpErrorHandler.handle(error, {
+              fallbackMessage: 'Unable to load this website. Please try again.'
+            }).message
+          );
+          this.state.set('error');
+        }
+      })
+    ).subscribe();
   }
 
   protected startFromDefault(): void {
@@ -606,60 +641,90 @@ export class WebsiteEditor implements OnInit, OnDestroy {
     this.state.set('ready');
   }
 
-  private loadWebsite(id: string): void {
+  /**
+   * Loads the website, its draft, and (in parallel where possible) its
+   * restaurant in ONE pass — `getWebsite` is requested exactly once per load.
+   * Returns a result object instead of mutating state so callers can compose
+   * it inside `switchMap`, which discards stale responses when the route id
+   * changes mid-flight. Side effects that must only run for the CURRENT
+   * website (templates, menu items, applied draft) are performed by
+   * `loadWebsiteAndApply`.
+   */
+  private loadWebsite(id: string): Observable<
+    | { ok: true; website: WebsiteDto; draft: ApiResponse<WebsiteDraftDto>; restaurant: ApiResponse<RestaurantDto> | null }
+    | { ok: false; message: string; notFound: boolean }
+  > {
     this.state.set('loading');
     this.errorMessage.set('');
     this.startingFromDefault.set(false);
 
-    forkJoin({
-      website: this.websiteService.getWebsite(id),
-      draft: this.websiteService.getDraft(id),
-      restaurant: this.loadRestaurantForWebsite(id)
-    }).subscribe({
-      next: ({ website, draft, restaurant }) => {
-        if (!website.success || !website.data) {
-          this.errorMessage.set(
-            website.message ?? 'Unable to load this website. Please try again.'
-          );
-          this.state.set(website.errorCode === 'NOT_FOUND' ? 'missing' : 'error');
-          return;
+    return this.websiteService.getWebsite(id).pipe(
+      switchMap(websiteResponse => {
+        if (!websiteResponse.success || !websiteResponse.data) {
+          return of({
+            ok: false as const,
+            message:
+              websiteResponse.message ?? 'Unable to load this website. Please try again.',
+            notFound: websiteResponse.errorCode === 'NOT_FOUND'
+          });
         }
 
-        this.website.set(website.data);
-        if (restaurant?.success && restaurant.data) this.restaurant.set(restaurant.data);
+        const site = websiteResponse.data;
+        // Independent resources fetched in parallel; failures degrade to null
+        // so the editor can still open without restaurant context.
+        const restaurant$ = this.restaurantService
+          .getRestaurantById(site.restaurantId)
+          .pipe(catchError(() => of(null)));
+        const draft$ = this.websiteService.getDraft(id).pipe(catchError(() => of(null)));
 
-        if (!draft.success || draft.data == null) {
-          this.errorMessage.set(
-            draft.message ?? 'The draft configuration could not be loaded. Please try again.'
-          );
-          this.state.set('error');
-          return;
+        return combineLatest({ draft: draft$, restaurant: restaurant$ }).pipe(
+          map(({ draft, restaurant }) => ({
+            ok: true as const,
+            website: site,
+            draft,
+            restaurant
+          }))
+        );
+      }),
+      catchError((error: unknown) => {
+        const details = this.httpErrorHandler.handle(error, {
+          fallbackMessage: 'Unable to load this website. Please try again.'
+        });
+        return of({ ok: false as const, message: details.message, notFound: false });
+      })
+    );
+  }
+
+  private loadWebsiteAndApply(
+    id: string
+  ): Observable<{ ok: boolean; message?: string; notFound?: boolean } | null> {
+    return this.loadWebsite(id).pipe(
+      map(result => {
+        if (!result.ok) {
+          return { ok: false as const, message: result.message, notFound: result.notFound };
+        }
+
+        this.website.set(result.website);
+        if (result.restaurant?.success && result.restaurant.data) {
+          this.restaurant.set(result.restaurant.data);
+        }
+
+        const draft = result.draft;
+        if (draft == null || !draft.success || draft.data == null) {
+          return {
+            ok: false as const,
+            message:
+              (draft?.message ?? 'The draft configuration could not be loaded. Please try again.'),
+            notFound: false
+          };
         }
 
         this.applyDraft(draft.data);
-        this.loadTemplates(website.data.websiteTemplateId);
-        this.loadMenuItems(website.data.restaurantId);
-      },
-      error: (error: unknown) => {
-        this.errorMessage.set(
-          this.httpErrorHandler.handle(error, {
-            fallbackMessage: 'Unable to load this website. Please try again.'
-          }).message
-        );
-        this.state.set('error');
-      }
-    });
-  }
-
-  private loadRestaurantForWebsite(websiteId: string) {
-    return this.websiteService.getWebsite(websiteId).pipe(
-      switchMap(response => {
-        if (response.success && response.data) {
-          return this.restaurantService.getRestaurantById(response.data.restaurantId);
-        }
-        return of({ success: false, data: null } as ApiResponse<RestaurantDto>);
-      }),
-      catchError(() => of({ success: false, data: null } as ApiResponse<RestaurantDto>))
+        // Secondary data belongs to the website we just committed to state.
+        this.loadTemplates(result.website.websiteTemplateId);
+        this.loadMenuItems(result.website.restaurantId);
+        return { ok: true as const };
+      })
     );
   }
 
@@ -719,14 +784,6 @@ export class WebsiteEditor implements OnInit, OnDestroy {
     this.state.set('ready');
 
     this.autosaveService.reset();
-  }
-
-  protected onPreviewDialogUse(): void {
-    const item = this.templates().find(t => t.template.id === this.previewTemplateId());
-    if (item) {
-      this.onTemplateChange({ templateId: item.template.id, templateKey: item.template.templateKey });
-    }
-    this.closePreview();
   }
 
   ngOnDestroy(): void {
