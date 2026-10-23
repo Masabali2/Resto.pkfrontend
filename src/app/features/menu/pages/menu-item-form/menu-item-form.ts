@@ -10,7 +10,7 @@ import {
   ReactiveFormsModule,
   Validators
 } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { MenuService } from '../../services/menu.service';
 import { HttpErrorHandlerService } from '../../../../core/services/http-error-handler.service';
@@ -35,7 +35,6 @@ const DISPLAY_ORDER_PATTERN = /^\d+$/;
   standalone: true,
   imports: [
     ReactiveFormsModule,
-    RouterLink,
     Button,
     LoadingSpinner
   ],

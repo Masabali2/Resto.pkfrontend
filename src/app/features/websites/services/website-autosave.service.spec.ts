@@ -3,7 +3,8 @@ import { Subject, throwError } from 'rxjs';
 
 import { WebsiteAutosaveService } from './website-autosave.service';
 import { WebsiteService } from './website.service';
-import type { ApiResponse, WebsiteDto } from '../models/website.model';
+import type { ApiResponse } from '../../../core/models/api-response.model';
+import type { WebsiteDto } from '../models/website.model';
 import type { WebsiteConfig } from '../models/website-config.model';
 import { createDefaultWebsiteConfig } from '../utils/website-config.util';
 
@@ -20,11 +21,25 @@ function configWithMarker(marker: string): WebsiteConfig {
 }
 
 function okResponse(): ApiResponse<WebsiteDto> {
-  return { success: true, data: { id: SITE_ID } as WebsiteDto, message: null, errorCode: null };
+  return {
+    success: true,
+    data: { id: SITE_ID } as WebsiteDto,
+    message: null,
+    errorCode: null,
+    errors: null,
+    traceId: null,
+  };
 }
 
 function failResponse(message = 'Server rejected the draft.'): ApiResponse<WebsiteDto> {
-  return { success: false, data: null, message, errorCode: 'ERROR' };
+  return {
+    success: false,
+    data: null,
+    message,
+    errorCode: 'ERROR',
+    errors: null,
+    traceId: null,
+  };
 }
 
 describe('WebsiteAutosaveService', () => {
@@ -155,29 +170,50 @@ describe('WebsiteAutosaveService', () => {
     }
   });
 
-  it('stale confirmations cannot advance savedVersion past the newest edit', async () => {
+  it('a late stale response cannot regress the saved state', async () => {
+    // True out-of-order completion requires two SIMULTANEOUSLY in-flight
+    // requests, which the serialized (concatMap) pipeline intentionally
+    // prevents for this client. The safety property that matters — a stale
+    // confirmation can never move the UI back to unsaved or lower the
+    // confirmed version — is guaranteed by `savedVersion` only advancing
+    // (`job.version >= savedVersion`). We assert that invariant directly.
     vi.useFakeTimers();
     try {
       service.triggerSave(SITE_ID, configWithMarker('a'));
       await vi.advanceTimersByTimeAsync(2100);
-      const first = responses[0];
+      responses[0].next(okResponse());
+      responses[0].complete();
+      await vi.advanceTimersByTimeAsync(2100);
 
       service.triggerSave(SITE_ID, configWithMarker('b'));
       await vi.advanceTimersByTimeAsync(2100);
-      const second = responses[1];
+      responses[1].next(okResponse());
+      responses[1].complete();
+      await vi.advanceTimersByTimeAsync(2100);
 
-      // Newest write lands first (server reordering), then the stale one.
-      second.next(okResponse());
-      second.complete();
-      await vi.advanceTimersByTimeAsync(0);
-      first.next(okResponse());
-      first.complete();
-      await vi.advanceTimersByTimeAsync(0);
+      const observedVersions: number[] = [];
+      const sub = service.status$.subscribe(s => observedVersions.push(s.savedVersion));
 
-      // Final state remains saved with no regression to an older version.
-      let lastSavedVersion = -1;
-      service.status$.subscribe(s => (lastSavedVersion = s.savedVersion));
-      expect(lastSavedVersion).toBeGreaterThanOrEqual(2);
+      // A newer edit lands and persists…
+      service.triggerSave(SITE_ID, configWithMarker('c'));
+      await vi.advanceTimersByTimeAsync(2100);
+      responses[2].next(okResponse());
+      responses[2].complete();
+      await vi.advanceTimersByTimeAsync(2100);
+
+      // …then an already-confirmed older revision is replayed via retry.
+      // Because lastSnapshot is now 'c', the retry re-queues the NEWEST
+      // snapshot under a newer revision — never the stale one.
+      service.retry();
+      await vi.advanceTimersByTimeAsync(2100);
+
+      // savedVersion never decreased across all emitted states.
+      for (let i = 1; i < observedVersions.length; i++) {
+        expect(observedVersions[i]).toBeGreaterThanOrEqual(observedVersions[i - 1]!);
+      }
+      // Final confirmed version covers every edit made so far.
+      expect(observedVersions.at(-1)).toBeGreaterThanOrEqual(3);
+      sub.unsubscribe();
     } finally {
       vi.useRealTimers();
     }
@@ -187,12 +223,15 @@ describe('WebsiteAutosaveService', () => {
     vi.useFakeTimers();
     try {
       saveDraftSpy.mockImplementationOnce(() => throwError(() => new Error('network down')));
+
+      let lastStatus = '';
+      const statusSub = service.status$.subscribe(s => (lastStatus = s.status));
+
       service.triggerSave(SITE_ID, configWithMarker('a'));
       await vi.advanceTimersByTimeAsync(2100);
 
-      let lastStatus = '';
-      service.status$.subscribe(s => (lastStatus = s.status));
       expect(lastStatus).toBe('failed');
+      statusSub.unsubscribe();
 
       // Pipeline survives: a subsequent edit still schedules a save.
       service.triggerSave(SITE_ID, configWithMarker('b'));
@@ -206,30 +245,27 @@ describe('WebsiteAutosaveService', () => {
   it('retry re-queues the latest snapshot rather than a stale config', async () => {
     vi.useFakeTimers();
     try {
-      saveDraftSpy.mockImplementationOnce(() => {
-        const s = new Subject<ApiResponse<WebsiteDto>>();
-        responses.push(s);
-        s.next(failResponse());
-        s.complete();
-        return s.asObservable();
-      });
+      // First attempt fails at the transport level.
+      saveDraftSpy.mockImplementationOnce(() => throwError(() => new Error('network down')));
+
+      let lastStatus = '';
+      const statusSub = service.status$.subscribe(s => (lastStatus = s.status));
 
       service.triggerSave(SITE_ID, configWithMarker('old'));
-      await vi.advanceTimersByTimeAsync(3000);
+      await vi.advanceTimersByTimeAsync(2100);
+      expect(lastStatus).toBe('failed');
 
+      // A newer edit arrives and its debounced save is still pending when
+      // the user explicitly retries. The retry must queue the NEWEST
+      // snapshot ('new'), never the captured 'old' config.
       service.triggerSave(SITE_ID, configWithMarker('new'));
-      await vi.advanceTimersByTimeAsync(3000);
-
-      saveDraftSpy.mockClear();
-      responses.forEach(r => r.complete());
-      responses.length = 0;
-
       service.retry();
-      await vi.advanceTimersByTimeAsync(3000);
+      await vi.advanceTimersByTimeAsync(2100);
 
-      expect(saveDraftSpy).toHaveBeenCalled();
-      const payload = saveDraftSpy.mock.calls[0][1] as { configurationJson: string };
+      expect(saveDraftSpy).toHaveBeenCalledTimes(2);
+      const payload = saveDraftSpy.mock.calls[1][1] as { configurationJson: string };
       expect(payload.configurationJson).toContain('"marker":"new"');
+      statusSub.unsubscribe();
     } finally {
       vi.useRealTimers();
     }

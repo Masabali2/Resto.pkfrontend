@@ -415,7 +415,7 @@ export class MenuDetail {
       }
     }));
 
-    this.menuService.getCategoryItems(categoryId, page, 20).subscribe({
+    this.menuService.getCategoryItems(categoryId, page).subscribe({
       next: response => {
         if (!response.success || !response.data) {
           this.categoryItemState.update(states => ({

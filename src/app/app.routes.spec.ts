@@ -57,8 +57,10 @@ describe('template catalogue routes', () => {
     const preview = templates?.children?.find(route => route.path === ':id/preview');
 
     expect(preview).toBeTruthy();
-    // Placeholder until the dedicated TemplatePreview page lands: redirects
-    // back to the catalogue instead of falling through to the wildcard.
-    expect(preview?.redirectTo).toBe('templates');
+    // The dedicated TemplatePreview page is registered lazily (Task 2); no
+    // redirect placeholder remains, so previews resolve to a real component.
+    expect(preview?.redirectTo).toBeUndefined();
+    expect(typeof preview?.loadComponent).toBe('function');
+    expect(preview?.data).toEqual({ permission: 'Website.View' });
   });
 });

@@ -53,14 +53,20 @@ export class TemplateCatalogue {
     this.load();
   }
 
+  /** Guards against overlapping in-flight catalogue requests. */
+  private loadingInFlight = false;
+
   protected load(): void {
-    if (this.state() === 'loading') return;
+    if (this.loadingInFlight) return;
+    this.loadingInFlight = true;
 
     this.state.set('loading');
     this.errorMessage.set('');
 
     this.websiteService.getTemplates().subscribe({
       next: (response: ApiResponse<WebsiteTemplateDto[]>) => {
+        this.loadingInFlight = false;
+
         if (!response.success || !response.data) {
           this.errorMessage.set(
             response.message ?? 'Unable to load the template catalogue. Please try again.'
@@ -81,6 +87,7 @@ export class TemplateCatalogue {
         this.state.set('ready');
       },
       error: (error: unknown) => {
+        this.loadingInFlight = false;
         this.errorMessage.set(
           this.httpErrorHandler.handle(error, {
             fallbackMessage: 'Unable to load the template catalogue. Please try again.'

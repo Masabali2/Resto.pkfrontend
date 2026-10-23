@@ -117,7 +117,6 @@ describe('TemplateCatalogue', () => {
   let getTemplatesCallCount = 0;
   let templatesResponse: ApiResponse<WebsiteTemplateDto[]> | null = null;
   let templatesError: unknown = null;
-
   const websiteServiceSpy = {
     getTemplates: vi.fn(() => {
       getTemplatesCallCount += 1;
