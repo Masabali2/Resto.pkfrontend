@@ -105,12 +105,17 @@ export const routes: Routes = [
               )
           },
           {
-            // Dedicated preview page (next task). Until it exists this route
-            // falls back to the catalogue so /templates/:id/preview never
-            // dead-ends; remove once TemplatePreview is implemented.
+            // Dedicated template preview page. The route parameter is the
+            // template id (GUID) used by CreateWebsiteRequest.websiteTemplateId.
             path: ':id/preview',
             pathMatch: 'full',
-            redirectTo: 'templates'
+            title: 'Template Preview — Resto.pk',
+            canActivate: [permissionGuard],
+            data: { permission: 'Website.View' },
+            loadComponent: () =>
+              import('./features/templates/pages/template-preview/template-preview').then(
+                m => m.TemplatePreview
+              )
           }
         ]
       },

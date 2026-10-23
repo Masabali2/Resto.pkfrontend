@@ -1,0 +1,126 @@
+<main class="preview-page">
+  <div class="preview-shell">
+    <!-- Back navigation -->
+    <a class="back-link" routerLink="/templates">
+      <span aria-hidden="true">&larr;</span> Back to Templates
+    </a>
+
+    @if (state() === 'loading') {
+      <section class="state-panel" role="status" aria-live="polite">
+        <div class="skeleton skeleton-head" aria-hidden="true"></div>
+        <div class="skeleton skeleton-body" aria-hidden="true"></div>
+        <p class="state-text">Loading template…</p>
+      </section>
+    } @else if (state() === 'error') {
+      <section class="state-panel state-panel-error" role="alert">
+        <h1>This template could not be loaded</h1>
+        <p>{{ errorMessage() }}</p>
+        <app-button variant="outline" size="md" [fullWidth]="false" (click)="retry()">
+          Try again
+        </app-button>
+      </section>
+    } @else if (state() === 'not-found') {
+      <section class="state-panel" role="status">
+        <h1>Template not found</h1>
+        <p>
+          This design is no longer available in the platform catalogue. It may have been
+          removed, or the link may point to an outdated template id.
+        </p>
+        <app-button variant="primary" size="md" [fullWidth]="false" (click)="backToCatalogue()">
+          Browse templates
+        </app-button>
+      </section>
+    } @else if (template(); as tpl) {
+      <!-- Template identity -->
+      <header class="template-header">
+        <div class="template-heading">
+          @if (category(); as category) {
+            <p class="template-category">{{ category }}</p>
+          }
+          <h1 class="template-name">{{ tpl.name }}</h1>
+          @if (tpl.description) {
+            <p class="template-description">{{ tpl.description }}</p>
+          }
+          @if (tags().length > 0) {
+            <ul class="template-tags" aria-label="Template tags">
+              @for (tag of tags(); track tag) {
+                <li>{{ tag }}</li>
+              }
+            </ul>
+          }
+        </div>
+
+        <div class="template-actions">
+          <app-button variant="primary" size="md" [fullWidth]="false" (click)="useThisTemplate()">
+            Use This Template
+          </app-button>
+          <button
+            type="button"
+            class="action-secondary"
+            aria-describedby="edit-template-note"
+            (click)="explainEditUnavailable()"
+          >
+            Edit Template
+          </button>
+          <p id="edit-template-note" class="action-hint" role="note">
+            Editing a published design definition is reserved for platform owners.
+            Choose “Use This Template” to create your own website from this design and
+            edit it in the website editor.
+          </p>
+        </div>
+      </header>
+
+      <!-- Viewport controls -->
+      <div
+        class="viewport-switcher"
+        role="group"
+        aria-label="Preview viewport size"
+      >
+        @for (mode of viewportModes; track mode) {
+          <button
+            type="button"
+            class="viewport-btn"
+            [class.viewport-btn--active]="viewport() === mode"
+            [attr.aria-pressed]="viewport() === mode"
+            [attr.aria-label]="
+              'Preview as ' + viewportLabel(mode) + ' (' + viewportWidth(mode) + ' pixels wide)'
+            "
+            (click)="setViewport(mode)"
+          >
+            {{ viewportLabel(mode) }}
+          </button>
+        }
+      </div>
+
+      <!-- Live preview stage -->
+      <section
+        class="preview-stage"
+        [attr.data-viewport]="viewport()"
+        [attr.aria-busy]="false"
+        [attr.aria-label]="tpl.name + ' rendered preview'"
+      >
+        @if (item()?.design; as viewModel) {
+          <div class="preview-frame" [style.width.px]="viewportWidth(viewport())">
+            <app-template-renderer [viewModel]="viewModel" mode="full" />
+          </div>
+        } @else {
+          <div class="preview-fallback" role="status">
+            <h2>Live preview unavailable</h2>
+            <p>
+              {{ item()?.designError ?? 'This template does not provide a readable design
+              configuration, so it cannot be rendered here.' }}
+            </p>
+            <app-button variant="outline" size="md" [fullWidth]="false" (click)="useThisTemplate()">
+              Use This Template anyway
+            </app-button>
+          </div>
+        }
+      </section>
+
+      <p class="preview-note">
+        Preview rendered from the template's real design configuration — this is not a
+        screenshot, and nothing has been created or saved yet.
+      </p>
+    }
+  </div>
+</main>
