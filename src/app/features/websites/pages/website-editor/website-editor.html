@@ -176,14 +176,30 @@
     />
   }
 
-  @if (showPreviewDialog()) {
-    <app-template-preview-dialog
-      [template]="previewTemplate()!.template"
-      [design]="previewTemplate()?.design ?? null"
-      [designError]="previewTemplate()?.designError ?? null"
-      (closed)="closePreview()"
-      (useTemplate)="onPreviewDialogUse()"
-    />
+  @if (showLivePreview()) {
+    <div class="live-preview-overlay" role="dialog" aria-modal="true" aria-label="Live website preview">
+      <header class="live-preview-bar">
+        <h2 class="live-preview-title">Live preview &mdash; {{ website()?.name ?? "Website" }}</h2>
+        <button
+          type="button"
+          class="live-preview-close"
+          aria-label="Close live preview"
+          (click)="closePreview()"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          <span>Close</span>
+        </button>
+      </header>
+      <div class="live-preview-body">
+        <app-preview-canvas
+          [config]="config()"
+          [websiteName]="website()?.name ?? ''"
+          [template]="selectedTemplateItem()"
+          [viewportMode]="viewportMode()"
+          [unsupportedReason]="draftError() ?? 'The preview will appear once a draft configuration is available.'"
+        />
+      </div>
+    </div>
   }
 </main>
 
