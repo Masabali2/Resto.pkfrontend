@@ -150,6 +150,7 @@ export class CreateWebsite {
         }
 
         this.templates.set({ state: 'ready', items: response.data, error: '' });
+        this.preselectTemplateFromQuery();
       },
       error: (error: unknown) => {
         this.templates.set({
@@ -228,6 +229,25 @@ export class CreateWebsite {
 
     if (this.restaurants().items.some(item => item.id === restaurantId)) {
       this.selectedRestaurantId.set(restaurantId);
+    }
+  }
+
+  /**
+   * Honors /websites/new?templateId={guid} coming from the dedicated template
+   * preview page's "Use This Template" action. The value is the catalogue
+   * template id (`WebsiteTemplateDto.id`), which is exactly what
+   * `CreateWebsiteRequest.websiteTemplateId` expects. Unknown ids are ignored
+   * so a stale link never selects a non-existent template.
+   */
+  private preselectTemplateFromQuery(): void {
+    const templateId = this.route.snapshot.queryParamMap.get('templateId');
+
+    if (!templateId) {
+      return;
+    }
+
+    if (this.templates().items.some(item => item.id === templateId)) {
+      this.selectedTemplateId.set(templateId);
     }
   }
 
