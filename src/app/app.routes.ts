@@ -234,7 +234,7 @@ export const routes: Routes = [
               )
           },
           {
-            path: ':menuId/categories/:menuId/items/new',
+            path: ':menuId/categories/:categoryId/items/new',
             title: 'Create Item — Resto.pk',
             canActivate: [permissionGuard],
             canDeactivate: [unsavedChangesGuard],

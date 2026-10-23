@@ -35,6 +35,9 @@
             Edit menu
           </button>
         }
+        @if (canUpdateMenu()) {
+          <button app-button variant="outline" [disabled]="isArchived()" (click)="editMenu()">Edit Menu</button>
+        }
       </div>
     }
   </header>

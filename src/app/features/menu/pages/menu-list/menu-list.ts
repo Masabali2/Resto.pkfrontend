@@ -102,8 +102,6 @@ export class MenuList {
         const queryId = params.get('restaurantId') ?? null;
         this.resolveRestaurantSelection(queryId);
       });
-
-    this.loadRestaurants();
   }
 
   protected loadRestaurants(): void {
@@ -125,7 +123,6 @@ export class MenuList {
     this.errorMessage.set('');
 
     this.restaurantService.getRestaurants()
-      .pipe(finalize(() => {}))
       .subscribe({
         next: (response: ApiResponse<{ items: RestaurantDto[] }>) => {
           if (!this.isCurrent(requestId, tenantId)) {
@@ -334,7 +331,6 @@ export class MenuList {
     }
 
     this.menuService.setMenuActive(menu.id, isActive)
-      .pipe(finalize(() => {}))
       .subscribe({
         next: response => {
           if (!response.success || !response.data) {

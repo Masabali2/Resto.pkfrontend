@@ -145,9 +145,21 @@ export class MenuDetail {
     this.authorization.hasPermission('MenuItem.Delete')
   );
 
-  protected readonly isArchived = computed(() =>
-    this.menu()?.status === 'Archived'
-  );
+  protected readonly isArchived = computed(() => this.menu()?.status === 'Archived');
+
+  protected readonly activeCategory = computed(() => {
+    const menu = this.menu();
+    const activeId = this.activeCategoryId();
+    if (!menu || !activeId) {
+      return null;
+    }
+    return menu.categories.find(c => c.id === activeId) ?? null;
+  });
+
+  protected readonly activeItems = computed(() => {
+    const id = this.activeCategoryId();
+    return id ? (this.categoryItemState()[id]?.items ?? []) : [];
+  });
 
   /** Read-only menus cannot be mutated from this screen. */
   protected readonly isReadOnly = computed(() => this.isArchived());
@@ -210,10 +222,12 @@ export class MenuDetail {
   private requestSequence = 0;
 
   constructor() {
+    // React to active-tenant changes: reset all context so nothing from the
+    // previous workspace remains visible (stale-data protection).
     toObservable(this.tenantContext.activeTenantId)
       .pipe(takeUntilDestroyed())
       .subscribe(tenantId => {
-        if (tenantId === this.loadedTenantId) {
+        if (tenantId === this.loadedTenantId || this.suppressTenantReload) {
           return;
         }
 
@@ -239,8 +253,35 @@ export class MenuDetail {
           return;
         }
 
+        // Switching menus clears the previous selection so a stale category
+        // id can never survive into the newly loaded menu.
+        this.activeCategoryId.set(null);
         this.loadMenu(menuId);
       });
+
+    // Whenever the active category resolves to a real id, make sure its
+    // items are loaded exactly once (the per-category loading flag guards
+    // against duplicate requests).
+    effect(() => {
+      const categoryId = this.activeCategoryId();
+      if (!categoryId) {
+        return;
+      }
+
+      const state = this.categoryItemState()[categoryId];
+      if (!state && !this.categoryItemLoadingGuard(categoryId)) {
+        queueMicrotask(() => {
+          if (!this.categoryItemState()[categoryId]) {
+            this.loadCategoryItems(categoryId, 1);
+          }
+        });
+      }
+    });
+  }
+
+  /** Guards against two concurrent loads of the same category. */
+  private categoryItemLoadingGuard(categoryId: string): boolean {
+    return !!this.categoryItemState()[categoryId]?.loading;
   }
 
   // --- Data loading ---------------------------------------------------------
@@ -438,6 +479,8 @@ export class MenuDetail {
     });
   }
 
+  // Category persistence operations ---------------------------------------------
+
   protected editCategory(category: MenuCategoryDto): void {
     const menu = this.menu();
     if (!menu || !this.canManageCategories()) {
@@ -542,6 +585,13 @@ export class MenuDetail {
   }
 
   // --- Items panel ----------------------------------------------------------
+
+  protected isLastCategory(categoryId: string): boolean {
+    const categories = this.menu()?.categories ?? [];
+    return categories.length > 0 && categories[categories.length - 1].id === categoryId;
+  }
+
+  // --- Items panel ------------------------------------------------------------
 
   protected loadCategoryItems(categoryId: string, page = 1): void {
     const current = this.categoryItemState();
@@ -813,7 +863,15 @@ export class MenuDetail {
     }
 
     this.menuService.deleteItem(target.id).subscribe({
-      next: () => {
+      next: response => {
+        // Strict success contract — removal happens only for successful envelopes.
+        if (!response.success) {
+          this.errorMessage.set(
+            response.message ?? 'Unable to delete the item. Please try again.'
+          );
+          return;
+        }
+
         this.removeItemFromCategory(target.id);
         if (categoryId) {
           this.loadCategoryItems(
@@ -877,31 +935,33 @@ export class MenuDetail {
 
   private updateItemInCategory(updated: MenuItemDto): void {
     this.categoryItemState.update(states => {
-      for (const [cid, state] of Object.entries(states)) {
+      const next = { ...states };
+      for (const [cid, state] of Object.entries(next)) {
         if (state.items.some(i => i.id === updated.id)) {
-          states[cid] = {
+          next[cid] = {
             ...state,
             items: state.items.map(i => (i.id === updated.id ? updated : i))
           };
           break;
         }
       }
-      return states;
+      return next;
     });
   }
 
   private removeItemFromCategory(itemId: string): void {
     this.categoryItemState.update(states => {
-      for (const [cid, state] of Object.entries(states)) {
+      const next = { ...states };
+      for (const [cid, state] of Object.entries(next)) {
         if (state.items.some(i => i.id === itemId)) {
-          states[cid] = {
+          next[cid] = {
             ...state,
             items: state.items.filter(i => i.id !== itemId)
           };
           break;
         }
       }
-      return states;
+      return next;
     });
   }
 
@@ -1048,5 +1108,17 @@ export class MenuDetail {
       requestId === this.requestSequence &&
       this.tenantContext.activeTenantId() === tenantId
     );
+  }
+
+  private isCurrent(requestId: number, tenantId: string): boolean {
+    return (
+      requestId === this.requestSequence &&
+      this.tenantContext.activeTenantId() === tenantId
+    );
+  }
+
+  /** Test-only: prevents the tenant-change subscription from reloading data. */
+  public setTenantReloadSuppressedForTests(suppress: boolean): void {
+    this.suppressTenantReload = suppress;
   }
 }
