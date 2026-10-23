@@ -23,21 +23,30 @@ export class WebsitePreview {
   readonly websiteName = input('');
   readonly unsupportedReason = input<string | null>(null);
 
+  /**
+   * Canonical theme location (backend schema): `theme.colors.<name>` hex map
+   * and a single allow-listed `theme.font`. This mirrors the settings panel's
+   * write path exactly, so color/typography edits always reach the preview.
+   */
   protected readonly frameStyle = computed<PreviewStyle>(() => {
-    const theme = this.config()?.theme ?? {};
-    const color = (key: string, fallback: string): string =>
-      isValidHexColor(theme[key]) ? theme[key] as string : fallback;
-    const font = (key: string): string =>
-      isSupportedFont(theme[key]) ? `"${theme[key]}", ${theme[key] === 'system-ui' ? 'inherit' : 'sans-serif'}` : 'inherit';
+    const theme = this.config()?.theme;
+    const colors = theme?.colors ?? {};
+    const color = (key: string, fallback: string): string => {
+      const value = (colors as Record<string, unknown>)[key];
+      return isValidHexColor(value) ? (value as string) : fallback;
+    };
+    const font = isSupportedFont(theme?.font)
+      ? `"${theme?.font}", ${theme?.font === 'system-ui' ? 'inherit' : 'sans-serif'}`
+      : 'inherit';
 
     return {
-      '--pv-primary': color('primaryColor', '#b3261e'),
-      '--pv-secondary': color('secondaryColor', '#7a5900'),
-      '--pv-accent': color('accentColor', '#ff8f00'),
-      '--pv-bg': color('backgroundColor', '#ffffff'),
-      '--pv-text': color('textColor', '#1c1b1f'),
-      '--pv-heading-font': font('headingFont'),
-      '--pv-body-font': font('bodyFont')
+      '--pv-primary': color('primary', '#b3261e'),
+      '--pv-secondary': color('secondary', '#7a5900'),
+      '--pv-accent': color('accent', '#ff8f00'),
+      '--pv-bg': color('background', '#ffffff'),
+      '--pv-text': color('text', '#1c1b1f'),
+      '--pv-heading-font': font,
+      '--pv-body-font': font
     };
   });
 
