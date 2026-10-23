@@ -109,7 +109,7 @@ function apiSuccess(data: WebsiteTemplateDto[]): ApiResponse<WebsiteTemplateDto[
 }
 
 /** Reads private-ish component state through the DOM for assertions. */
-function renderState(fixture) {
+function renderState(fixture: { nativeElement: HTMLElement }): string {
   return (fixture.nativeElement as HTMLElement).textContent ?? '';
 }
 
@@ -119,7 +119,7 @@ describe('TemplateCatalogue', () => {
   let templatesError: unknown = null;
 
   const websiteServiceSpy = {
-    getTemplates: () => {
+    getTemplates: vi.fn(() => {
       getTemplatesCallCount += 1;
 
       if (templatesError) {
@@ -127,7 +127,7 @@ describe('TemplateCatalogue', () => {
       }
 
       return of(templatesResponse ?? apiSuccess([]));
-    }
+    })
   };
 
   beforeEach(() => {

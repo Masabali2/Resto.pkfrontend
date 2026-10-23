@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Observable, Subject, takeUntil, switchMap, map, of, combineLatest, type Observer } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 import { MenuService } from '../../../menu/services/menu.service';
 import { RestaurantService } from '../../../../core/services/restaurant.service';
 import { WebsiteService } from '../../services/website.service';
@@ -47,12 +47,12 @@ const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 
 /**
  * Composes the public URL of a published site from the deployment-configured
- * base URL and the actual website slug. An unconfigured base URL yields null
- * so the UI falls back to showing the path template instead of a fabricated
- * clickable domain.
+ * base URL and the actual website slug. When no base URL is configured for
+ * the environment (relative-path mode) the slug path alone is returned; an
+ * invalid slug yields null so the UI never renders a fabricated domain.
  */
 export function buildPublicSiteUrl(baseUrl: string, slug: string): string | null {
-  if (!baseUrl || !slug) return null;
+  if (!slug) return null;
   try {
     const url = new URL(`${baseUrl.replace(/\/+$/, '')}/${encodeURIComponent(slug)}`);
     return url.protocol === 'http:' || url.protocol === 'https:' ? url.toString() : null;
@@ -125,6 +125,20 @@ export class WebsiteEditor implements OnInit, OnDestroy {
    * never depends on a separately-tracked template id that could be unset.
    */
   protected readonly showLivePreview = signal(false);
+
+  /**
+   * Test seam: resolves once the autosave status stream has been observed at
+   * least once after `savedVersion` reaches or exceeds `localVersion`. Used to
+   * avoid timing-sensitive assertions on transient 'saved' feedback.
+   */
+  readonly firstSavedConfirmation = new Promise<void>(resolve => {
+    const sub = this.autosaveService.status$.subscribe(status => {
+      if (status.savedVersion >= this.localVersion()) {
+        resolve();
+        sub.unsubscribe();
+      }
+    });
+  });
 
   protected readonly publicSiteUrl = computed(() => {
     const site = this.website();
@@ -611,25 +625,13 @@ export class WebsiteEditor implements OnInit, OnDestroy {
       this.state.set('missing');
       return;
     }
-    this.loadWebsiteAndApply(id).pipe(
-      tap({
-        next: loaded => {
-          if (loaded === null) return;
-          if (!loaded.ok) {
-            this.errorMessage.set(loaded.message);
-            this.state.set(loaded.notFound ? 'missing' : 'error');
-          }
-        },
-        error: (error: unknown) => {
-          this.errorMessage.set(
-            this.httpErrorHandler.handle(error, {
-              fallbackMessage: 'Unable to load this website. Please try again.'
-            }).message
-          );
-          this.state.set('error');
-        }
-      })
-    ).subscribe();
+    // `loadWebsite` already funnels transport errors into an ok:false result,
+    // so no separate error handler is needed here.
+    this.loadWebsiteAndApply(id).subscribe(loaded => {
+      if (loaded === null || loaded.ok) return;
+      this.errorMessage.set(loaded.message ?? 'Unable to load this website. Please try again.');
+      this.state.set(loaded.notFound ? 'missing' : 'error');
+    });
   }
 
   protected startFromDefault(): void {
@@ -651,7 +653,7 @@ export class WebsiteEditor implements OnInit, OnDestroy {
    * `loadWebsiteAndApply`.
    */
   private loadWebsite(id: string): Observable<
-    | { ok: true; website: WebsiteDto; draft: ApiResponse<WebsiteDraftDto>; restaurant: ApiResponse<RestaurantDto> | null }
+    | { ok: true; website: WebsiteDto; draft: ApiResponse<WebsiteDraftDto> | null; restaurant: ApiResponse<RestaurantDto> | null }
     | { ok: false; message: string; notFound: boolean }
   > {
     this.state.set('loading');
