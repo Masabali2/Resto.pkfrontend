@@ -2,7 +2,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
   inject,
   input,
   OnDestroy,
@@ -10,7 +9,7 @@ import {
   OnInit
 } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { forkJoin, Subject, takeUntil, switchMap, of, catchError } from 'rxjs';
+import { Observable, Subject, takeUntil, switchMap, map, of, type Observer } from 'rxjs';
 import { MenuService } from '../../../menu/services/menu.service';
 import { RestaurantService } from '../../../../core/services/restaurant.service';
 import { WebsiteService } from '../../services/website.service';
@@ -24,26 +23,34 @@ import { EditorSettingsPanel, type SectionConfigChange, type ThemeChange, type T
 import { EditorToolbar, type ViewportMode, type CompareData, type ConfigDifference, type EditorState, type SaveState, type PublishState } from '../../components/editor-toolbar/editor-toolbar';
 import { PreviewCanvas } from '../../components/preview-canvas/preview-canvas';
 import { CompareDialog } from '../../components/compare-dialog/compare-dialog';
-import { TemplatePreviewDialog } from '../../components/template-preview-dialog/template-preview-dialog';
 import {
   createDefaultWebsiteConfig,
   parseWebsiteConfig,
-  serializeWebsiteConfig
+  serializeWebsiteConfig,
+  type ThemeColorField
 } from '../../utils/website-config.util';
 import { buildCatalogueItem } from '../../utils/website-template-catalogue.util';
 import type { ApiResponse } from '../../../../core/models/api-response.model';
-import type { WebsiteConfig } from '../../models/website-config.model';
+import type { WebsiteConfig, WebsiteSectionConfig } from '../../models/website-config.model';
 import type { WebsiteDto } from '../../models/website.model';
 import type { WebsiteDraftDto } from '../../models/website-draft.model';
 import type { WebsiteTemplateDto } from '../../models/website-template.model';
 import type { WebsiteTemplateCatalogueItem } from '../../models/website-template-catalogue.model';
-import type { WebsiteTemplateDesignViewModel } from '../../models/website-template-design.model';
+import type { TemplateSectionType } from '../../models/website-template-design.model';
 import type { RestaurantDto } from '../../../../core/models/restaurant.model';
 import type { MenuItemDto } from '../../../menu/models/menu-item.model';
 
+import { environment } from '../../../../environments/environment';
+
 const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function buildPublicSiteUrl(baseUrl: string, slug: string): string | null {
+/**
+ * Composes the public URL of a published site from the deployment-configured
+ * base URL and the actual website slug. An unconfigured base URL yields null
+ * so the UI falls back to showing the path template instead of a fabricated
+ * clickable domain.
+ */
+export function buildPublicSiteUrl(baseUrl: string, slug: string): string | null {
   if (!baseUrl || !slug) return null;
   try {
     const url = new URL(`${baseUrl.replace(/\/+$/, '')}/${encodeURIComponent(slug)}`);
@@ -51,10 +58,6 @@ function buildPublicSiteUrl(baseUrl: string, slug: string): string | null {
   } catch {
     return null;
   }
-}
-
-function slugFromName(name: string): string {
-  return name.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
 @Component({
@@ -67,8 +70,7 @@ function slugFromName(name: string): string {
     EditorSettingsPanel,
     EditorToolbar,
     PreviewCanvas,
-    CompareDialog,
-    TemplatePreviewDialog
+    CompareDialog
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './website-editor.html',
@@ -89,6 +91,14 @@ export class WebsiteEditor implements OnInit, OnDestroy {
 
   protected readonly state = signal<EditorState>('loading');
   protected readonly saveState = signal<SaveState>('clean');
+  /** Revision confirmed persisted by the autosave pipeline. */
+  private readonly savedVersion = signal(0);
+  /** Monotonic revision of the latest local edit. */
+  private readonly localVersion = signal(0);
+  /** True while a save request for some revision is in flight. */
+  private readonly saveInFlight = signal(false);
+  private lastConfirmedSaveAt: Date | null = null;
+  private savedResetTimer: ReturnType<typeof setTimeout> | null = null;
   protected readonly publishState = signal<PublishState>('idle');
   protected readonly viewportMode = signal<ViewportMode>('desktop');
   protected readonly website = signal<WebsiteDto | null>(null);
@@ -101,13 +111,26 @@ export class WebsiteEditor implements OnInit, OnDestroy {
   protected readonly errorMessage = signal('');
   protected readonly isComparing = signal(false);
   protected readonly compareData = signal<CompareData | null>(null);
-  protected readonly previewTemplateId = signal<string | null>(null);
-  protected readonly autosaveStatus = signal<AutosaveState>({ status: 'idle', lastSaved: null, error: null });
-  protected readonly showPreviewDialog = signal(false);
+  protected readonly autosaveStatus = signal<AutosaveState>({
+    status: 'idle',
+    savedVersion: 0,
+    lastSaved: null,
+    error: null
+  });
+
+  /**
+   * The toolbar "Preview" opens a live preview of the CURRENT editor
+   * configuration (rendered through the same renderer as the canvas), so it
+   * never depends on a separately-tracked template id that could be unset.
+   */
+  protected readonly showLivePreview = signal(false);
 
   protected readonly publicSiteUrl = computed(() => {
     const site = this.website();
-    return site ? buildPublicSiteUrl('https://resto.pk', site.slug) : null;
+    if (!site) return null;
+    // Only ever advertised for sites the server actually reports as live.
+    if (!site.isPublished) return null;
+    return buildPublicSiteUrl(environment.publicSiteBaseUrl, site.slug);
   });
 
   protected readonly canPublish = computed(() => {
@@ -146,47 +169,119 @@ export class WebsiteEditor implements OnInit, OnDestroy {
     this.templates().find(t => t.template.id === this.website()?.websiteTemplateId) ?? null
   );
 
-  protected readonly previewTemplate = computed<WebsiteTemplateCatalogueItem | null>(() =>
-    this.templates().find(t => t.template.id === this.previewTemplateId()) ?? null
-  );
+  /**
+   * Derives the toolbar save state from explicit revision tracking:
+   * - 'saving' while any save is in flight,
+   * - 'saved' briefly after the latest revision was confirmed persisted,
+   * - 'dirty' whenever newer local edits exist (or a save failed),
+   * - 'clean' only when nothing has been edited since load/reset.
+   */
+  private syncSaveState(): void {
+    if (this.saveInFlight()) {
+      this.saveState.set('saving');
+      return;
+    }
 
-  constructor() {
-    effect(() => {
-      const status = this.autosaveStatus();
-      if (status.status === 'saved') {
-        this.saveState.set('saved');
-        setTimeout(() => this.saveState.set('clean'), 3000);
-      } else if (status.status === 'failed') {
-        this.saveState.set('failed');
-      } else if (status.status === 'saving') {
-        this.saveState.set('saving');
+    const pending = this.localVersion() > this.savedVersion();
+
+    if (!pending && this.lastConfirmedSaveAt) {
+      this.saveState.set('saved');
+      if (this.savedResetTimer === null) {
+        this.savedResetTimer = setTimeout(() => {
+          this.savedResetTimer = null;
+          if (!this.saveInFlight() && this.localVersion() <= this.savedVersion()) {
+            this.saveState.set('clean');
+          }
+        }, 3000);
       }
-    });
+      return;
+    }
+
+    if (this.savedResetTimer !== null) {
+      clearTimeout(this.savedResetTimer);
+      this.savedResetTimer = null;
+    }
+
+    this.saveState.set(pending ? 'dirty' : 'clean');
   }
 
   ngOnInit(): void {
-    this.route.paramMap
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(params => {
-        const id = (params.get('id') ?? '').trim();
-
-        if (!GUID_PATTERN.test(id)) {
-          this.state.set('missing');
-          return;
-        }
-
-        this.loadWebsite(id);
-      });
-
-    this.autosaveService.getStatus().pipe(takeUntil(this.destroy$)).subscribe(status => {
+    // Subscribing BEFORE route processing guarantees no status event emitted
+    // during initial loading can be missed.
+    this.autosaveService.status$.pipe(takeUntil(this.destroy$)).subscribe(status => {
       this.autosaveStatus.set(status);
+      this.saveInFlight.set(status.status === 'saving');
+      if (status.savedVersion > this.savedVersion()) {
+        this.savedVersion.set(status.savedVersion);
+        this.lastConfirmedSaveAt = status.lastSaved;
+      }
+      if (status.status === 'failed') {
+        // Explicit failure always surfaces, independent of version math.
+        this.saveState.set('failed');
+        return;
+      }
+      this.syncSaveState();
     });
+
+    this.route.paramMap
+      .pipe(
+        // Ignore stale route events for a website that is no longer selected.
+        takeUntil(this.destroy$),
+        switchMap(params => {
+          const id = (params.get('id') ?? '').trim();
+
+          if (!GUID_PATTERN.test(id)) {
+            this.state.set('missing');
+            return of(null);
+          }
+
+          return this.loadWebsite(id);
+        })
+      )
+      .subscribe({
+        next: loaded => {
+          if (loaded === null) return;
+          if (!loaded.ok) {
+            this.errorMessage.set(loaded.message);
+            this.state.set(loaded.notFound ? 'missing' : 'error');
+          }
+        },
+        error: (error: unknown) => {
+          this.errorMessage.set(
+            this.httpErrorHandler.handle(error, {
+              fallbackMessage: 'Unable to load this website. Please try again.'
+            }).message
+          );
+          this.state.set('error');
+        }
+      });
+  }
+
+  /**
+   * Centralized, single-source mapping between template design section types
+   * (`header|hero|menu|about|gallery|contact|footer`) and website draft
+   * section types (`hero|menu-preview|about|gallery|contact|hours|map|footer|
+   * banner|testimonials`). Both the renderer switch and the settings panel
+   * consume this map so a `menu` template section never falls through to an
+   * unmatched `menu-preview` case (and vice versa).
+   */
+  private static readonly WEBSITE_TO_TEMPLATE_SECTION: Readonly<Record<string, TemplateSectionType>> = {
+    'menu-preview': 'menu'
+  };
+
+  private static toTemplateSectionType(type: string | undefined): TemplateSectionType | null {
+    if (!type) return null;
+    const mapped = WebsiteEditor.WEBSITE_TO_TEMPLATE_SECTION[type];
+    return mapped ?? (type as TemplateSectionType);
   }
 
   protected onThemeChange(change: ThemeChange): void {
     const current = this.config();
     if (!current) return;
 
+    // Canonical schema location: theme.colors.<name> for colors, theme.font
+    // for typography. Unrelated theme keys (and unknown color keys saved by
+    // older drafts) are preserved via spread — no competing top-level props.
     this.config.update(cfg => {
       if (!cfg) return cfg;
 
@@ -230,7 +325,7 @@ export class WebsiteEditor implements OnInit, OnDestroy {
       return {
         ...cfg,
         sections: cfg.sections.map(section =>
-          section.type === 'menu-preview'
+          section.type === 'menu-preview' || section.type === 'menu'
             ? { ...section, settings: { ...section.settings, featuredItemIds: change.itemIds } }
             : section
         )
@@ -257,56 +352,98 @@ export class WebsiteEditor implements OnInit, OnDestroy {
     this.notificationService.info(`Switched to "${targetTemplate.template.name}". Review your content and save.`);
   }
 
-  private applyTemplateDesign(currentConfig: WebsiteConfig | null, design: WebsiteTemplateDesignViewModel): WebsiteConfig {
+  private applyTemplateDesign(
+    currentConfig: WebsiteConfig | null,
+    design: NonNullable<WebsiteTemplateCatalogueItem['design']>
+  ): WebsiteConfig {
     const baseConfig = currentConfig ?? createDefaultWebsiteConfig();
 
     const templateColors = design.configuration.design.palette;
-    const colorMap: Record<string, string> = {
-      primary: templateColors.primary,
-      secondary: templateColors.accent,
-      accent: templateColors.accent,
-      background: templateColors.background,
-      text: templateColors.text
+    // Only non-empty palette values override existing user colors; empty
+    // strings from malformed seeds never erase valid settings.
+    const colorMap: Partial<Record<ThemeColorField, string>> = {};
+    const assign = (field: ThemeColorField, value: string | undefined): void => {
+      if (typeof value === 'string' && value.trim().length > 0) colorMap[field] = value;
     };
+    assign('primary', templateColors.primary);
+    assign('secondary', templateColors.accent);
+    assign('accent', templateColors.accent);
+    assign('background', templateColors.background);
+    assign('text', templateColors.text);
+
+    // Preserve existing section settings by section type so switching
+    // templates does not erase unrelated editor content. New section order
+    // and enabled flags come from the template.
+    const previousSettingsByType = new Map<string, Record<string, unknown>>();
+    for (const section of baseConfig.sections) {
+      if (typeof section.type === 'string' && section.settings) {
+        previousSettingsByType.set(section.type, section.settings);
+      }
+    }
+
+    const sections: WebsiteSectionConfig[] = design.sections
+      .filter(s => s.enabled)
+      .sort((a, b) => a.order - b.order)
+      .map(s => {
+        const templateType = WebsiteEditor.toTemplateSectionType(s.type);
+        const websiteType = templateType === 'menu' ? 'menu-preview' : s.type;
+        const existing = previousSettingsByType.get(websiteType);
+        const defaults = this.getDefaultSectionSettings(websiteType);
+        return {
+          type: websiteType,
+          enabled: true,
+          order: s.order,
+          settings: existing ?? defaults
+        };
+      });
 
     return {
       ...baseConfig,
       schemaVersion: 1,
       theme: {
         ...baseConfig.theme,
-        colors: { ...baseConfig.theme.colors, ...colorMap },
-        font: design.configuration.design.typography.bodyFont
+        colors: { ...(baseConfig.theme.colors ?? {}), ...colorMap },
+        font: baseConfig.theme.font ?? design.configuration.design.typography.bodyFont
       },
-      sections: design.sections.map(s => ({
-        type: s.type,
-        enabled: s.enabled,
-        order: s.order,
-        settings: this.getDefaultSectionSettings(s.type)
-      })),
-      settings: {},
+      sections,
+      settings: baseConfig.settings ?? {},
       extraTopLevel: baseConfig.extraTopLevel
     };
   }
 
+  /**
+   * Defaults contain only meaningful placeholder labels. Empty-string fields
+   * are deliberately NOT seeded here — they would overwrite real user
+   * content when a template is applied. Missing keys simply fall back to the
+   * renderer's safe defaults.
+   */
   private getDefaultSectionSettings(type: string): Record<string, unknown> {
     const defaults: Record<string, Record<string, unknown>> = {
-      hero: { heading: '', subheading: '', ctaText: 'View Menu', imageUrl: '' },
-      'menu-preview': { heading: 'Our Menu', featuredItemIds: [] },
-      about: { heading: 'Our Story', body: '' },
-      contact: { phone: '', email: '', address: '', instagram: '' },
-      hours: { hours: { monday: '', tuesday: '', wednesday: '', thursday: '', friday: '', saturday: '', sunday: '' } },
+      hero: { ctaText: 'View Menu' },
+      'menu-preview': { heading: 'Our Menu' },
+      about: { heading: 'Our Story' },
+      hours: {},
       gallery: { heading: 'Gallery' },
-      footer: { copyright: '' },
-      banner: { message: '' },
-      testimonials: { heading: 'Testimonials', quotes: [] }
+      banner: {},
+      testimonials: { heading: 'Testimonials' }
     };
     return defaults[type] ?? {};
   }
 
+  /**
+   * Marks the session dirty AND enqueues a debounced autosave of the latest
+   * snapshot. The local revision counter guarantees that confirmations of
+   * older requests can never mark newer edits as saved.
+   */
   private markDirty(): void {
-    if (this.saveState() !== 'saving') {
-      this.saveState.set('dirty');
-    }
+    const site = this.website();
+    const cfg = this.config();
+
+    if (!site || !cfg) return;
+
+    this.localVersion.update(v => v + 1);
+    this.autosaveService.triggerSave(site.id, cfg);
+    this.syncSaveState();
   }
 
   protected async saveDraft(): Promise<void> {
@@ -315,20 +452,30 @@ export class WebsiteEditor implements OnInit, OnDestroy {
 
     if (!site || !cfg || this.saveState() === 'saving') return;
 
-    this.saveState.set('saving');
+    // Ensure the current in-memory config is queued even if markDirty was
+    // skipped (e.g. restored session with unsaved state after reload).
+    this.autosaveService.triggerSave(site.id, cfg);
 
     try {
-      await this.autosaveService.flushPending();
+      // Resolves ONLY after the save covering the latest revision succeeded.
+      await this.autosaveService.saveNow();
       this.notificationService.success('Draft saved. The live site is unchanged until it is published.');
     } catch (error) {
       this.saveState.set('failed');
-      const details = this.httpErrorHandler.handle(error, {
-        fallbackMessage: 'The draft could not be saved. Your changes are kept.'
-      });
+      const details =
+        error instanceof Error && error.message
+          ? { message: error.message }
+          : this.httpErrorHandler.handle(error, {
+              fallbackMessage: 'The draft could not be saved. Your changes are kept.'
+            });
       this.notificationService.error(
         details.message || 'The draft could not be saved. Your changes are kept.'
       );
     }
+  }
+
+  protected retrySave(): void {
+    this.autosaveService.retry();
   }
 
   protected confirmPublish(): void {
