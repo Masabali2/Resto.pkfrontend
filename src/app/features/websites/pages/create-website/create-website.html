@@ -17,6 +17,41 @@
       <app-inline-error [message]="generalError()" />
     }
 
+    @if (invalidTemplateNotice()) {
+      <div class="template-notice" role="alert">
+        <span class="template-notice-icon" aria-hidden="true">&#9888;</span>
+        <p>{{ invalidTemplateNotice() }}</p>
+      </div>
+    }
+
+    @if (selectedCatalogueItem(); as item) {
+      <aside class="selected-template-card" aria-label="Selected template">
+        <div class="selected-template-body">
+          <p class="selected-template-eyebrow">Selected template</p>
+          <h2 class="selected-template-name">{{ item.template.name }}</h2>
+          @if (item.template.description) {
+            <p class="selected-template-desc">{{ item.template.description }}</p>
+          }
+          <div class="selected-template-meta">
+            @if (item.category) {
+              <span class="meta-chip">{{ item.category }}</span>
+            }
+            @for (tag of item.tags; track tag) {
+              <span class="meta-chip meta-chip-muted">{{ tag }}</span>
+            }
+          </div>
+        </div>
+        <div class="selected-template-actions">
+          <app-button variant="outline" size="sm" [fullWidth]="false" (click)="openPreview(item.template.id)">
+            Review preview
+          </app-button>
+          <app-button variant="secondary" size="sm" [fullWidth]="false" (click)="clearTemplateSelection()">
+            Change
+          </app-button>
+        </div>
+      </aside>
+    }
+
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <section class="form-section" aria-labelledby="restaurant-title">
         <h2 id="restaurant-title" class="section-title">

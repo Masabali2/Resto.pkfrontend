@@ -343,4 +343,146 @@ describe('CreateWebsite template selection', () => {
     const router = TestBed.inject(Router);
     expect(router.url).toContain('/websites/website-1');
   });
+
+  describe('templateId query parameter (from the template preview page)', () => {
+    /** Rebuilds the fixture with a fixed ActivatedRoute snapshot. */
+    async function createWithQuery(queryParams: Record<string, string>): Promise<void> {
+      TestBed.resetTestingModule();
+
+      await TestBed.configureTestingModule({
+        imports: [CreateWebsite],
+        providers: [
+          provideHttpClient(),
+          provideHttpClientTesting(),
+          provideRouter([{ path: 'websites/:id', children: [] }]),
+          { provide: NotificationService, useValue: notification },
+          {
+            provide: ActivatedRoute,
+            useValue: { snapshot: { queryParamMap: new Map(Object.entries(queryParams)) } }
+          },
+          {
+            provide: RestaurantService,
+            useValue: {
+              getRestaurants: () =>
+                of({
+                  success: true,
+                  data: {
+                    items: [{ id: 'restaurant-1', name: 'Bella Bistro' }],
+                    page: 1,
+                    pageSize: 20,
+                    total: 1,
+                    totalPages: 1
+                  },
+                  message: null,
+                  errors: null
+                } as unknown as ApiResponse<never>)
+            }
+          }
+        ]
+      }).compileComponents();
+
+      httpMock = TestBed.inject(HttpTestingController);
+      fixture = TestBed.createComponent(CreateWebsite);
+    }
+
+    it('preselects the requested template and submits its GUID', async () => {
+      await createWithQuery({ templateId: TEMPLATE_ID });
+
+      flushInitialLoad();
+      fixture.detectChanges();
+
+      // The preselected template is visible in the summary card...
+      expect(el('.selected-template-card')).toBeTruthy();
+      expect(el('.selected-template-name')?.textContent?.trim()).toBe('Spice Garden');
+
+      // ...and reaches the real creation contract without further clicking.
+      component().selectRestaurant({ id: 'restaurant-1' });
+      fillValidForm();
+      submitForm();
+
+      const request = httpMock.expectOne(
+        req => req.method === 'POST' && req.url === `${environment.apiUrl}/v1/websites`
+      );
+
+      expect(request.request.body.websiteTemplateId).toBe(TEMPLATE_ID);
+    });
+
+    it('reports an unknown templateId without selecting any template', async () => {
+      await createWithQuery({ templateId: 'missing-guid' });
+
+      flushInitialLoad();
+      fixture.detectChanges();
+
+      expect(el('.template-notice')).toBeTruthy();
+      expect(el('.selected-template-card')).toBeNull();
+
+      component().selectRestaurant({ id: 'restaurant-1' });
+      fillValidForm();
+      submitForm();
+
+      // Nothing was invented to satisfy the stale link: submission is blocked
+      // until the user explicitly chooses a template.
+      const writeRequests = httpMock.match(
+        (req: HttpRequest<unknown>) => req.method === 'POST'
+      );
+      expect(writeRequests.length).toBe(0);
+    });
+
+    it('refuses to preselect an inactive template', async () => {
+      await createWithQuery({ templateId: TEMPLATE_ID });
+
+      httpMock.expectOne(`${environment.apiUrl}/v1/websites/templates`).flush({
+        success: true,
+        data: [template({ isActive: false })],
+        message: null,
+        errors: null
+      });
+      fixture.detectChanges();
+
+      expect(el('.template-notice')).toBeTruthy();
+      expect(el('.selected-template-card')).toBeNull();
+    });
+
+    it('shows an actionable notice when the catalogue fails while a templateId is pending', async () => {
+      await createWithQuery({ templateId: TEMPLATE_ID });
+
+      httpMock.expectOne(`${environment.apiUrl}/v1/websites/templates`).flush(
+        { success: false, data: null, message: 'Unavailable.', errors: null },
+        { status: 503, statusText: 'Unavailable' }
+      );
+      fixture.detectChanges();
+
+      // No background retry loop is started — exactly one request was made.
+      expect(el('.template-notice')).toBeTruthy();
+      expect(el('.selected-template-card')).toBeNull();
+      httpMock.expectNone(`${environment.apiUrl}/v1/websites/templates`);
+
+      // The user's explicit gallery retry still resolves the deep link.
+      el<HTMLButtonElement>('.gallery-retry')?.click();
+      httpMock.expectOne(`${environment.apiUrl}/v1/websites/templates`).flush({
+        success: true,
+        data: [template()],
+        message: null,
+        errors: null
+      });
+      fixture.detectChanges();
+
+      expect(el('.selected-template-card')).toBeTruthy();
+    });
+
+    it('preserves the original behavior when no templateId is supplied', async () => {
+      await createWithQuery({});
+
+      flushInitialLoad();
+      fixture.detectChanges();
+
+      expect(el('.selected-template-card')).toBeNull();
+      expect(el('.template-notice')).toBeNull();
+
+      // Manual selection still works exactly as before.
+      el<HTMLButtonElement>('.picker-select')?.click();
+      fixture.detectChanges();
+      expect(el('.picker-card-selected')).toBeTruthy();
+    });
+  });
 });
