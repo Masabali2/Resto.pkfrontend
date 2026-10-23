@@ -157,9 +157,40 @@
     grid-template-columns: 1fr;
   }
 
+  .editor-settings {
+    position: sticky;
+    top: 70px;
+    max-height: calc(100vh - 140px);
+    overflow-y: auto;
+  }
+
   .publish-note {
     display: none;
   }
+}
+
+@media (max-width: 600px) {
+  .editor-body {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .editor-settings {
+    padding: 16px;
+  }
+}
+
+.publish-confirm {
+  margin: 0.75rem clamp(16px, 3vw, 28px) 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e2d9cf;
+  border-radius: 8px;
+  background: #fdfaf6;
+}
+
+.publish-confirm p {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
 }
 
 .live-link {

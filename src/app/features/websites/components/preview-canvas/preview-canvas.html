@@ -1,0 +1,61 @@
+<div class="preview-canvas" aria-label="Website preview">
+  @if (unsupportedReason() && !templateDesign()) {
+    <div class="preview-empty" role="status">
+      <p>{{ unsupportedReason() }}</p>
+    </div>
+  } @else if (templateDesign(); as design) {
+    <div class="browser-chrome" [style]="browserChromeStyle()">
+      <div class="browser-toolbar">
+        <div class="browser-url">
+          <span class="url-lock" aria-hidden="true">🔒</span>
+          <span class="url-domain">resto.pk/</span>
+          <span class="url-slug">{{ slugFromName() }}</span>
+        </div>
+        <div class="browser-actions">
+          <button class="browser-btn" type="button" aria-label="Refresh" disabled>⟳</button>
+          <button class="browser-btn" type="button" aria-label="Share" disabled>⤴</button>
+        </div>
+      </div>
+
+      <div class="preview-frame" [style]="previewStyle()">
+        <app-template-renderer [viewModel]="design" mode="full" [brandName]="websiteName()" />
+      </div>
+
+      <div class="browser-status">
+        <span class="viewport-indicator">
+          {{ viewportLabel() }} ({{ viewportWidth() }}px)
+        </span>
+        <span class="preview-note">Editor preview — not visible to public</span>
+      </div>
+    </div>
+  } @else if (config(); as cfg) {
+    <div class="browser-chrome" [style]="browserChromeStyle()">
+      <div class="browser-toolbar">
+        <div class="browser-url">
+          <span class="url-lock" aria-hidden="true">🔒</span>
+          <span class="url-domain">resto.pk/</span>
+          <span class="url-slug">{{ slugFromName() }}</span>
+        </div>
+      </div>
+
+      <div class="preview-frame" [style]="previewStyle()">
+        <app-website-preview
+          [config]="cfg"
+          [websiteName]="websiteName()"
+          [unsupportedReason]="unsupportedReason() ?? 'No configuration loaded'"
+        />
+      </div>
+
+      <div class="browser-status">
+        <span class="viewport-indicator">
+          {{ viewportLabel() }} ({{ viewportWidth() }}px)
+        </span>
+        <span class="preview-note">Editor preview — not visible to public</span>
+      </div>
+    </div>
+  } @else {
+    <div class="preview-empty" role="status">
+      <p>{{ unsupportedReason() ?? 'No configuration loaded. Select a template to begin.' }}</p>
+    </div>
+  }
+</div>

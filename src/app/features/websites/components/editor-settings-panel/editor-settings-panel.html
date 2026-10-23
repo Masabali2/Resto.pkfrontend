@@ -1,57 +1,356 @@
-<section class="settings-panel" aria-label="Website theme settings">
-  <h2 class="panel-title">Theme</h2>
+<section class="settings-panel" aria-label="Website editor settings">
+  @for (section of sections(); track section.id) {
+    <details class="accordion-section" [open]="section.open" (toggle)="toggleSection(section.id)">
+      <summary class="accordion-header">
+        <span class="accordion-icon" aria-hidden="true">{{ section.icon }}</span>
+        <span class="accordion-title">{{ section.title }}</span>
+        <span class="accordion-chevron" aria-hidden="true">▼</span>
+      </summary>
 
-  <fieldset class="field-group">
-    <legend class="group-label">Colors</legend>
+      <div class="accordion-content">
+        @switch (section.id) {
+          @case ('hero') {
+            @if (heroSection(); as hero) {
+              <div class="section-fields">
+                <div class="field-group">
+                  <label class="field-label" for="hero-heading">Heading</label>
+                  <input
+                    id="hero-heading"
+                    type="text"
+                    class="field-input"
+                    [value]="hero.settings?.['heading'] ?? ''"
+                    placeholder="Your Restaurant Name"
+                    maxlength="80"
+                    (input)="updateHeroSetting('heading', $any($event.target).value)"
+                  />
+                  <span class="field-hint">Max 80 characters</span>
+                </div>
 
-    @for (field of colorFields; track field) {
-      <div class="setting-row">
-        <label class="setting-label" [attr.for]="'color-' + field">
-          {{ colorLabel(field) }}
-        </label>
-        <div class="control-with-swatch">
-          <input
-            [id]="'color-' + field"
-            type="color"
-            class="swatch-input"
-            [value]="colorValue()(field)"
-            (input)="onColorInput(field, $any($event.target).value)"
-          />
-          <input
-            type="text"
-            class="hex-input"
-            [value]="colorValue()(field)"
-            maxlength="7"
-            spellcheck="false"
-            autocomplete="off"
-            [attr.aria-label]="colorLabel(field) + ' hex value'"
-            (change)="onColorInput(field, $any($event.target).value)"
-          />
-        </div>
-      </div>
-    }
-  </fieldset>
+                <div class="field-group">
+                  <label class="field-label" for="hero-subheading">Subheading</label>
+                  <input
+                    id="hero-subheading"
+                    type="text"
+                    class="field-input"
+                    [value]="hero.settings?.['subheading'] ?? ''"
+                    placeholder="Delicious food made with love"
+                    maxlength="160"
+                    (input)="updateHeroSetting('subheading', $any($event.target).value)"
+                  />
+                  <span class="field-hint">Max 160 characters</span>
+                </div>
 
-  <fieldset class="field-group">
-    <legend class="group-label">Typography</legend>
+                <div class="field-group">
+                  <label class="field-label" for="hero-cta">Call to Action Text</label>
+                  <input
+                    id="hero-cta"
+                    type="text"
+                    class="field-input"
+                    [value]="hero.settings?.['ctaText'] ?? ''"
+                    placeholder="View Menu"
+                    maxlength="40"
+                    (input)="updateHeroSetting('ctaText', $any($event.target).value)"
+                  />
+                  <span class="field-hint">Button text, max 40 characters</span>
+                </div>
 
-    <div class="setting-row setting-row-stacked">
-      <label class="setting-label" for="theme-font">Font</label>
-      <select
-        id="theme-font"
-        class="font-select"
-        [value]="fontValue()"
-        (change)="onFontChange($any($event.target).value)"
-      >
-        @for (choice of fontChoices; track choice.value) {
-          <option [value]="choice.value">{{ choice.label }}</option>
+                <div class="field-group">
+                  <label class="field-label" for="hero-image">Hero Image</label>
+                  <div class="image-picker">
+                    <input
+                      id="hero-image"
+                      type="text"
+                      class="field-input"
+                      [value]="hero.settings?.['imageUrl'] ?? ''"
+                      placeholder="Image URL or asset ID"
+                      (input)="updateHeroSetting('imageUrl', $any($event.target).value)"
+                    />
+                    <span class="field-hint">Enter an image URL or asset identifier</span>
+                  </div>
+                </div>
+              </div>
+            } @else {
+              <p class="empty-state">No hero section in current configuration. Switch templates or add a hero section.</p>
+            }
+          }
+
+          @case ('theme') {
+            <div class="section-fields">
+              <fieldset class="field-group">
+                <legend class="group-label">Color Palette</legend>
+                @for (field of colorFields; track field) {
+                  <div class="setting-row">
+                    <label class="setting-label" [attr.for]="'color-' + field">
+                      {{ colorLabel(field) }}
+                    </label>
+                    <div class="control-with-swatch">
+                      <input
+                        [id]="'color-' + field"
+                        type="color"
+                        class="swatch-input"
+                        [value]="colorValue()(field)"
+                        (input)="onColorInput(field, $any($event.target).value)"
+                      />
+                      <input
+                        type="text"
+                        class="hex-input"
+                        [value]="colorValue()(field)"
+                        maxlength="7"
+                        spellcheck="false"
+                        autocomplete="off"
+                        [attr.aria-label]="colorLabel(field) + ' hex value'"
+                        (change)="onColorInput(field, $any($event.target).value)"
+                      />
+                    </div>
+                  </div>
+                }
+              </fieldset>
+
+              <fieldset class="field-group">
+                <legend class="group-label">Typography</legend>
+                <div class="setting-row setting-row-stacked">
+                  <label class="setting-label" for="theme-font">Font Family</label>
+                  <select
+                    id="theme-font"
+                    class="font-select"
+                    [value]="fontValue()"
+                    (change)="onFontChange($any($event.target).value)"
+                  >
+                    @for (choice of fontChoices; track choice.value) {
+                      <option [value]="choice.value">{{ choice.label }}</option>
+                    }
+                  </select>
+                </div>
+              </fieldset>
+
+              <div class="theme-preview" aria-label="Theme preview">
+                <div class="preview-card">
+                  <div class="preview-header" [style.background]="colorValue()('primary')" [style.color]="'white'">
+                    Preview
+                  </div>
+                  <div class="preview-body" [style.background]="colorValue()('background')" [style.color]="colorValue()('text')">
+                    <h3 [style.font-family]="fontValue() + ', sans-serif'">Sample Heading</h3>
+                    <p [style.font-family]="fontValue() + ', sans-serif'">This is how your text will look with the selected theme.</p>
+                    <button class="preview-button" [style.background]="colorValue()('accent')" [style.color]="'#1c1b1f'">
+                      Call to Action
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+
+          @case ('featured-dishes') {
+            <div class="section-fields">
+              <p class="section-description">
+                Select up to 3 dishes to feature on your homepage. Changes are saved automatically.
+              </p>
+
+              @if (availableMenuItems().length === 0) {
+                <div class="empty-state">
+                  <p>No menu items available. <a routerLink="/menus">Create a menu</a> with dishes first.</p>
+                </div>
+              } @else {
+                <div class="dish-grid">
+                  @for (item of availableMenuItems(); track item.id) {
+                    <button
+                      type="button"
+                      class="dish-card"
+                      [class.selected]="isItemSelected(item.id)"
+                      (click)="toggleFeaturedItem(item.id)"
+                      [disabled]="!isItemSelected(item.id) && featuredItemIds().length >= 3"
+                    >
+                      <div class="dish-image">
+                        @if (item.imageFileId) {
+                          <img [src]="'/api/v1/files/' + item.imageFileId" [alt]="item.name" />
+                        } @else {
+                          <span class="dish-placeholder">🍽️</span>
+                        }
+                      </div>
+                      <div class="dish-info">
+                        <h4 class="dish-name">{{ item.name }}</h4>
+                        @if (item.description) {
+                          <p class="dish-description">{{ item.description }}</p>
+                        }
+                        <span class="dish-price">{{ getItemPrice(item) }}</span>
+                      </div>
+                      @if (isItemSelected(item.id)) {
+                        <span class="selection-badge" aria-label="Selected">✓</span>
+                      }
+                    </button>
+                  }
+                </div>
+
+                @if (featuredItemIds().length > 0) {
+                  <p class="selection-summary">
+                    {{ featuredItemIds().length }} of 3 dishes selected
+                  </p>
+                }
+              }
+            </div>
+          }
+
+          @case ('contact') {
+            @if (contactSection(); as contact) {
+              <div class="section-fields">
+                <div class="field-group">
+                  <label class="field-label" for="contact-phone">Phone / WhatsApp</label>
+                  <input
+                    id="contact-phone"
+                    type="tel"
+                    class="field-input"
+                    [value]="contact.settings?.['phone'] ?? restaurant()?.phone ?? ''"
+                    placeholder="+1 (555) 123-4567"
+                    (input)="updateContactSetting('phone', $any($event.target).value)"
+                  />
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label" for="contact-email">Email</label>
+                  <input
+                    id="contact-email"
+                    type="email"
+                    class="field-input"
+                    [value]="contact.settings?.['email'] ?? restaurant()?.email ?? ''"
+                    placeholder="hello@restaurant.com"
+                    (input)="updateContactSetting('email', $any($event.target).value)"
+                  />
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label" for="contact-address">Address</label>
+                  <textarea
+                    id="contact-address"
+                    class="field-textarea"
+                    [value]="contact.settings?.['address'] ?? getDefaultAddress()"
+                    rows="3"
+                    (input)="updateContactSetting('address', $any($event.target).value)"
+                  ></textarea>
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label" for="contact-instagram">Instagram Handle</label>
+                  <input
+                    id="contact-instagram"
+                    type="text"
+                    class="field-input"
+                    [value]="contact.settings?.['instagram'] ?? ''"
+                    placeholder="@restaurantname"
+                    (input)="updateContactSetting('instagram', $any($event.target).value)"
+                  />
+                  <span class="field-hint">Without the @ symbol</span>
+                </div>
+              </div>
+            } @else {
+              <p class="empty-state">No contact section in current configuration.</p>
+            }
+          }
+
+          @case ('hours') {
+            @if (hoursSection(); as hours) {
+              <div class="section-fields">
+                <div class="field-group">
+                  <label class="field-label">Opening Hours</label>
+                  <div class="hours-grid">
+                    @for (day of weekDays; track day) {
+                      <div class="hours-row">
+                        <span class="day-label">{{ day }}</span>
+                        <input
+                          type="text"
+                          class="field-input hours-input"
+                          [value]="getHoursValue(day)"
+                          placeholder="Closed"
+                          [attr.aria-label]="day + ' opening hours'"
+                          (input)="updateHoursSetting('hours.' + day.toLowerCase(), $any($event.target).value)"
+                        />
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            } @else {
+              <p class="empty-state">No hours section in current configuration.</p>
+            }
+          }
+
+          @case ('story') {
+            @if (aboutSection(); as about) {
+              <div class="section-fields">
+                <div class="field-group">
+                  <label class="field-label" for="story-heading">Story Heading</label>
+                  <input
+                    id="story-heading"
+                    type="text"
+                    class="field-input"
+                    [value]="about.settings?.['heading'] ?? ''"
+                    placeholder="Our Story"
+                    maxlength="60"
+                    (input)="updateAboutSetting('heading', $any($event.target).value)"
+                  />
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label" for="story-body">Story Content</label>
+                  <textarea
+                    id="story-body"
+                    class="field-textarea"
+                    [value]="about.settings?.['body'] ?? about.settings?.['description'] ?? ''"
+                    rows="6"
+                    maxlength="2000"
+                    placeholder="Tell your customers about your restaurant's history, philosophy, and what makes you special..."
+                    (input)="updateAboutSetting('body', $any($event.target).value)"
+                  ></textarea>
+                  <span class="field-hint">Max 2000 characters</span>
+                </div>
+              </div>
+            } @else {
+              <p class="empty-state">No about/story section in current configuration.</p>
+            }
+          }
+
+          @case ('template') {
+            <div class="section-fields">
+              <p class="section-description">
+                Switching templates applies the new design while preserving your content where possible.
+              </p>
+
+              <div class="template-grid">
+                @for (template of templates(); track template.template.id) {
+                  <button
+                    type="button"
+                    class="template-card"
+                    [class.selected]="template.template.id === currentTemplateId()"
+                    (click)="selectTemplate(template.template.id, template.template.templateKey)"
+                    [disabled]="template.template.id === currentTemplateId()"
+                  >
+                    <div class="template-preview">
+                      @if (getTemplateImageUrl(template)) {
+                        <img [src]="getTemplateImageUrl(template)" [alt]="template.template.name" />
+                      } @else {
+                        <div class="template-placeholder">
+                          <span>{{ template.template.name.charAt(0) }}</span>
+                        </div>
+                      }
+                    </div>
+                    <div class="template-info">
+                      <h4 class="template-name">{{ template.template.name }}</h4>
+                      @if (template.category) {
+                        <span class="template-category">{{ template.category }}</span>
+                      }
+                      @if (template.featured) {
+                        <span class="template-featured-badge">Featured</span>
+                      }
+                    </div>
+                    @if (template.template.id === currentTemplateId()) {
+                      <span class="template-selected-badge" aria-label="Currently selected">✓</span>
+                    }
+                  </button>
+                }
+              </div>
+            </div>
+          }
         }
-      </select>
-    </div>
-  </fieldset>
-
-  <p class="panel-note">
-    Sections are managed by your template. Section editing and publishing
-    controls arrive in later phases.
-  </p>
+      </div>
+    </details>
+  }
 </section>

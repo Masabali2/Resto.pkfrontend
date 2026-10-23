@@ -83,67 +83,27 @@
     }
     @case ('ready') {
       @if (website(); as site) {
-        <header class="editor-toolbar">
-          <div class="toolbar-left">
-            <a class="back-link" [routerLink]="['/websites', site.id]">
-              <span aria-hidden="true">&larr;</span> Manage
-            </a>
-            <div class="toolbar-title">
-              <h1>{{ site.name }}</h1>
-              <p class="toolbar-meta">
-                <span class="status-badge">{{ publicationLabel() }}</span>
-                <span class="save-state" [attr.data-state]="saveState()" role="status" aria-live="polite">
-                  {{ saveLabel() }}
-                </span>
-              </p>
-            </div>
-          </div>
-          <div class="toolbar-right">
-            @if (publicSiteUrl(); as url) {
-              <a class="live-link" [href]="url" target="_blank" rel="noopener noreferrer">
-                View live site<span aria-hidden="true">&#8599;</span>
-              </a>
-            }
-            @if (website(); as current) {
-              @if (current.isPublished) {
-                <app-button
-                  variant="outline"
-                  size="md"
-                  [fullWidth]="false"
-                  [disabled]="publishState() !== 'idle'"
-                  [loading]="publishState() === 'unpublishing'"
-                  (click)="confirmUnpublish()"
-                >
-                  Unpublish
-                </app-button>
-              } @else {
-                <app-button
-                  variant="secondary"
-                  size="md"
-                  [fullWidth]="false"
-                  [disabled]="!canPublish() || !!publishBlockedReason() || publishState() !== 'idle'"
-                  (click)="confirmPublish()"
-                >
-                  Publish
-                </app-button>
-              }
-            }
-            <app-button
-              variant="primary"
-              size="md"
-              [fullWidth]="false"
-              [disabled]="!config() || saveState() === 'saving' || saveState() === 'clean'"
-              [loading]="saveState() === 'saving'"
-              (click)="saveDraft()"
-            >
-              Save Draft
-            </app-button>
-          </div>
-        </header>
-
-        @if (!config() && publishBlockedReason(); as reason) {
-          <p class="publish-hint" role="status">{{ reason }}</p>
-        }
+        <app-editor-toolbar
+          [website]="website()"
+          [saveState]="saveState()"
+          [publishState]="publishState()"
+          [editorState]="state()"
+          [viewportMode]="viewportMode()"
+          [publicationLabel]="publicationLabel()"
+          [canPublish]="canPublish()"
+          [publishBlockedReason]="publishBlockedReason()"
+          [publicSiteUrl]="publicSiteUrl()"
+          [hasUnsavedChanges]="hasUnsavedChanges()"
+          [isComparing]="isComparing()"
+          [compareData]="compareData()"
+          (backClick)="retry()"
+          (saveClick)="saveDraft()"
+          (publishClick)="confirmPublish()"
+          (unpublishClick)="confirmUnpublish()"
+          (previewClick)="openPreview()"
+          (compareClick)="compareChanges()"
+          (viewportChange)="onViewportChange($event)"
+        />
 
         @if (publishState() === 'confirming') {
           <section class="publish-confirm" role="alertdialog" aria-label="Confirm publication">
@@ -161,7 +121,7 @@
                   [loading]="publishState() === 'publishing'"
                   (click)="executePublish()"
                 >
-                  Confirm &amp; Publish
+                  Confirm & Publish
                 </app-button>
                 <app-button variant="secondary" size="md" [fullWidth]="false" (click)="cancelPublish()">
                   Cancel
@@ -181,14 +141,26 @@
                   Save Draft.
                 </p>
               }
-              <app-editor-settings-panel [config]="config()!" (themeChange)="onThemeChange($event)" />
+              <app-editor-settings-panel
+                [config]="config()!"
+                [restaurant]="restaurant()"
+                [menuItems]="menuItems()"
+                [templates]="templates()"
+                [currentTemplateId]="website()?.websiteTemplateId ?? null"
+                (themeChange)="onThemeChange($event)"
+                (sectionConfigChange)="onSectionConfigChange($event)"
+                (featuredDishesChange)="onFeaturedDishesChange($event)"
+                (templateChange)="onTemplateChange($event)"
+              />
             }
           </aside>
 
           <section class="editor-preview" aria-label="Website preview">
-            <app-website-preview
+            <app-preview-canvas
               [config]="config()"
               [websiteName]="site.name"
+              [template]="selectedTemplateItem()"
+              [viewportMode]="viewportMode()"
               [unsupportedReason]="draftError() ?? 'The preview will appear once a draft configuration is available.'"
             />
           </section>
@@ -196,4 +168,23 @@
       }
     }
   }
+
+  @if (isComparing()) {
+    <app-compare-dialog
+      [data]="compareData()"
+      (close)="closeCompare()"
+    />
+  }
+
+  @if (showPreviewDialog()) {
+    <app-template-preview-dialog
+      [template]="previewTemplate()!.template"
+      [design]="previewTemplate()?.design ?? null"
+      [designError]="previewTemplate()?.designError ?? null"
+      (closed)="closePreview()"
+      (useTemplate)="onPreviewDialogUse()"
+    />
+  }
 </main>
+
+(End of file - total 135 lines)

@@ -1,5 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import type { SupportedFont, WebsiteConfig } from '../../models/website-config.model';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import type { MenuItemDto } from '../../../menu/models/menu-item.model';
+import type { RestaurantDto } from '../../../../core/models/restaurant.model';
+import type { WebsiteConfig, WebsiteSectionConfig } from '../../models/website-config.model';
+import type { WebsiteTemplateCatalogueItem } from '../../models/website-template-catalogue.model';
 import {
   fontOptions,
   isValidHexColor,
@@ -10,7 +13,21 @@ import {
 
 export type ThemeChange =
   | { kind: 'color'; field: ThemeColorField; value: string }
-  | { kind: 'font'; value: SupportedFont };
+  | { kind: 'font'; value: string };
+
+export type SectionConfigChange = {
+  sectionType: string;
+  settings: Record<string, unknown>;
+};
+
+export type TemplateChange = {
+  templateId: string;
+  templateKey: string;
+};
+
+export type FeaturedDishesChange = {
+  itemIds: string[];
+};
 
 const COLOR_LABELS: Record<ThemeColorField, string> = {
   primary: 'Primary color',
@@ -28,12 +45,13 @@ const FALLBACK_COLORS: Record<ThemeColorField, string> = {
   text: '#1c1b1f'
 };
 
-/**
- * Presentational settings panel for the theme fields supported by the
- * backend WebsiteConfigSchema (`theme.colors` map of hex values and a single
- * allow-listed `theme.font`). It never mutates the configuration itself;
- * all edits are emitted as validated ThemeChange intents.
- */
+interface AccordionSection {
+  id: string;
+  title: string;
+  icon: string;
+  open: boolean;
+}
+
 @Component({
   selector: 'app-editor-settings-panel',
   standalone: true,
@@ -43,8 +61,15 @@ const FALLBACK_COLORS: Record<ThemeColorField, string> = {
 })
 export class EditorSettingsPanel {
   readonly config = input.required<WebsiteConfig>();
+  readonly restaurant = input<RestaurantDto | null>(null);
+  readonly menuItems = input<readonly MenuItemDto[]>([]);
+  readonly templates = input<readonly WebsiteTemplateCatalogueItem[]>([]);
+  readonly currentTemplateId = input<string | null>(null);
 
   readonly themeChange = output<ThemeChange>();
+  readonly sectionConfigChange = output<SectionConfigChange>();
+  readonly templateChange = output<TemplateChange>();
+  readonly featuredDishesChange = output<FeaturedDishesChange>();
 
   protected readonly colorFields = THEME_COLOR_FIELDS;
   protected readonly fontChoices = fontOptions();
@@ -65,6 +90,57 @@ export class EditorSettingsPanel {
     return isSupportedFont(raw) ? raw : 'system-ui';
   });
 
+  protected readonly sections = signal<AccordionSection[]>([
+    { id: 'hero', title: 'Hero Banner', icon: '🎯', open: true },
+    { id: 'theme', title: 'Theme & Design', icon: '🎨', open: false },
+    { id: 'featured-dishes', title: 'Featured Dishes', icon: '🍽️', open: false },
+    { id: 'contact', title: 'Contact & Hours', icon: '📍', open: false },
+    { id: 'story', title: 'Restaurant Story', icon: '📖', open: false },
+    { id: 'template', title: 'Template', icon: '📐', open: false }
+  ]);
+
+  protected readonly heroSection = computed<WebsiteSectionConfig | null>(() =>
+    this.config().sections.find(s => s.type === 'hero') ?? null
+  );
+
+  protected readonly menuPreviewSection = computed<WebsiteSectionConfig | null>(() =>
+    this.config().sections.find(s => s.type === 'menu-preview') ?? null
+  );
+
+  protected readonly aboutSection = computed<WebsiteSectionConfig | null>(() =>
+    this.config().sections.find(s => s.type === 'about') ?? null
+  );
+
+  protected readonly contactSection = computed<WebsiteSectionConfig | null>(() =>
+    this.config().sections.find(s => s.type === 'contact') ?? null
+  );
+
+  protected readonly hoursSection = computed<WebsiteSectionConfig | null>(() =>
+    this.config().sections.find(s => s.type === 'hours') ?? null
+  );
+
+  protected readonly featuredItemIds = computed<string[]>(() => {
+    const menuSection = this.menuPreviewSection();
+    const items = menuSection?.settings?.['featuredItemIds'];
+    return Array.isArray(items) ? items.filter((id): id is string => typeof id === 'string') : [];
+  });
+
+  protected readonly availableMenuItems = computed(() =>
+    this.menuItems().filter(item => item.isActive && item.isAvailable)
+  );
+
+  protected readonly selectedTemplate = computed(() =>
+    this.templates().find(t => t.template.id === this.currentTemplateId()) ?? null
+  );
+
+  protected readonly weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+  protected toggleSection(sectionId: string): void {
+    this.sections.update(sections =>
+      sections.map(s => s.id === sectionId ? { ...s, open: !s.open } : s)
+    );
+  }
+
   protected onColorInput(field: ThemeColorField, value: string): void {
     if (isValidHexColor(value)) {
       this.themeChange.emit({ kind: 'color', field, value });
@@ -75,5 +151,84 @@ export class EditorSettingsPanel {
     if (isSupportedFont(value)) {
       this.themeChange.emit({ kind: 'font', value });
     }
+  }
+
+  protected updateHeroSetting(key: string, value: string): void {
+    const section = this.heroSection();
+    if (!section) return;
+
+    const newSettings = { ...section.settings, [key]: value };
+    this.sectionConfigChange.emit({ sectionType: 'hero', settings: newSettings });
+  }
+
+  protected updateAboutSetting(key: string, value: string): void {
+    const section = this.aboutSection();
+    if (!section) return;
+
+    const newSettings = { ...section.settings, [key]: value };
+    this.sectionConfigChange.emit({ sectionType: 'about', settings: newSettings });
+  }
+
+  protected updateContactSetting(key: string, value: string): void {
+    const section = this.contactSection();
+    if (!section) return;
+
+    const newSettings = { ...section.settings, [key]: value };
+    this.sectionConfigChange.emit({ sectionType: 'contact', settings: newSettings });
+  }
+
+  protected updateHoursSetting(key: string, value: string): void {
+    const section = this.hoursSection();
+    if (!section) return;
+
+    const newSettings = { ...section.settings, [key]: value };
+    this.sectionConfigChange.emit({ sectionType: 'hours', settings: newSettings });
+  }
+
+  protected toggleFeaturedItem(itemId: string): void {
+    const current = this.featuredItemIds();
+    const isSelected = current.includes(itemId);
+
+    let newIds: string[];
+    if (isSelected) {
+      newIds = current.filter(id => id !== itemId);
+    } else {
+      if (current.length >= 3) return;
+      newIds = [...current, itemId];
+    }
+
+    this.featuredDishesChange.emit({ itemIds: newIds });
+  }
+
+  protected isItemSelected(itemId: string): boolean {
+    return this.featuredItemIds().includes(itemId);
+  }
+
+  protected getItemPrice(item: MenuItemDto): string {
+    return `${item.currency} ${item.price.toFixed(2)}`;
+  }
+
+  protected selectTemplate(templateId: string, templateKey: string): void {
+    this.templateChange.emit({ templateId, templateKey });
+  }
+
+  protected getTemplateImageUrl(template: WebsiteTemplateCatalogueItem): string | null {
+    return template.template.previewImageFileId
+      ? `/api/v1/files/${template.template.previewImageFileId}`
+      : null;
+  }
+
+  protected getDefaultAddress(): string {
+    const r = this.restaurant();
+    if (!r) return '';
+    const parts = [r.addressLine1, r.addressLine2, r.city, r.country].filter(Boolean);
+    return parts.join(', ');
+  }
+
+  protected getHoursValue(day: string): string {
+    const section = this.hoursSection();
+    if (!section) return '';
+    const hours = section.settings?.['hours'] as Record<string, string> | undefined;
+    return hours?.[day.toLowerCase()] ?? '';
   }
 }

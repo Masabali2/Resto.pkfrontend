@@ -6,7 +6,7 @@ import {
   inject,
   signal
 } from '@angular/core';
-import { DatePipe, NgIf, NgForOf } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
@@ -31,8 +31,6 @@ type PageState = 'loading' | 'list' | 'empty' | 'no-workspace' | 'forbidden' | '
   standalone: true,
   imports: [
     DatePipe,
-    NgIf,
-    NgForOf,
     RouterLink,
     Button,
     LoadingSpinner,
