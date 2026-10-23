@@ -36,3 +36,29 @@ describe('app routes', () => {
     expect(restaurantSetup).toBeTruthy();
   });
 });
+
+describe('template catalogue routes', () => {
+  const authenticatedLayout = routes.find(route => route.children);
+
+  it('registers the catalogue inside the authenticated layout under Website.View', () => {
+    const templates = authenticatedLayout?.children?.find(route => route.path === 'templates');
+    const catalogue = templates?.children?.find(
+      route => route.path === '' && route.pathMatch === 'full'
+    );
+
+    expect(catalogue).toBeTruthy();
+    expect(catalogue?.title).toBe('Templates — Resto.pk');
+    expect(catalogue?.data).toEqual({ permission: 'Website.View' });
+    expect(typeof catalogue?.loadComponent).toBe('function');
+  });
+
+  it('keeps the intended preview path present so previews do not dead-end', () => {
+    const templates = authenticatedLayout?.children?.find(route => route.path === 'templates');
+    const preview = templates?.children?.find(route => route.path === ':id/preview');
+
+    expect(preview).toBeTruthy();
+    // Placeholder until the dedicated TemplatePreview page lands: redirects
+    // back to the catalogue instead of falling through to the wildcard.
+    expect(preview?.redirectTo).toBe('templates');
+  });
+});
