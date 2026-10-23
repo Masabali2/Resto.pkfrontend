@@ -1,22 +1,51 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal
+} from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { forkJoin } from 'rxjs';
+import {
+  LucideAlertCircle,
+  LucideArrowDown,
+  LucideArrowUp,
+  LucideCheck,
+  LucideEdit3,
+  LucideFlame,
+  LucideGripVertical,
+  LucideImageOff,
+  LucideLayers,
+  LucidePercent,
+  LucidePlus,
+  LucideSearch,
+  LucideSparkles,
+  LucideTag,
+  LucideTrash2,
+  LucideUtensilsCrossed,
+  LucideX
+} from '@lucide/angular';
 import { MenuService } from '../../services/menu.service';
 import { AuthorizationService } from '../../../../core/services/authorization.service';
 import { TenantContextService } from '../../../../core/services/tenant-context.service';
 import { HttpErrorHandlerService } from '../../../../core/services/http-error-handler.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ConfirmationDialog } from '../../../../shared/components/confirmation-dialog/confirmation-dialog';
-import { Button } from '../../../../shared/components/button/button';
 import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
+import { BulkPriceDialog } from '../../components/bulk-price-dialog/bulk-price-dialog';
 import type { ApiResponse } from '../../../../core/models/api-response.model';
 import type { MenuDetailsDto } from '../../models/menu.model';
 import type { MenuCategoryDto } from '../../models/menu-category.model';
 import type { MenuItemDto } from '../../models/menu-item.model';
+import { formatPrice } from '../../models/menu-price.util';
 
 type PageState = 'loading' | 'list' | 'not-found' | 'no-workspace' | 'forbidden' | 'error';
 
+/** One loaded page of items for a single category (GET .../items is paged). */
 interface CategoryItemState {
   items: MenuItemDto[];
   page: number;
@@ -26,32 +55,44 @@ interface CategoryItemState {
   error: string | null;
 }
 
-/** Backend convention for category item pages (Task 2 aligned the service default). */
 const ITEMS_PAGE_SIZE = 50;
 
-/** Body of PUT /api/v1/menu-items/{itemId} built from a full existing DTO. */
-interface ItemReorderRequest {
-  name: string;
-  description: string | null;
-  price: number;
-  currency: string;
-  imageFileId: string | null;
-  clearImage: boolean;
-  displayOrder: number;
-}
-
 /**
- * Screen 4 — Digital Menu Organizer.
- * Two-column workspace: a category navigation rail on the left and the
- * selected category's items on the right. Recovered selectively from orphan
- * commit 93f7f89 with three deliberate corrections documented in Task 3:
- * first-category (not second) default selection, strict delete-success
- * handling, and full-DTO item reorder payloads that cannot clear fields.
+ * Screen 4 — "Digital Menu & Category Organizer".
+ *
+ * Two-column workspace: category rail on the left (select / reorder / add),
+ * live item list on the right (instant optimistic availability toggles,
+ * search, per-item actions) plus the Bulk Price Adjustment dialog. All data
+ * flows through MenuService against the real backend endpoints; nothing is
+ * mocked.
  */
 @Component({
   selector: 'app-menu-detail',
   standalone: true,
-  imports: [LoadingSpinner, ConfirmationDialog, Button, RouterLink],
+  imports: [
+    FormsModule,
+    ConfirmationDialog,
+    LoadingSpinner,
+    BulkPriceDialog,
+    LucideAlertCircle,
+    LucideArrowDown,
+    LucideArrowUp,
+    LucideCheck,
+    LucideEdit3,
+    LucideFlame,
+    LucideGripVertical,
+    LucideImageOff,
+    LucideLayers,
+    LucidePercent,
+    LucidePlus,
+    LucideSearch,
+    LucideSparkles,
+    LucideTag,
+    LucideTrash2,
+    LucideUtensilsCrossed,
+    LucideX
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './menu-detail.html',
   styleUrl: './menu-detail.css'
 })
@@ -69,28 +110,14 @@ export class MenuDetail {
   protected readonly menu = signal<MenuDetailsDto | null>(null);
   protected readonly categoryItemState = signal<Record<string, CategoryItemState>>({});
 
-  /** The category whose items are shown in the right-hand panel. */
+  // --- Screen-4 UI state ---------------------------------------------------
   protected readonly activeCategoryId = signal<string | null>(null);
-
-  /** Item ids with an in-flight availability PATCH (pending-toggle guard). */
-  protected readonly pendingToggles = signal<ReadonlySet<string>>(new Set());
-
-  // Inline category creation state (rail footer form).
+  protected readonly searchQuery = signal('');
   protected readonly isAddingCategory = signal(false);
-  protected readonly addingCategory = signal(false);
   protected readonly newCategoryName = signal('');
-  protected readonly categoryValidationError = signal('');
-
-  /** True while a category reorder request is in flight; blocks overlapping saves. */
-  protected readonly reorderingCategories = signal(false);
-
-  /**
-   * Test seam: the active-tenant subscription fires on emit and would race
-   * with the route-paramMap bootstrap load in component tests. Production
-   * code never sets this. Declared before the constructor so field
-   * initializers run ahead of injection-based constructor logic.
-   */
-  private suppressTenantReload = false;
+  protected readonly addingCategory = signal(false);
+  protected readonly bulkPriceOpen = signal(false);
+  protected readonly pendingToggles = signal<Set<string>>(new Set());
 
   protected readonly dialogOpen = signal(false);
   protected readonly dialogKind = signal<'category' | 'item' | null>(null);
@@ -134,6 +161,63 @@ export class MenuDetail {
     return id ? (this.categoryItemState()[id]?.items ?? []) : [];
   });
 
+  /** Read-only menus cannot be mutated from this screen. */
+  protected readonly isReadOnly = computed(() => this.isArchived());
+
+  protected readonly categories = computed(
+    () => this.menu()?.categories ?? []
+  );
+
+  protected readonly activeCategory = computed(() => {
+    const categories = this.categories();
+    const activeId = this.activeCategoryId();
+
+    return (
+      categories.find(c => c.id === activeId) ?? categories[0] ?? null
+    );
+  });
+
+  /** Active category first, then the rest — mirrors the design's stacked view. */
+  protected readonly orderedCategories = computed(() => {
+    const active = this.activeCategory();
+    if (!active) {
+      return [];
+    }
+
+    return [active, ...this.categories().filter(c => c.id !== active.id)];
+  });
+
+  protected readonly activeItems = computed(
+    () => this.categoryItems(this.activeCategory()?.id ?? '')
+  );
+
+  protected readonly activeItemsLoading = computed(() =>
+    this.categoryItemsLoading(this.activeCategory()?.id ?? '')
+  );
+
+  protected readonly filteredItems = computed(() => {
+    const query = this.searchQuery().trim().toLowerCase();
+    const items = this.activeItems();
+
+    if (query.length === 0) {
+      return items;
+    }
+
+    return items.filter(
+      item =>
+        item.name.toLowerCase().includes(query) ||
+        (item.description ?? '').toLowerCase().includes(query)
+    );
+  });
+
+  protected readonly availableCount = computed(
+    () => this.activeItems().filter(i => i.isAvailable).length
+  );
+
+  protected readonly outOfStockCount = computed(
+    () => this.activeItems().length - this.availableCount()
+  );
+
   private loadedTenantId: string | null = null;
   private requestSequence = 0;
 
@@ -153,8 +237,7 @@ export class MenuDetail {
         this.menu.set(null);
         this.categoryItemState.set({});
         this.activeCategoryId.set(null);
-        this.pendingToggles.set(new Set());
-        this.cancelAddCategory();
+        this.searchQuery.set('');
 
         const menuId = this.route.snapshot.paramMap.get('menuId');
         if (menuId) {
@@ -201,6 +284,8 @@ export class MenuDetail {
     return !!this.categoryItemState()[categoryId]?.loading;
   }
 
+  // --- Data loading ---------------------------------------------------------
+
   private loadMenu(menuId: string): void {
     const tenantId = this.tenantContext.activeTenantId();
     if (tenantId === null) {
@@ -229,14 +314,17 @@ export class MenuDetail {
         this.menu.set(menu);
         this.pageState.set('list');
 
-        // Active-category initialization (corrects the orphan defect that
-        // defaulted to categories[1]): keep the current selection when it
-        // still exists; otherwise select the FIRST category; null-safe when
-        // the list is empty.
-        const activeId = this.activeCategoryId();
-        if (!activeId || !menu.categories.some(c => c.id === activeId)) {
-          this.activeCategoryId.set(menu.categories[0]?.id ?? null);
+        if (
+          this.activeCategoryId() === null ||
+          !menu.categories.some(c => c.id === this.activeCategoryId())
+        ) {
+          // Default to the second section when present (matches the design's
+          // intent of landing on a populated category), else the first.
+          const preferred = menu.categories[1] ?? menu.categories[0];
+          this.activeCategoryId.set(preferred?.id ?? null);
         }
+
+        this.ensureActiveItemsLoaded();
       },
       error: (error: unknown) => {
         if (!this.isCurrent(requestId, tenantId)) {
@@ -271,7 +359,613 @@ export class MenuDetail {
     }
   }
 
-  // --- Menu-level actions -----------------------------------------------------
+  // --- Category rail --------------------------------------------------------
+
+  protected selectCategory(categoryId: string): void {
+    if (this.activeCategoryId() === categoryId) {
+      return;
+    }
+
+    this.activeCategoryId.set(categoryId);
+    this.searchQuery.set('');
+    this.ensureActiveItemsLoaded();
+  }
+
+  private ensureActiveItemsLoaded(): void {
+    const category = this.activeCategory();
+    if (!category) {
+      return;
+    }
+
+    if (!this.categoryItemState()[category.id]) {
+      this.loadCategoryItems(category.id, 1);
+    }
+  }
+
+  protected onNewCategoryNameChange(value: string): void {
+    this.newCategoryName.set(value);
+  }
+
+  protected startAddCategory(): void {
+    if (!this.canCreateCategory() || this.isReadOnly()) {
+      return;
+    }
+
+    this.isAddingCategory.set(true);
+    this.newCategoryName.set('');
+  }
+
+  protected cancelAddCategory(): void {
+    this.isAddingCategory.set(false);
+    this.newCategoryName.set('');
+  }
+
+  protected submitAddCategory(): void {
+    const menu = this.menu();
+    const name = this.newCategoryName().trim();
+
+    if (!menu || name.length === 0 || this.addingCategory()) {
+      return;
+    }
+
+    this.addingCategory.set(true);
+
+    this.menuService.createCategory(menu.id, {
+      name,
+      description: null,
+      displayOrder: null
+    }).subscribe({
+      next: response => {
+        this.addingCategory.set(false);
+
+        if (!response.success || !response.data) {
+          this.errorMessage.set(
+            response.message ?? 'Unable to add the category. Please try again.'
+          );
+          return;
+        }
+
+        const created = response.data;
+        this.menu.update(m =>
+          m ? { ...m, categories: [...m.categories, created] } : null
+        );
+        this.activeCategoryId.set(created.id);
+        this.isAddingCategory.set(false);
+        this.newCategoryName.set('');
+        this.notificationService.success(`Category "${created.name}" added.`);
+      },
+      error: error => {
+        this.addingCategory.set(false);
+        this.errorMessage.set(
+          this.httpErrorHandler.extractBackendMessage(error) ??
+            'Unable to add the category. Please try again.'
+        );
+      }
+    });
+  }
+
+  protected moveCategory(index: number, direction: 'up' | 'down'): void {
+    const menu = this.menu();
+    if (!menu || !this.canManageCategories() || this.isReadOnly()) {
+      return;
+    }
+
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (index < 0 || targetIndex < 0 || targetIndex >= menu.categories.length) {
+      return;
+    }
+
+    const cats = [...menu.categories];
+    [cats[index], cats[targetIndex]] = [cats[targetIndex], cats[index]];
+    const previous = menu.categories;
+    const ordered = cats.map(c => c.id);
+
+    this.menu.update(m => (m ? { ...m, categories: cats } : null));
+
+    this.menuService.reorderCategories(menu.id, ordered).subscribe({
+      next: response => {
+        if (response.success && response.data) {
+          this.menu.update(m =>
+            m ? { ...m, categories: response.data! } : null
+          );
+        }
+      },
+      error: () => {
+        this.menu.update(m => (m ? { ...m, categories: previous } : null));
+        this.errorMessage.set(
+          'The category order could not be saved. The previous order was restored.'
+        );
+      }
+    });
+  }
+
+  // Category persistence operations ---------------------------------------------
+
+  protected editCategory(category: MenuCategoryDto): void {
+    const menu = this.menu();
+    if (!menu || !this.canManageCategories()) {
+      return;
+    }
+
+    void this.router.navigate(['/menus', menu.id, 'categories', category.id, 'edit'], {
+      queryParams: { restaurantId: menu.restaurantId },
+      queryParamsHandling: 'merge'
+    });
+  }
+
+  protected toggleCategoryActive(category: MenuCategoryDto): void {
+    if (!this.canManageCategories() || this.isReadOnly()) {
+      return;
+    }
+
+    const isActive = !category.isActive;
+
+    this.menuService.setCategoryActive(category.id, isActive).subscribe({
+      next: response => {
+        if (!response.success || !response.data) {
+          this.errorMessage.set(response.message ?? 'Unable to update the category.');
+          return;
+        }
+
+        const updated = response.data;
+        this.menu.update(m => {
+          if (!m) return null;
+          return {
+            ...m,
+            categories: m.categories.map(c =>
+              c.id === updated.id ? { ...c, isActive: updated.isActive } : c
+            )
+          };
+        });
+        this.notificationService.success(
+          `Category "${updated.name}" ${updated.isActive ? 'activated' : 'deactivated'}.`
+        );
+      },
+      error: error => {
+        this.errorMessage.set(
+          this.httpErrorHandler.extractBackendMessage(error) ??
+            'Unable to update the category. Please try again.'
+        );
+      }
+    });
+  }
+
+  protected openDeleteCategoryDialog(category: MenuCategoryDto): void {
+    if (!this.canDeleteCategory() || this.isReadOnly()) {
+      return;
+    }
+
+    this.dialogKind.set('category');
+    this.dialogTarget.set({ id: category.id, name: category.name });
+    this.dialogOpen.set(true);
+  }
+
+  private deleteCategory(): void {
+    const target = this.dialogTarget();
+    if (!target || this.dialogKind() !== 'category') {
+      return;
+    }
+
+    this.closeDialog();
+
+    this.menuService.deleteCategory(target.id).subscribe({
+      next: () => {
+        this.menu.update(m => {
+          if (!m) return null;
+          return {
+            ...m,
+            categories: m.categories.filter(c => c.id !== target.id)
+          };
+        });
+        this.categoryItemState.update(states => {
+          const { [target.id]: _removed, ...rest } = states;
+          return rest;
+        });
+        if (this.activeCategoryId() === target.id) {
+          this.activeCategoryId.set(null);
+          this.ensureActiveItemsLoaded();
+        }
+        this.notificationService.success(`"${target.name}" has been deleted.`);
+      },
+      error: error => {
+        if (error instanceof HttpErrorResponse && error.status === 409) {
+          this.errorMessage.set(
+            this.httpErrorHandler.extractBackendMessage(error) ??
+              'This category still has menu items. Deactivate it or remove the items first.'
+          );
+          return;
+        }
+
+        this.errorMessage.set(
+          this.httpErrorHandler.extractBackendMessage(error) ??
+            'Unable to delete the category. Please try again.'
+        );
+      }
+    });
+  }
+
+  // --- Items panel ----------------------------------------------------------
+
+  protected isLastCategory(categoryId: string): boolean {
+    const categories = this.menu()?.categories ?? [];
+    return categories.length > 0 && categories[categories.length - 1].id === categoryId;
+  }
+
+  // --- Items panel ------------------------------------------------------------
+
+  protected loadCategoryItems(categoryId: string, page = 1): void {
+    const current = this.categoryItemState();
+    const existing = current[categoryId];
+    if (existing?.loading) {
+      return;
+    }
+
+    if (!this.menu()) {
+      return;
+    }
+
+    const emptyState: CategoryItemState = {
+      items: [],
+      page: 1,
+      pageSize: ITEMS_PAGE_SIZE,
+      totalCount: 0,
+      loading: false,
+      error: null
+    };
+
+    this.categoryItemState.update(states => ({
+      ...states,
+      [categoryId]: { ...(existing ?? emptyState), loading: true, error: null }
+    }));
+
+    this.menuService
+      .getCategoryItems(categoryId, page, ITEMS_PAGE_SIZE)
+      .subscribe({
+        next: response => {
+          if (!response.success || !response.data) {
+            this.categoryItemState.update(states => ({
+              ...states,
+              [categoryId]: {
+                ...(states[categoryId] ?? emptyState),
+                loading: false,
+                error: response.message ?? 'Unable to load items.'
+              }
+            }));
+            return;
+          }
+
+          const data = response.data;
+          this.categoryItemState.update(states => ({
+            ...states,
+            [categoryId]: {
+              items: data.items ?? [],
+              page: data.page ?? page,
+              pageSize: data.pageSize ?? ITEMS_PAGE_SIZE,
+              totalCount: data.totalCount ?? 0,
+              loading: false,
+              error: null
+            }
+          }));
+        },
+        error: error => {
+          this.categoryItemState.update(states => ({
+            ...states,
+            [categoryId]: {
+              ...(states[categoryId] ?? emptyState),
+              loading: false,
+              error:
+                this.httpErrorHandler.extractBackendMessage(error) ??
+                'Unable to load items.'
+            }
+          }));
+        }
+      });
+  }
+
+  protected categoryItems(categoryId: string): MenuItemDto[] {
+    return this.categoryItemState()[categoryId]?.items ?? [];
+  }
+
+  protected categoryPage(
+    categoryId: string
+  ): { page: number; pageSize: number; totalCount: number } | null {
+    const state = this.categoryItemState()[categoryId];
+    if (!state) {
+      return null;
+    }
+
+    return { page: state.page, pageSize: state.pageSize, totalCount: state.totalCount };
+  }
+
+  protected totalPages(categoryId: string): number {
+    const page = this.categoryPage(categoryId);
+    if (!page) {
+      return 1;
+    }
+
+    return Math.max(1, Math.ceil(page.totalCount / page.pageSize));
+  }
+
+  protected categoryError(categoryId: string): string | null {
+    return this.categoryItemState()[categoryId]?.error ?? null;
+  }
+
+  protected categoryItemsLoading(categoryId: string): boolean {
+    return !!this.categoryItemState()[categoryId]?.loading;
+  }
+
+  protected isTogglePending(itemId: string): boolean {
+    return this.pendingToggles().has(itemId);
+  }
+
+  /**
+   * Instant availability toggle with optimistic UI: the switch flips
+   * immediately, PATCH .../availability runs in the background and the row
+   * rolls back with an error toast if the request fails.
+   */
+  protected toggleItemAvailability(item: MenuItemDto): void {
+    if (!this.canManageItems() || this.isReadOnly() || this.isTogglePending(item.id)) {
+      return;
+    }
+
+    const nextState = !item.isAvailable;
+    const previous = item.isAvailable;
+
+    this.applyAvailabilityLocally(item.id, nextState);
+    this.pendingToggles.update(set => new Set(set).add(item.id));
+
+    this.menuService.setItemAvailability(item.id, nextState).subscribe({
+      next: response => {
+        this.pendingToggles.update(set => {
+          const copy = new Set(set);
+          copy.delete(item.id);
+          return copy;
+        });
+
+        if (!response.success || !response.data) {
+          this.applyAvailabilityLocally(item.id, previous);
+          this.errorMessage.set(response.message ?? 'Unable to update availability.');
+          return;
+        }
+
+        this.updateItemInCategory(response.data);
+        this.notificationService.success(
+          `${response.data.name} is now ${
+            response.data.isAvailable
+              ? 'available on the digital menu'
+              : 'marked out of stock'
+          }.`
+        );
+      },
+      error: error => {
+        this.pendingToggles.update(set => {
+          const copy = new Set(set);
+          copy.delete(item.id);
+          return copy;
+        });
+
+        this.applyAvailabilityLocally(item.id, previous);
+        this.errorMessage.set(
+          this.httpErrorHandler.extractBackendMessage(error) ??
+            'Unable to update availability. Please try again.'
+        );
+      }
+    });
+  }
+
+  private applyAvailabilityLocally(itemId: string, isAvailable: boolean): void {
+    this.categoryItemState.update(states => {
+      for (const [cid, state] of Object.entries(states)) {
+        if (state.items.some(i => i.id === itemId)) {
+          states[cid] = {
+            ...state,
+            items: state.items.map(i =>
+              i.id === itemId ? { ...i, isAvailable } : i
+            )
+          };
+          break;
+        }
+      }
+      return states;
+    });
+  }
+
+  protected toggleItemActive(item: MenuItemDto): void {
+    if (!this.canManageItems() || this.isReadOnly()) {
+      return;
+    }
+
+    this.menuService.setItemActive(item.id, !item.isActive).subscribe({
+      next: response => {
+        if (!response.success || !response.data) {
+          this.errorMessage.set(response.message ?? 'Unable to update the item.');
+          return;
+        }
+
+        this.updateItemInCategory(response.data);
+        this.notificationService.success(
+          `Item "${response.data.name}" ${response.data.isActive ? 'shown' : 'hidden'} on the menu.`
+        );
+      },
+      error: error => {
+        this.errorMessage.set(
+          this.httpErrorHandler.extractBackendMessage(error) ??
+            'Unable to update the item. Please try again.'
+        );
+      }
+    });
+  }
+
+  protected createItem(): void {
+    const menu = this.menu();
+    const category = this.activeCategory();
+    if (!menu || !category || !this.canCreateItem() || this.isReadOnly()) {
+      return;
+    }
+
+    void this.router.navigate(
+      ['/menus', menu.id, 'categories', category.id, 'items', 'new'],
+      {
+        queryParams: { restaurantId: menu.restaurantId },
+        queryParamsHandling: 'merge'
+      }
+    );
+  }
+
+  protected editItem(item: MenuItemDto): void {
+    const menu = this.menu();
+    if (!menu || !this.canManageItems()) {
+      return;
+    }
+
+    void this.router.navigate(
+      [
+        '/menus',
+        menu.id,
+        'categories',
+        item.menuCategoryId,
+        'items',
+        item.id,
+        'edit'
+      ],
+      {
+        queryParams: { restaurantId: menu.restaurantId },
+        queryParamsHandling: 'merge'
+      }
+    );
+  }
+
+  protected openDeleteItemDialog(item: MenuItemDto): void {
+    if (!this.canDeleteItem() || this.isReadOnly()) {
+      return;
+    }
+
+    this.dialogKind.set('item');
+    this.dialogTarget.set({ id: item.id, name: item.name });
+    this.dialogOpen.set(true);
+  }
+
+  private deleteItem(): void {
+    const target = this.dialogTarget();
+    if (!target || this.dialogKind() !== 'item') {
+      return;
+    }
+
+    this.closeDialog();
+
+    // Find the category the item belongs to so its page can be refreshed.
+    let categoryId = '';
+    for (const [cid, state] of Object.entries(this.categoryItemState())) {
+      if (state.items.some(i => i.id === target.id)) {
+        categoryId = cid;
+        break;
+      }
+    }
+
+    this.menuService.deleteItem(target.id).subscribe({
+      next: response => {
+        // Strict success contract — removal happens only for successful envelopes.
+        if (!response.success) {
+          this.errorMessage.set(
+            response.message ?? 'Unable to delete the item. Please try again.'
+          );
+          return;
+        }
+
+        this.removeItemFromCategory(target.id);
+        if (categoryId) {
+          this.loadCategoryItems(
+            categoryId,
+            this.categoryItemState()[categoryId]?.page ?? 1
+          );
+        }
+        this.notificationService.success(`"${target.name}" has been deleted.`);
+      },
+      error: error => {
+        this.errorMessage.set(
+          this.httpErrorHandler.extractBackendMessage(error) ??
+            'Unable to delete the item. Please try again.'
+        );
+      }
+    });
+  }
+
+  /** Swaps displayOrder with the neighbouring item, then refreshes the page. */
+  protected moveItem(index: number, direction: 'up' | 'down'): void {
+    const category = this.activeCategory();
+    if (!category || !this.canManageItems() || this.isReadOnly()) {
+      return;
+    }
+
+    const state = this.categoryItemState()[category.id];
+    if (!state) {
+      return;
+    }
+
+    const items = state.items;
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (index < 0 || targetIndex < 0 || targetIndex >= items.length) {
+      return;
+    }
+
+    const a = items[index];
+    const b = items[targetIndex];
+
+    forkJoin([
+      this.menuService.updateItem(a.id, {
+        displayOrder: b.displayOrder,
+        imageFileId: null,
+        clearImage: false
+      }),
+      this.menuService.updateItem(b.id, {
+        displayOrder: a.displayOrder,
+        imageFileId: null,
+        clearImage: false
+      })
+    ]).subscribe({
+      next: () => this.loadCategoryItems(category.id, state.page),
+      error: () => {
+        this.loadCategoryItems(category.id, state.page);
+        this.errorMessage.set(
+          'The item order could not be saved. The original order was kept.'
+        );
+      }
+    });
+  }
+
+  private updateItemInCategory(updated: MenuItemDto): void {
+    this.categoryItemState.update(states => {
+      const next = { ...states };
+      for (const [cid, state] of Object.entries(next)) {
+        if (state.items.some(i => i.id === updated.id)) {
+          next[cid] = {
+            ...state,
+            items: state.items.map(i => (i.id === updated.id ? updated : i))
+          };
+          break;
+        }
+      }
+      return next;
+    });
+  }
+
+  private removeItemFromCategory(itemId: string): void {
+    this.categoryItemState.update(states => {
+      const next = { ...states };
+      for (const [cid, state] of Object.entries(next)) {
+        if (state.items.some(i => i.id === itemId)) {
+          next[cid] = {
+            ...state,
+            items: state.items.filter(i => i.id !== itemId)
+          };
+          break;
+        }
+      }
+      return next;
+    });
+  }
+
+  // --- Menu header actions --------------------------------------------------
 
   protected setMenuActive(isActive: boolean): void {
     const menu = this.menu();
@@ -313,727 +1007,36 @@ export class MenuDetail {
     });
   }
 
-  // --- Category rail ----------------------------------------------------------
+  // --- Bulk price adjustment ------------------------------------------------
 
-  protected selectCategory(categoryId: string): void {
-    if (this.activeCategoryId() === categoryId) {
+  protected openBulkPriceDialog(): void {
+    if (!this.canManageItems() || this.isReadOnly()) {
       return;
     }
 
-    this.activeCategoryId.set(categoryId);
-    this.errorMessage.set('');
+    this.bulkPriceOpen.set(true);
   }
 
-  /** Accurate count only once the category's page metadata has been fetched. */
-  protected categoryCountLabel(categoryId: string): string {
-    const state = this.categoryItemState()[categoryId];
-    if (!state) {
-      return '';
-    }
-
-    return String(state.totalCount);
+  protected closeBulkPriceDialog(): void {
+    this.bulkPriceOpen.set(false);
   }
 
-  protected trackByCategoryId(_index: number, category: MenuCategoryDto): string {
-    return category.id;
-  }
-
-  // Inline category creation ----------------------------------------------------
-
-  protected startAddCategory(): void {
-    if (!this.canCreateCategory() || this.isArchived() || this.addingCategory()) {
-      return;
-    }
-
-    this.isAddingCategory.set(true);
-    this.newCategoryName.set('');
-    this.categoryValidationError.set('');
-  }
-
-  protected cancelAddCategory(): void {
-    this.isAddingCategory.set(false);
-    this.newCategoryName.set('');
-    this.categoryValidationError.set('');
-  }
-
-  protected onCategoryNameInput(value: string): void {
-    this.newCategoryName.set(value);
-    if (this.categoryValidationError()) {
-      this.categoryValidationError.set('');
-    }
-  }
-
-  protected submitAddCategory(event?: Event): void {
-    event?.preventDefault();
-
-    const menu = this.menu();
-    if (!menu || this.addingCategory()) {
-      return;
-    }
-
-    const name = this.newCategoryName().trim();
-    if (name.length === 0) {
-      this.categoryValidationError.set('Category name is required.');
-      return;
-    }
-
-    if (name.length > 100) {
-      this.categoryValidationError.set('Category name must be 100 characters or fewer.');
-      return;
-    }
-
-    this.addingCategory.set(true);
-
-    this.menuService.createCategory(menu.id, {
-      name,
-      description: null,
-      displayOrder: null
-    }).subscribe({
-      next: response => {
-        this.addingCategory.set(false);
-
-        // Strict success contract: only mutate UI state for a successful
-        // envelope carrying data. Failed envelopes never add the category.
-        if (!response.success || !response.data) {
-          this.categoryValidationError.set(
-            response.message ?? 'Unable to add the category. Please try again.'
-          );
-          return;
-        }
-
-        const created = response.data;
-        this.menu.update(m =>
-          m ? { ...m, categories: [...m.categories, created] } : null
-        );
-        // Select the newly created category — its id comes from the DTO.
-        this.activeCategoryId.set(created.id);
-        this.isAddingCategory.set(false);
-        this.newCategoryName.set('');
-        this.categoryValidationError.set('');
-        this.notificationService.success(`Category "${created.name}" added.`);
-      },
-      error: error => {
-        this.addingCategory.set(false);
-        this.categoryValidationError.set(
-          this.httpErrorHandler.extractBackendMessage(error) ??
-            'Unable to add the category. Please try again.'
-        );
-      }
-    });
-  }
-
-  // Category persistence operations ---------------------------------------------
-
-  protected editCategory(category: MenuCategoryDto): void {
-    const menu = this.menu();
-    if (!menu || !this.canManageCategories()) {
-      return;
-    }
-
-    void this.router.navigate(['/menus', menu.id, 'categories', category.id, 'edit'], {
-      queryParams: { restaurantId: menu.restaurantId },
-      queryParamsHandling: 'merge'
-    });
-  }
-
-  protected toggleCategoryActive(category: MenuCategoryDto): void {
-    const menu = this.menu();
-    if (!menu || !this.canManageCategories() || this.isArchived()) {
-      return;
-    }
-
-    const isActive = !category.isActive;
-
-    this.menuService.setCategoryActive(category.id, isActive).subscribe({
-      next: response => {
-        if (!response.success || !response.data) {
-          this.errorMessage.set(response.message ?? 'Unable to update the category.');
-          return;
-        }
-
-        const updated = response.data;
-        this.menu.update(m => {
-          if (!m) return null;
-          return {
-            ...m,
-            categories: m.categories.map(c =>
-              c.id === updated.id ? { ...c, isActive: updated.isActive } : c
-            )
-          };
-        });
-        this.notificationService.success(
-          `Category "${updated.name}" ${updated.isActive ? 'activated' : 'deactivated'}.`
-        );
-      },
-      error: error => {
-        this.errorMessage.set(
-          this.httpErrorHandler.extractBackendMessage(error) ??
-            'Unable to update the category. Please try again.'
-        );
-      }
-    });
-  }
-
-  protected openDeleteCategoryDialog(category: MenuCategoryDto): void {
-    if (!this.canDeleteCategory() || this.isArchived()) {
-      return;
-    }
-
-    this.dialogKind.set('category');
-    this.dialogTarget.set({ id: category.id, name: category.name });
-    this.dialogOpen.set(true);
-  }
-
-  /**
-   * Strict deletion success handling: the category is removed from the UI
-   * ONLY when the response satisfies the application's success contract
-   * (`success === true`). A completed-but-unsuccessful envelope leaves the
-   * list untouched; HTTP errors (including the 409 "still has items"
-   * conflict) surface actionable messages.
-   */
-  private deleteCategory(): void {
-    const target = this.dialogTarget();
-    if (!target || this.dialogKind() !== 'category') {
-      return;
-    }
-
-    this.closeDialog();
-
-    this.menuService.deleteCategory(target.id).subscribe({
-      next: response => {
-        if (!response.success) {
-          this.errorMessage.set(
-            response.message ?? 'Unable to delete the category. Please try again.'
-          );
-          return;
-        }
-
-        const menu = this.menu();
-        if (!menu) return;
-
-        const remaining = menu.categories.filter(c => c.id !== target.id);
-        this.menu.update(m => (m ? { ...m, categories: remaining } : null));
-        this.categoryItemState.update(states => {
-          const { [target.id]: _removed, ...rest } = states;
-          return rest;
-        });
-
-        if (this.activeCategoryId() === target.id) {
-          // Choose a valid remaining category instead of leaving a dangling id.
-          this.activeCategoryId.set(remaining[0]?.id ?? null);
-        }
-
-        this.notificationService.success(`"${target.name}" has been deleted.`);
-      },
-      error: error => {
-        if (error instanceof HttpErrorResponse && error.status === 409) {
-          this.errorMessage.set(
-            this.httpErrorHandler.extractBackendMessage(error) ??
-              'This category still has menu items. Deactivate it or remove the items first.'
-          );
-          return;
-        }
-
-        this.errorMessage.set(
-          this.httpErrorHandler.extractBackendMessage(error) ??
-            'Unable to delete the category. Please try again.'
-        );
-      }
-    });
-  }
-
-  // Category reordering ----------------------------------------------------------
-
-  /**
-   * Move-up/move-down controls persist through
-   * PATCH /api/v1/menus/{menuId}/categories/order with the COMPLETE ordered
-   * id list. Overlapping requests are blocked via `reorderingCategories`;
-   * failures roll back the optimistic order, notify the user, and refresh
-   * from the server. The active selection survives because ids are stable.
-   */
-  protected moveCategory(categoryId: string, direction: 'up' | 'down'): void {
-    const menu = this.menu();
-    if (!menu || !this.canManageCategories() || this.isArchived() || this.reorderingCategories()) {
-      return;
-    }
-
-    const cats = [...menu.categories];
-    const idx = cats.findIndex(c => c.id === categoryId);
-    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
-    if (idx < 0 || targetIdx < 0 || targetIdx >= cats.length) {
-      return;
-    }
-
-    [cats[idx], cats[targetIdx]] = [cats[targetIdx], cats[idx]];
-    const previous = menu.categories;
-    const ordered = cats.map(c => c.id);
-
-    this.reorderingCategories.set(true);
-    this.errorMessage.set('');
-    this.menu.update(m => (m ? { ...m, categories: cats } : null));
-
-    this.menuService.reorderCategories(menu.id, ordered).subscribe({
-      next: response => {
-        this.reorderingCategories.set(false);
-
-        if (response.success && response.data) {
-          this.menu.update(m => (m ? { ...m, categories: response.data! } : null));
-          return;
-        }
-
-        this.menu.update(m => (m ? { ...m, categories: previous } : null));
-        this.errorMessage.set(
-          response.message ??
-            'The category order could not be saved. The previous order was restored.'
-        );
-      },
-      error: error => {
-        this.reorderingCategories.set(false);
-        this.menu.update(m => (m ? { ...m, categories: previous } : null));
-        this.errorMessage.set(
-          this.httpErrorHandler.extractBackendMessage(error) ??
-            'The category order could not be saved. The previous order was restored.'
-        );
-      }
-    });
-  }
-
-  protected isFirstCategory(categoryId: string): boolean {
-    const categories = this.menu()?.categories ?? [];
-    return categories.length > 0 && categories[0].id === categoryId;
-  }
-
-  protected isLastCategory(categoryId: string): boolean {
-    const categories = this.menu()?.categories ?? [];
-    return categories.length > 0 && categories[categories.length - 1].id === categoryId;
-  }
-
-  // --- Items panel ------------------------------------------------------------
-
-  protected loadCategoryItems(categoryId: string, page = 1): void {
-    const current = this.categoryItemState();
-    const existing = current[categoryId];
-    if (existing?.loading) {
-      return;
-    }
-
-    if (!this.menu()) {
-      return;
-    }
-
-    const fallback: CategoryItemState = {
-      items: [],
-      page: 1,
-      pageSize: ITEMS_PAGE_SIZE,
-      totalCount: 0,
-      loading: false,
-      error: null
-    };
-
-    this.categoryItemState.update(states => ({
-      ...states,
-      [categoryId]: { ...(existing ?? fallback), loading: true, error: null }
-    }));
-
-    this.menuService.getCategoryItems(categoryId, page).subscribe({
-      next: response => {
-        if (!response.success || !response.data) {
-          this.categoryItemState.update(states => ({
-            ...states,
-            [categoryId]: {
-              ...(states[categoryId] ?? fallback),
-              loading: false,
-              error: response.message ?? 'Unable to load items.'
-            }
-          }));
-          return;
-        }
-
-        const data = response.data;
-        this.categoryItemState.update(states => ({
-          ...states,
-          [categoryId]: {
-            items: data.items ?? [],
-            page: data.page ?? page,
-            pageSize: data.pageSize ?? ITEMS_PAGE_SIZE,
-            totalCount: data.totalCount ?? 0,
-            loading: false,
-            error: null
-          }
-        }));
-      },
-      error: error => {
-        this.categoryItemState.update(states => ({
-          ...states,
-          [categoryId]: {
-            ...(states[categoryId] ?? fallback),
-            loading: false,
-            error:
-              this.httpErrorHandler.extractBackendMessage(error) ?? 'Unable to load items.'
-          }
-        }));
-      }
-    });
-  }
-
-  protected categoryItems(categoryId: string): MenuItemDto[] {
-    return this.categoryItemState()[categoryId]?.items ?? [];
-  }
-
-  protected categoryPage(
-    categoryId: string
-  ): { page: number; pageSize: number; totalCount: number } | null {
-    const s = this.categoryItemState()[categoryId];
-    if (!s) {
-      return null;
-    }
-
-    return { page: s.page, pageSize: s.pageSize, totalCount: s.totalCount };
-  }
-
-  protected categoryError(categoryId: string): string | null {
-    return this.categoryItemState()[categoryId]?.error ?? null;
-  }
-
-  protected categoryItemsLoading(categoryId: string): boolean {
-    return !!this.categoryItemState()[categoryId]?.loading;
-  }
-
-  protected totalPages(categoryId: string): number {
-    const page = this.categoryPage(categoryId);
-    if (!page) {
-      return 1;
-    }
-
-    return Math.max(1, Math.ceil(page.totalCount / page.pageSize));
-  }
-
-  // Item CRUD navigation (routed forms preserved) -------------------------------
-
-  protected createItem(categoryId: string): void {
-    const menu = this.menu();
-    if (!menu || !this.canCreateItem() || this.isArchived()) {
-      return;
-    }
-
-    void this.router.navigate(['/menus', menu.id, 'categories', categoryId, 'items', 'new'], {
-      queryParams: { restaurantId: menu.restaurantId },
-      queryParamsHandling: 'merge'
-    });
-  }
-
-  protected editItem(item: MenuItemDto): void {
-    const menu = this.menu();
-    if (!menu || !this.canManageItems() || this.isArchived()) {
-      return;
-    }
-
-    void this.router.navigate(
-      ['/menus', menu.id, 'categories', item.menuCategoryId, 'items', item.id, 'edit'],
-      { queryParams: { restaurantId: menu.restaurantId }, queryParamsHandling: 'merge' }
-    );
-  }
-
-  // Optimistic availability toggle ----------------------------------------------
-
-  protected isTogglePending(itemId: string): boolean {
-    return this.pendingToggles().has(itemId);
-  }
-
-  /**
-   * Availability toggle with optimistic UI. Changes `isAvailable` ONLY —
-   * `isActive` is a distinct concept handled by toggleItemActive below.
-   * The row is locked while the PATCH is in flight; failure restores the
-   * previous value and shows an error.
-   */
-  protected toggleItemAvailability(item: MenuItemDto): void {
-    if (!this.canManageItems() || this.isArchived() || this.isTogglePending(item.id)) {
-      return;
-    }
-
-    const nextState = !item.isAvailable;
-    const previous = item.isAvailable;
-
-    this.applyAvailabilityLocally(item.id, nextState);
-    this.pendingToggles.update(set => new Set(set).add(item.id));
-
-    this.menuService.setItemAvailability(item.id, nextState).subscribe({
-      next: response => {
-        this.clearTogglePending(item.id);
-
-        if (!response.success || !response.data) {
-          this.applyAvailabilityLocally(item.id, previous);
-          this.errorMessage.set(response.message ?? 'Unable to update availability.');
-          return;
-        }
-
-        this.updateItemInCategory(response.data);
-        this.notificationService.success(
-          `${response.data.name} is now ${
-            response.data.isAvailable ? 'available' : 'marked unavailable'
-          }.`
-        );
-      },
-      error: error => {
-        this.clearTogglePending(item.id);
-        this.applyAvailabilityLocally(item.id, previous);
-        this.errorMessage.set(
-          this.httpErrorHandler.extractBackendMessage(error) ??
-            'Unable to update availability. Please try again.'
-        );
-      }
-    });
-  }
-
-  private clearTogglePending(itemId: string): void {
-    this.pendingToggles.update(set => {
-      const copy = new Set(set);
-      copy.delete(itemId);
-      return copy;
-    });
-  }
-
-  private applyAvailabilityLocally(itemId: string, isAvailable: boolean): void {
-    this.categoryItemState.update(states => {
-      const next = { ...states };
-      for (const [cid, state] of Object.entries(next)) {
-        if (state.items.some(i => i.id === itemId)) {
-          next[cid] = {
-            ...state,
-            items: state.items.map(i => (i.id === itemId ? { ...i, isAvailable } : i))
-          };
-          break;
-        }
-      }
-      return next;
-    });
-  }
-
-  /** Active-status control — PATCH .../status. Kept semantically distinct from availability. */
-  protected toggleItemActive(item: MenuItemDto): void {
-    const menu = this.menu();
-    if (!menu || !this.canManageItems() || this.isArchived()) {
-      return;
-    }
-
-    this.menuService.setItemActive(item.id, !item.isActive).subscribe({
-      next: response => {
-        if (!response.success || !response.data) {
-          this.errorMessage.set(response.message ?? 'Unable to update the item.');
-          return;
-        }
-
-        this.updateItemInCategory(response.data);
-        this.notificationService.success(
-          `Item "${response.data.name}" ${response.data.isActive ? 'shown' : 'hidden'}.`
-        );
-      },
-      error: error => {
-        this.errorMessage.set(
-          this.httpErrorHandler.extractBackendMessage(error) ??
-            'Unable to update the item. Please try again.'
-        );
-      }
-    });
-  }
-
-  protected openDeleteItemDialog(item: MenuItemDto): void {
-    if (!this.canDeleteItem() || this.isArchived()) {
-      return;
-    }
-
-    this.dialogKind.set('item');
-    this.dialogTarget.set({ id: item.id, name: item.name });
-    this.dialogOpen.set(true);
-  }
-
-  private deleteItem(): void {
-    const target = this.dialogTarget();
-    if (!target || this.dialogKind() !== 'item') {
-      return;
-    }
-
-    this.closeDialog();
-
-    let categoryId = '';
-    for (const [cid, state] of Object.entries(this.categoryItemState())) {
-      if (state.items.some(i => i.id === target.id)) {
-        categoryId = cid;
-        break;
-      }
-    }
-
-    this.menuService.deleteItem(target.id).subscribe({
-      next: response => {
-        // Strict success contract — removal happens only for successful envelopes.
-        if (!response.success) {
-          this.errorMessage.set(
-            response.message ?? 'Unable to delete the item. Please try again.'
-          );
-          return;
-        }
-
-        this.removeItemFromCategory(target.id);
-        if (categoryId) {
-          this.loadCategoryItems(categoryId, this.categoryItemState()[categoryId]?.page ?? 1);
-        }
-        this.notificationService.success(`"${target.name}" has been deleted.`);
-      },
-      error: error => {
-        this.errorMessage.set(
-          this.httpErrorHandler.extractBackendMessage(error) ??
-            'Unable to delete the item. Please try again.'
-        );
-      }
-    });
-  }
-
-  /**
-   * Swap adjacent items' display order.
-   *
-   * Data-loss fix vs. orphan commit 93f7f89: the old code sent
-   * `{ displayOrder, imageFileId: null, clearImage: false }` only. If the
-   * backend treated omitted PUT fields as resets, name/description/price/
-   * currency would be wiped by a simple reorder. This implementation sends
-   * the FULL current values for every field of UpdateMenuItemRequest,
-   * changing only displayOrder. Sequential updates with refresh + message
-   * on partial failure keep the UI consistent with persisted state.
-   */
-  protected moveItem(index: number, direction: 'up' | 'down'): void {
+  protected onBulkPricesApplied(): void {
     const category = this.activeCategory();
-    if (!category || !this.canManageItems() || this.isArchived()) {
-      return;
+    if (category) {
+      this.loadCategoryItems(
+        category.id,
+        this.categoryItemState()[category.id]?.page ?? 1
+      );
     }
 
-    const state = this.categoryItemState()[category.id];
-    if (!state) {
-      return;
-    }
-
-    const items = state.items;
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    if (index < 0 || targetIndex < 0 || targetIndex >= items.length) {
-      return;
-    }
-
-    const a = items[index];
-    const b = items[targetIndex];
-
-    this.menuService.updateItem(a.id, this.buildReorderPayload(a, b.displayOrder)).subscribe({
-      next: firstResponse => {
-        if (!firstResponse.success) {
-          this.loadCategoryItems(category.id, state.page);
-          this.errorMessage.set(
-            firstResponse.message ??
-              'The item order could not be saved. The original order was kept.'
-          );
-          return;
-        }
-
-        this.menuService
-          .updateItem(b.id, this.buildReorderPayload(b, a.displayOrder))
-          .subscribe({
-            next: secondResponse => {
-              if (!secondResponse.success) {
-                // Partial swap — refresh so the persisted state is authoritative.
-                this.loadCategoryItems(category.id, state.page);
-                this.errorMessage.set(
-                  secondResponse.message ??
-                    'Only part of the reorder was saved. The list was refreshed from the server.'
-                );
-                return;
-              }
-
-              this.loadCategoryItems(category.id, state.page);
-            },
-            error: () => {
-              this.loadCategoryItems(category.id, state.page);
-              this.errorMessage.set(
-                'The item order could not be saved. The original order was kept.'
-              );
-            }
-          });
-      },
-      error: () => {
-        this.loadCategoryItems(category.id, state.page);
-        this.errorMessage.set(
-          'The item order could not be saved. The original order was kept.'
-        );
-      }
-    });
+    this.notificationService.success('Bulk price adjustment applied.');
   }
 
-  /** Full-payload PUT body preserving every existing item value; only displayOrder changes. */
-  private buildReorderPayload(item: MenuItemDto, displayOrder: number): ItemReorderRequest {
-    return {
-      name: item.name,
-      description: item.description,
-      price: item.price,
-      currency: item.currency,
-      imageFileId: item.imageFileId,
-      clearImage: false,
-      displayOrder
-    };
-  }
-
-  /** Exposed for regression tests asserting no field loss during reorder. */
-  protected reorderRequestsForTests(
-    a: MenuItemDto,
-    b: MenuItemDto
-  ): Array<{ id: string; body: ItemReorderRequest }> {
-    return [
-      { id: a.id, body: this.buildReorderPayload(a, b.displayOrder) },
-      { id: b.id, body: this.buildReorderPayload(b, a.displayOrder) }
-    ];
-  }
-
-  private updateItemInCategory(updated: MenuItemDto): void {
-    this.categoryItemState.update(states => {
-      const next = { ...states };
-      for (const [cid, state] of Object.entries(next)) {
-        if (state.items.some(i => i.id === updated.id)) {
-          next[cid] = {
-            ...state,
-            items: state.items.map(i => (i.id === updated.id ? updated : i))
-          };
-          break;
-        }
-      }
-      return next;
-    });
-  }
-
-  private removeItemFromCategory(itemId: string): void {
-    this.categoryItemState.update(states => {
-      const next = { ...states };
-      for (const [cid, state] of Object.entries(next)) {
-        if (state.items.some(i => i.id === itemId)) {
-          next[cid] = {
-            ...state,
-            items: state.items.filter(i => i.id !== itemId)
-          };
-          break;
-        }
-      }
-      return next;
-    });
-  }
-
-  // --- Dialog ------------------------------------------------------------------
+  // --- Dialog helpers ---------------------------------------------------------
 
   protected cancelDialog(): void {
     this.closeDialog();
-  }
-
-  private closeDialog(): void {
-    this.dialogOpen.set(false);
-    this.dialogKind.set(null);
-    this.dialogTarget.set(null);
-  }
-
-  protected dialogConfirmMessage(): string {
-    const target = this.dialogTarget();
-    return target ? `Are you sure you want to delete "${target.name}"?` : '';
   }
 
   protected confirmDialog(): void {
@@ -1042,23 +1045,69 @@ export class MenuDetail {
     } else if (this.dialogKind() === 'item') {
       this.deleteItem();
     } else {
-      this.cancelDialog();
+      this.closeDialog();
     }
   }
 
-  // --- Presentation helpers ------------------------------------------------------
+  protected dialogConfirmMessage(): string {
+    const target = this.dialogTarget();
+
+    return target ? `Are you sure you want to delete "${target.name}"?` : '';
+  }
+
+  private closeDialog(): void {
+    this.dialogOpen.set(false);
+    this.dialogKind.set(null);
+    this.dialogTarget.set(null);
+  }
+
+  // --- Presentation helpers ---------------------------------------------------
+
+  protected clearSearch(): void {
+    this.searchQuery.set('');
+  }
+
+  protected onSearchChange(value: string): void {
+    this.searchQuery.set(value);
+  }
+
+  protected isFirstCategory(index: number): boolean {
+    return index === 0;
+  }
+
+  protected isLastCategory(index: number): boolean {
+    return index === this.categories().length - 1;
+  }
+
+  protected isFirstItem(index: number): boolean {
+    return index === 0;
+  }
+
+  protected isLastItem(index: number): boolean {
+    return index === this.activeItems().length - 1;
+  }
+
+  protected trackByCategoryId(_index: number, category: MenuCategoryDto): string {
+    return category.id;
+  }
+
+  protected trackByItemId(_index: number, item: MenuItemDto): string {
+    return item.id;
+  }
 
   protected pluralize(count: number, singular: string): string {
     return `${count} ${count === 1 ? singular : singular + 's'}`;
   }
 
-  protected formatPrice(value: number): string {
-    return new Intl.NumberFormat('en-PK', {
-      style: 'currency',
-      currency: 'PKR',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(value);
+  protected formatMoney(value: number): string {
+    return formatPrice(value);
+  }
+
+  private isCurrent(requestId: number, tenantId: string): boolean {
+    return (
+      requestId === this.requestSequence &&
+      this.tenantContext.activeTenantId() === tenantId
+    );
   }
 
   private isCurrent(requestId: number, tenantId: string): boolean {
