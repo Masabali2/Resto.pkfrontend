@@ -91,6 +91,30 @@ export const routes: Routes = [
           )
       },
       {
+        path: 'templates',
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            title: 'Templates — Resto.pk',
+            canActivate: [permissionGuard],
+            data: { permission: 'Website.View' },
+            loadComponent: () =>
+              import('./features/templates/pages/template-catalogue/template-catalogue').then(
+                m => m.TemplateCatalogue
+              )
+          },
+          {
+            // Dedicated preview page (next task). Until it exists this route
+            // falls back to the catalogue so /templates/:id/preview never
+            // dead-ends; remove once TemplatePreview is implemented.
+            path: ':id/preview',
+            pathMatch: 'full',
+            redirectTo: 'templates'
+          }
+        ]
+      },
+      {
         path: 'websites',
         children: [
           {
