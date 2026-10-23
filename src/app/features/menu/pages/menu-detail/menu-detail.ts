@@ -14,6 +14,7 @@ import {
   LucideAlertCircle,
   LucideArrowDown,
   LucideArrowUp,
+  LucideCheck,
   LucideEdit3,
   LucideFlame,
   LucideGripVertical,
