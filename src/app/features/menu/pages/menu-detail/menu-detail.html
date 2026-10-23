@@ -1,190 +1,310 @@
 <div class="menu-detail">
   @if (menu(); as currentMenu) {
     <header class="menu-detail__header">
-      <div>
+      <div class="menu-detail__heading">
+        <a class="menu-detail__back" routerLink="/menus" [queryParams]="{ restaurantId: currentMenu.restaurantId }">← Back to menus</a>
         <h1>{{ currentMenu.name }}</h1>
         <p class="menu-detail__meta">
-          Status: <span class="menu-detail__status" [class]="'menu-detail__status--' + currentMenu.status.toLowerCase()">{{ currentMenu.status }}</span>
-          &nbsp;|&nbsp;
-          Active: {{ currentMenu.isActive ? 'Yes' : 'No' }}
+          <span class="menu-detail__status" [class]="'menu-detail__status--' + currentMenu.status.toLowerCase()">{{ currentMenu.status }}</span>
+          <span class="menu-detail__dot" aria-hidden="true">·</span>
+          <span>{{ pluralize(currentMenu.categories.length, 'category') }}</span>
+          @if (!currentMenu.isActive) {
+            <span class="menu-detail__dot" aria-hidden="true">·</span>
+            <span>Inactive</span>
+          }
+          @if (isArchived()) {
+            <span class="menu-detail__badge menu-detail__badge--archived">Archived — read only</span>
+          }
         </p>
       </div>
       <div class="menu-detail__actions">
-        @if (canCreateCategory() && !isArchived()) {
-          <button app-button variant="primary" (click)="createCategory()">Add Category</button>
-        }
-        @if (canUpdateMenu() && !isArchived()) {
-          <button app-button variant="outline" (click)="editMenu()">Edit Menu</button>
-        }
         @if (canUpdateMenu()) {
-          <button app-button variant="outline" (click)="setMenuActive(!currentMenu.isActive)">
+          <button app-button variant="outline" [disabled]="isArchived()" (click)="setMenuActive(!currentMenu.isActive)">
             {{ currentMenu.isActive ? 'Deactivate Menu' : 'Activate Menu' }}
           </button>
+        }
+        @if (canUpdateMenu()) {
+          <button app-button variant="outline" [disabled]="isArchived()" (click)="editMenu()">Edit Menu</button>
         }
       </div>
     </header>
   }
 
-  <section class="menu-detail__states">
-    @switch (pageState()) {
-      @case ('loading') {
-        <div class="menu-detail__loading">
-          <app-loading-spinner></app-loading-spinner>
-        </div>
-      }
-      @case ('error') {
-        <div class="menu-detail__empty menu-detail__error">
-          <p>{{ errorMessage() }}</p>
-          <button app-button variant="secondary" (click)="retry()">Retry</button>
-        </div>
-      }
-      @case ('not-found') {
-        <div class="menu-detail__empty menu-detail__not-found">
-          <p>Menu not found.</p>
-        </div>
-      }
-      @case ('forbidden') {
-        <div class="menu-detail__empty menu-detail__forbidden">
-          <p>You do not have permission to view this menu.</p>
-        </div>
-      }
-      @case ('no-workspace') {
-        <div class="menu-detail__empty menu-detail__no-workspace">
-          <p>No active workspace.</p>
-        </div>
-      }
+  @switch (pageState()) {
+    @case ('loading') {
+      <div class="menu-detail__loading" role="status" aria-label="Loading menu">
+        <app-loading-spinner></app-loading-spinner>
+      </div>
     }
-  </section>
+    @case ('error') {
+      <div class="menu-detail__state-panel menu-detail__state-panel--error" role="alert">
+        <p>{{ errorMessage() }}</p>
+        <button app-button variant="secondary" (click)="retry()">Retry</button>
+      </div>
+    }
+    @case ('not-found') {
+      <div class="menu-detail__state-panel">
+        <p>Menu not found.</p>
+        <a app-button variant="secondary" routerLink="/menus">Back to menus</a>
+      </div>
+    }
+    @case ('forbidden') {
+      <div class="menu-detail__state-panel">
+        <p>You do not have permission to view this menu.</p>
+      </div>
+    }
+    @case ('no-workspace') {
+      <div class="menu-detail__state-panel">
+        <p>No active workspace. Select a workspace to manage menus.</p>
+      </div>
+    }
+  }
 
   @if (pageState() === 'list' && menu(); as currentMenu) {
-    <section class="menu-detail__workspace">
-      <div class="menu-detail__intro">
-        {{ pluralize(currentMenu.categories.length, 'category') }}
-        @if (isArchived()) {
-          <span class="menu-detail__archived-badge">Archived — read only</span>
-        }
-      </div>
+    @if (errorMessage(); as message) {
+      <div class="menu-detail__banner" role="alert">{{ message }}</div>
+    }
 
-      <div class="menu-detail__categories">
-        @for (category of currentMenu.categories; track category.id) {
-          <div class="menu-detail__category">
-            <div class="menu-detail__category-header" (click)="toggleCategory(category.id)" (keydown.enter)="toggleCategory(category.id)" (keydown.space)="toggleCategory(category.id); $event.preventDefault()" role="button" tabindex="0" [attr.aria-expanded]="isCategoryExpanded(category.id)" [attr.aria-label]="'Toggle ' + category.name">
-              <h3>{{ category.name }}</h3>
-              <span class="menu-detail__category-meta">
-                {{ category.description ? category.description + ' · ' : '' }}Order {{
-                  categoryDisplayOrder(getCategoryIndex(category.id))
-                }}
-              </span>
-              <span class="menu-detail__category-toggle" [class.expanded]="isCategoryExpanded(category.id)">{{
-                isCategoryExpanded(category.id) ? '▲' : '▼'
-              }}</span>
-              <div class="menu-detail__category-actions">
-                <button app-button variant="outline" size="sm" [disabled]="!canManageCategories() || isArchived()" (click)="editCategory(category)">Edit</button>
-                <button app-button variant="outline" size="sm" [disabled]="!canManageCategories() || isArchived()" (click)="toggleCategoryActive(category, !category.isActive)">{{ category.isActive ? 'Deactivate' : 'Activate' }}</button>
-                <button app-button variant="danger" size="sm" [disabled]="!canDeleteCategory() || isArchived()" (click)="openDeleteCategoryDialog(category)">Delete</button>
-                <button app-button variant="outline" size="sm" [disabled]="!canManageCategories() || isArchived() || isFirstCategory(category.id)" (click)="moveCategory(category.id, 'up')">↑</button>
-                <button app-button variant="outline" size="sm" [disabled]="!canManageCategories() || isArchived() || isLastCategory(category.id)" (click)="moveCategory(category.id, 'down')">↓</button>
-              </div>
-            </div>
+    <div class="menu-detail__organizer">
+      <!-- Left rail: categories -->
+      <aside class="menu-detail__rail" aria-label="Categories">
+        <div class="menu-detail__rail-header">
+          <h2>Categories</h2>
+          @if (canCreateCategory() && !isArchived() && !isAddingCategory()) {
+            <button app-button variant="primary" size="sm" (click)="startAddCategory()">Add Category</button>
+          }
+        </div>
 
-            @if (isCategoryExpanded(category.id)) {
-              <div class="menu-detail__category-panel">
-                <div class="menu-detail__category-toolbar">
-                  @if (canCreateItem() && !isArchived()) {
-                    <button app-button variant="secondary" size="sm" (click)="createItem(category.id)">Add Item</button>
-                  }
-                  <span class="menu-detail__item-count">{{ pluralize(categoryItems(category.id).length, 'item') }}</span>
-                </div>
-
-                @if (categoryItemsLoading(category.id)) {
-                  <div class="menu-detail__loading">
-                    <app-loading-spinner></app-loading-spinner>
-                  </div>
-                }
-
-                @if (categoryError(category.id); as error) {
-                  <div class="menu-detail__error-inline">
-                    {{ error }}
-                    <app-button variant="secondary" size="sm" (click)="loadCategoryItems(category.id, categoryPage(category.id)?.page ?? 1)">Retry</app-button>
-                  </div>
-                }
-
-                @if (categoryItems(category.id).length > 0) {
-                  <table class="menu-detail__item-table">
-                    <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>Price</th>
-                        <th>Available</th>
-                        <th>Active</th>
-                        <th>Order</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      @for (item of categoryItems(category.id); track item.id) {
-                        <tr>
-                          <td>{{ item.name }}</td>
-                          <td>{{ formatPrice(item.price) }} {{ item.currency }}</td>
-                          <td><span [class]="'menu-detail__bool ' + (item.isAvailable ? 'menu-detail__bool--yes' : 'menu-detail__bool--no')">{{ item.isAvailable ? 'Yes' : 'No' }}</span></td>
-                          <td><span [class]="'menu-detail__bool ' + (item.isActive ? 'menu-detail__bool--yes' : 'menu-detail__bool--no')">{{ item.isActive ? 'Yes' : 'No' }}</span></td>
-                          <td>{{ item.displayOrder }}</td>
-                          <td class="menu-detail__item-actions">
-                           <app-button variant="outline" size="sm" [fullWidth]="false" [disabled]="!canManageItems() || isArchived()" (click)="editItem(category.id, item)">Edit</app-button>
-
-<app-button variant="outline" size="sm" [fullWidth]="false" [disabled]="!canManageItems() || isArchived()" (click)="toggleItemAvailability(item, !item.isAvailable)">
-  {{ item.isAvailable ? 'Unavailable' : 'Available' }}
-</app-button>
-
-<app-button variant="outline" size="sm" [fullWidth]="false" [disabled]="!canManageItems() || isArchived()" (click)="toggleItemActive(item, !item.isActive)">
-  {{ item.isActive ? 'Hide' : 'Show' }}
-</app-button>
-
-<app-button variant="danger" size="sm" [fullWidth]="false" [disabled]="!canDeleteItem() || isArchived()" (click)="openDeleteItemDialog(item)">Delete</app-button>
-
-<app-button variant="outline" size="sm" [fullWidth]="false" [disabled]="!canManageItems() || isArchived() || isFirstItem(category.id, item.id)" (click)="moveItem(category.id, item.id, 'up')">↑</app-button>
-
-<app-button variant="outline" size="sm" [fullWidth]="false" [disabled]="!canManageItems() || isArchived() || isLastItem(category.id, item.id)" (click)="moveItem(category.id, item.id, 'down')">↓</app-button>
-                        
-</td>
-</tr>
-                      }
-                    </tbody>
-                  </table>
-                }
-
-                @if (categoryItems(category.id).length === 0 && !categoryItemsLoading(category.id) && !categoryError(category.id)) {
-                  <div class="menu-detail__empty-items">
-                    No items yet.
-                    @if (canCreateItem() && !isArchived()) {
-                      <app-button variant="secondary" size="sm" (click)="createItem(category.id)">Add one</app-button>
-                    }.
-                  </div>
-                }
-
-                @if (categoryPage(category.id); as page) {
-                  <div class="menu-detail__pager">
-                    <app-button variant="outline" size="sm" [disabled]="page.page <= 1 || categoryItemsLoading(category.id)" (click)="loadCategoryItems(category.id, page.page - 1)">Prev</app-button>
-                    <span class="menu-detail__pager-label">Page {{ page.page }} of {{ totalPages(category.id) }}</span>
-                    <app-button variant="outline" size="sm" [disabled]="page.page * page.pageSize >= page.totalCount || categoryItemsLoading(category.id)" (click)="loadCategoryItems(category.id, page.page + 1)">Next</app-button>
-                  </div>
-                }
-              </div>
+        @if (currentMenu.categories.length === 0 && !isAddingCategory()) {
+          <div class="menu-detail__rail-empty">
+            <p>No categories yet.</p>
+            @if (canCreateCategory() && !isArchived()) {
+              <button app-button variant="primary" (click)="startAddCategory()">Create the first category</button>
             }
           </div>
         }
-      </div>
 
-      @if (currentMenu.categories.length === 0) {
-        <div class="menu-detail__empty-categories">
-          No categories yet.
-          @if (canCreateCategory() && !isArchived()) {
-            <app-button variant="primary" (click)="createCategory()">Add a category</app-button>
+        <ul class="menu-detail__category-list">
+          @for (category of currentMenu.categories; track category.id) {
+            <li
+              class="menu-detail__category"
+              [class.menu-detail__category--active]="activeCategoryId() === category.id"
+              [class.menu-detail__category--inactive]="!category.isActive"
+            >
+              <button
+                type="button"
+                class="menu-detail__category-select"
+                (click)="selectCategory(category.id)"
+                [attr.aria-current]="activeCategoryId() === category.id ? 'true' : null"
+                [attr.aria-label]="'Show items in ' + category.name"
+              >
+                <span class="menu-detail__category-name">{{ category.name }}</span>
+                @if (categoryCountLabel(category.id); as count) {
+                  <span class="menu-detail__category-count">{{ count }}</span>
+                }
+                @if (!category.isActive) {
+                  <span class="menu-detail__category-off">Inactive</span>
+                }
+              </button>
+
+              <div class="menu-detail__category-tools">
+                <button
+                  type="button"
+                  class="menu-detail__icon-btn"
+                  [disabled]="!canManageCategories() || isArchived() || isFirstCategory(category.id) || reorderingCategories()"
+                  (click)="moveCategory(category.id, 'up')"
+                  [attr.aria-label]="'Move ' + category.name + ' up'"
+                >↑</button>
+                <button
+                  type="button"
+                  class="menu-detail__icon-btn"
+                  [disabled]="!canManageCategories() || isArchived() || isLastCategory(category.id) || reorderingCategories()"
+                  (click)="moveCategory(category.id, 'down')"
+                  [attr.aria-label]="'Move ' + category.name + ' down'"
+                >↓</button>
+                <button
+                  type="button"
+                  class="menu-detail__text-btn"
+                  [disabled]="!canManageCategories() || isArchived()"
+                  (click)="toggleCategoryActive(category)"
+                  [attr.aria-label]="(category.isActive ? 'Deactivate ' : 'Activate ') + category.name"
+                >{{ category.isActive ? 'Deactivate' : 'Activate' }}</button>
+                <button
+                  type="button"
+                  class="menu-detail__text-btn"
+                  [disabled]="!canManageCategories()"
+                  (click)="editCategory(category)"
+                  [attr.aria-label]="'Edit ' + category.name"
+                >Edit</button>
+                <button
+                  type="button"
+                  class="menu-detail__text-btn menu-detail__text-btn--danger"
+                  [disabled]="!canDeleteCategory() || isArchived()"
+                  (click)="openDeleteCategoryDialog(category)"
+                  [attr.aria-label]="'Delete ' + category.name"
+                >Delete</button>
+              </div>
+            </li>
           }
-          to get started.
-        </div>
-      }
-    </section>
+        </ul>
+
+        @if (isAddingCategory()) {
+          <form class="menu-detail__inline-form" (submit)="submitAddCategory($event)">
+            <label class="sr-only" for="new-category-name">New category name</label>
+            <input
+              id="new-category-name"
+              type="text"
+              maxlength="100"
+              autocomplete="off"
+              placeholder="Category name"
+              [value]="newCategoryName()"
+              (input)="onCategoryNameInput($any($event.target).value)"
+              [attr.aria-invalid]="categoryValidationError() ? 'true' : 'false'"
+              [attr.aria-describedby]="categoryValidationError() ? 'new-category-error' : null"
+            />
+            @if (categoryValidationError()) {
+              <p id="new-category-error" class="menu-detail__field-error" role="alert">{{ categoryValidationError() }}</p>
+            }
+            <div class="menu-detail__inline-actions">
+              <button app-button variant="primary" size="sm" type="submit" [disabled]="addingCategory()">
+                {{ addingCategory() ? 'Adding…' : 'Add' }}
+              </button>
+              <button app-button variant="outline" size="sm" type="button" (click)="cancelAddCategory()">Cancel</button>
+            </div>
+          </form>
+        }
+      </aside>
+
+      <!-- Right panel: items of the selected category -->
+      <section class="menu-detail__items" [attr.aria-label]="activeCategory()?.name ? 'Items in ' + activeCategory()?.name : 'Items'">
+        @if (activeCategory(); as category) {
+          <div class="menu-detail__items-header">
+            <div>
+              <h2>{{ category.name }}</h2>
+              @if (category.description) {
+                <p class="menu-detail__items-desc">{{ category.description }}</p>
+              }
+            </div>
+            @if (canCreateItem() && !isArchived()) {
+              <button app-button variant="primary" (click)="createItem(category.id)">Add Item</button>
+            }
+          </div>
+
+          @if (categoryItemsLoading(category.id)) {
+            <div class="menu-detail__loading" role="status" aria-label="Loading items">
+              <app-loading-spinner></app-loading-spinner>
+            </div>
+          }
+
+          @if (categoryError(category.id); as error) {
+            <div class="menu-detail__state-panel menu-detail__state-panel--error" role="alert">
+              <p>{{ error }}</p>
+              <button app-button variant="secondary" (click)="loadCategoryItems(category.id, categoryPage(category.id)?.page ?? 1)">Retry</button>
+            </div>
+          }
+
+          @if (!categoryItemsLoading(category.id) && !categoryError(category.id)) {
+            @if (activeItems().length > 0) {
+              <ul class="menu-detail__item-list">
+                @for (item of activeItems(); track item.id) {
+                  <li class="menu-detail__item" [class.menu-detail__item--hidden]="!item.isActive">
+                    <div class="menu-detail__item-main">
+                      <div class="menu-detail__item-title">
+                        <span class="menu-detail__item-name">{{ item.name }}</span>
+                        <span class="menu-detail__item-price">{{ formatPrice(item.price) }} {{ item.currency }}</span>
+                      </div>
+                      @if (item.description) {
+                        <p class="menu-detail__item-desc">{{ item.description }}</p>
+                      }
+                      <div class="menu-detail__item-badges">
+                        <span class="menu-detail__pill" [class.menu-detail__pill--ok]="item.isAvailable" [class.menu-detail__pill--warn]="!item.isAvailable">
+                          {{ item.isAvailable ? 'Available' : 'Out of stock' }}
+                        </span>
+                        @if (!item.isActive) {
+                          <span class="menu-detail__pill menu-detail__pill--muted">Hidden</span>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="menu-detail__item-controls">
+                      <label class="menu-detail__switch" [class.menu-detail__switch--pending]="isTogglePending(item.id)">
+                        <input
+                          type="checkbox"
+                          role="switch"
+                          [checked]="item.isAvailable"
+                          [disabled]="!canManageItems() || isArchived() || isTogglePending(item.id)"
+                          (change)="toggleItemAvailability(item)"
+                          [attr.aria-label]="'Availability of ' + item.name"
+                        />
+                        <span class="menu-detail__switch-track" aria-hidden="true"></span>
+                        <span class="menu-detail__switch-text">{{ isTogglePending(item.id) ? 'Saving…' : 'Available' }}</span>
+                      </label>
+
+                      <button
+                        type="button"
+                        class="menu-detail__icon-btn"
+                        [disabled]="!canManageItems() || isArchived() || $first"
+                        (click)="moveItem($index, 'up')"
+                        [attr.aria-label]="'Move ' + item.name + ' up'"
+                      >↑</button>
+                      <button
+                        type="button"
+                        class="menu-detail__icon-btn"
+                        [disabled]="!canManageItems() || isArchived() || $last"
+                        (click)="moveItem($index, 'down')"
+                        [attr.aria-label]="'Move ' + item.name + ' down'"
+                      >↓</button>
+                      <button
+                        type="button"
+                        class="menu-detail__text-btn"
+                        [disabled]="!canManageItems() || isArchived()"
+                        (click)="toggleItemActive(item)"
+                        [attr.aria-label]="(item.isActive ? 'Hide ' : 'Show ') + item.name"
+                      >{{ item.isActive ? 'Hide' : 'Show' }}</button>
+                      <button
+                        type="button"
+                        class="menu-detail__text-btn"
+                        [disabled]="!canManageItems()"
+                        (click)="editItem(item)"
+                        [attr.aria-label]="'Edit ' + item.name"
+                      >Edit</button>
+                      <button
+                        type="button"
+                        class="menu-detail__text-btn menu-detail__text-btn--danger"
+                        [disabled]="!canDeleteItem() || isArchived()"
+                        (click)="openDeleteItemDialog(item)"
+                        [attr.aria-label]="'Delete ' + item.name"
+                      >Delete</button>
+                    </div>
+                  </li>
+                }
+              </ul>
+
+              @if (categoryPage(category.id); as page) {
+                @if (totalPages(category.id) > 1) {
+                  <nav class="menu-detail__pager" aria-label="Item pages">
+                    <button app-button variant="outline" size="sm" [disabled]="page.page <= 1 || categoryItemsLoading(category.id)" (click)="loadCategoryItems(category.id, page.page - 1)">Prev</button>
+                    <span class="menu-detail__pager-label">Page {{ page.page }} of {{ totalPages(category.id) }}</span>
+                    <button app-button variant="outline" size="sm" [disabled]="page.page * page.pageSize >= page.totalCount || categoryItemsLoading(category.id)" (click)="loadCategoryItems(category.id, page.page + 1)">Next</button>
+                  </nav>
+                }
+              }
+            } @else {
+              <div class="menu-detail__empty-items">
+                <p>This category has no items yet.</p>
+                @if (canCreateItem() && !isArchived()) {
+                  <button app-button variant="primary" (click)="createItem(category.id)">Add the first item</button>
+                }
+              </div>
+            }
+          }
+        } @else {
+          <div class="menu-detail__no-selection">
+            <p>Select a category to view its items.</p>
+          </div>
+        }
+      </section>
+    </div>
   }
 
   <app-confirmation-dialog
