@@ -1,0 +1,53 @@
+<main class="catalogue-page">
+  <div class="catalogue-shell">
+    <header class="page-header">
+      <div class="page-heading">
+        <a class="back-link" routerLink="/dashboard">
+          <span aria-hidden="true">&larr;</span> Dashboard
+        </a>
+        <h1>Templates</h1>
+        @if (state() === 'ready') {
+          <p class="page-subtitle">
+            {{ catalogue().length === 0
+              ? 'Restaurant website designs will appear here once the platform catalogue is available.'
+              : 'Browse every design offered by the platform. Open a preview to see it rendered with its real configuration.' }}
+          </p>
+        }
+      </div>
+
+      <a class="create-link" routerLink="/websites/new">
+        <app-button variant="primary" size="md" [fullWidth]="false">
+          + New Website
+        </app-button>
+      </a>
+    </header>
+
+    @if (state() === 'error') {
+      <section class="state-panel state-panel-error" role="alert">
+        <h2>Templates could not be loaded</h2>
+        <p>{{ errorMessage() }}</p>
+        <app-button variant="outline" size="md" [fullWidth]="false" (click)="retry()">
+          Try again
+        </app-button>
+      </section>
+    } @else {
+      <section class="catalogue-card" [attr.aria-busy]="state() === 'loading'">
+        <app-template-gallery
+          [items]="catalogue()"
+          [loading]="state() === 'loading'"
+          [error]="null"
+          (preview)="openPreview($event)"
+          (select)="openPreview($event)"
+        />
+      </section>
+
+      @if (state() === 'ready' && catalogue().length > 0 && renderableCount() < catalogue().length) {
+        <p class="catalogue-note">
+          {{ catalogue().length - renderableCount() }}
+          of these designs have a configuration that could not be read, so they show a safe
+          fallback instead of a live preview. You can still open them for details.
+        </p>
+      }
+    }
+  </div>
+</main>

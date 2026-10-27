@@ -1,0 +1,75 @@
+<div class="gallery">
+  <div class="gallery-toolbar">
+    <div class="gallery-search">
+      <label class="gallery-search-label" for="template-search">Search designs</label>
+      <input
+        id="template-search"
+        type="search"
+        class="gallery-search-input"
+        placeholder="Search by name, category or tag"
+        autocomplete="off"
+        [value]="searchTerm()"
+        (input)="onSearch($event)"
+      />
+    </div>
+
+    @if (categories().length > 1) {
+      <div class="gallery-filters" role="group" aria-label="Filter designs by category">
+        @for (category of categories(); track category) {
+          <button
+            type="button"
+            class="gallery-chip"
+            [class.gallery-chip-active]="isCategoryActive(category)"
+            [attr.aria-pressed]="isCategoryActive(category)"
+            (click)="selectCategory(category)"
+          >
+            {{ category }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  @if (!loading() && error()) {
+    <div class="gallery-error" role="alert">
+      <p>{{ error() }}</p>
+      <button type="button" class="gallery-retry" (click)="retry.emit()">Try again</button>
+    </div>
+  } @else if (loading()) {
+    <div class="gallery-status" role="status" aria-live="polite">
+      <span class="gallery-spinner" aria-hidden="true"></span>
+      <span>Loading designs&hellip;</span>
+    </div>
+  } @else if (filteredItems().length === 0) {
+    <div class="gallery-empty">
+      <p class="gallery-empty-title">
+        {{ hasActiveFilters() ? 'No designs match your search.' : 'No designs are available yet.' }}
+      </p>
+      @if (hasActiveFilters()) {
+        <button type="button" class="gallery-retry" (click)="clearFilters()">Clear filters</button>
+      } @else {
+        <p class="gallery-empty-hint">
+          Restaurant website designs will appear here once the platform catalogue is available.
+        </p>
+      }
+    </div>
+  } @else {
+    <p class="gallery-count" aria-live="polite">{{ resultLabel() }}</p>
+
+    <ul class="gallery-grid" role="list">
+      @for (item of filteredItems(); track item.template.id) {
+        <li>
+          <app-template-picker-card
+            [template]="item.template"
+            [design]="item.design"
+            [designError]="item.designError"
+            [selected]="selectedId() === item.template.id"
+            [previewImageUrl]="previewImageUrl()"
+            (select)="select.emit(item.template.id)"
+            (preview)="preview.emit(item.template.id)"
+          />
+        </li>
+      }
+    </ul>
+  }
+</div>

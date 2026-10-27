@@ -76,7 +76,9 @@ export const SIDEBAR_NAVIGATION: readonly SidebarNavGroup[] = [
       {
         label: 'Templates',
         icon: 'M4 4h7v7H4V4Zm9 0h7v4h-7V4Zm0 6h7v10h-7V10ZM4 13h7v7H4v-7Z',
-        status: 'planned'
+        status: 'available',
+        route: ['/templates'],
+        requiredPermissions: ['Website.View']
       },
       {
         label: 'Website Editor',

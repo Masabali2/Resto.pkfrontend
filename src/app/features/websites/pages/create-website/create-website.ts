@@ -13,18 +13,21 @@ import {
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { WebsiteService } from '../../services/website.service';
-import { RestaurantService } from '../../services/restaurant.service';
+import { RestaurantService } from '../../../../core/services/restaurant.service';
 import { HttpErrorHandlerService } from '../../../../core/services/http-error-handler.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { Button } from '../../../../shared/components/button/button';
 import { InlineError } from '../../../../shared/components/inline-error/inline-error/inline-error';
 import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
-import { TemplatePickerCard } from '../../components/template-picker-card/template-picker-card';
+import { TemplateGallery } from '../../components/template-gallery/template-gallery';
+import { TemplatePreviewDialog } from '../../components/template-preview-dialog/template-preview-dialog';
 import type { ApiResponse } from '../../../../core/models/api-response.model';
 import type { ValidationError } from '../../../../core/models/api-response.model';
+import type { WebsiteTemplateCatalogueItem } from '../../models/website-template-catalogue.model';
 import type { WebsiteTemplateDto } from '../../models/website-template.model';
 import type { RestaurantDto, RestaurantsPage } from '../../models/restaurant.model';
 import type { CreateWebsiteRequest, WebsiteDto } from '../../models/website.model';
+import { buildCatalogueItem } from '../../utils/website-template-catalogue.util';
 
 const SLUG_PATTERN = '^[a-z0-9]+(?:-[a-z0-9]+)*$';
 
@@ -45,7 +48,8 @@ interface SectionState<T> {
     Button,
     InlineError,
     LoadingSpinner,
-    TemplatePickerCard
+    TemplateGallery,
+    TemplatePreviewDialog
   ],
   templateUrl: './create-website.html',
   styleUrl: './create-website.css'
@@ -78,10 +82,56 @@ export class CreateWebsite {
   protected readonly selectedTemplateId = signal<string | null>(null);
   protected readonly selectedRestaurantId = signal<string | null>(null);
 
+  /**
+   * Catalogue entries prepared for the gallery (design configuration parsed once).
+   * Ordered by the `displayOrder` declared in the design configuration so the
+   * curated platform order is preserved, then alphabetically by name.
+   */
+  protected readonly catalogue = computed<WebsiteTemplateCatalogueItem[]>(() =>
+    this.templates()
+      .items.map(item => buildCatalogueItem(item))
+      .sort(
+        (left, right) =>
+          left.displayOrder - right.displayOrder ||
+          left.template.name.localeCompare(right.template.name)
+      )
+  );
+
+  /** Template currently shown in the larger preview dialog. */
+  protected readonly previewTemplateId = signal<string | null>(null);
+
+  protected readonly previewItem = computed<WebsiteTemplateCatalogueItem | null>(() => {
+    const id = this.previewTemplateId();
+
+    if (!id) {
+      return null;
+    }
+
+    return this.catalogue().find(item => item.template.id === id) ?? null;
+  });
+
   protected readonly submitting = signal(false);
   protected readonly submitted = signal(false);
   protected readonly generalError = signal('');
   protected readonly fieldErrors = signal<Record<string, string>>({});
+
+  /**
+   * Set when /websites/new?templateId={guid} names a template that does not
+   * exist (or whose design cannot be read). The requested template is never
+   * silently replaced by another one; the user must choose explicitly.
+   */
+  protected readonly invalidTemplateNotice = signal<string | null>(null);
+
+  /** Catalogue entry of the preselected template (parsed design + metadata). */
+  protected readonly selectedCatalogueItem = computed<WebsiteTemplateCatalogueItem | null>(() => {
+    const id = this.selectedTemplateId();
+
+    if (!id) {
+      return null;
+    }
+
+    return this.catalogue().find(item => item.template.id === id) ?? null;
+  });
 
   protected readonly selectedTemplate = computed(() =>
     this.templates().items.find(item => item.id === this.selectedTemplateId()) ?? null
@@ -114,10 +164,14 @@ export class CreateWebsite {
             items: [],
             error: response.message ?? 'Unable to load templates. Please try again.'
           });
+          // A pending ?templateId deep link can no longer be verified; say so
+          // instead of silently leaving the user with an unexplained gallery.
+          this.preselectTemplateFromQuery();
           return;
         }
 
         this.templates.set({ state: 'ready', items: response.data, error: '' });
+        this.preselectTemplateFromQuery();
       },
       error: (error: unknown) => {
         this.templates.set({
@@ -125,6 +179,7 @@ export class CreateWebsite {
           items: [],
           error: this.buildLoadErrorMessage(error, 'Unable to load templates. Please try again.')
         });
+        this.preselectTemplateFromQuery();
       }
     });
   }
@@ -161,8 +216,42 @@ export class CreateWebsite {
     });
   }
 
-  protected selectTemplate(template: WebsiteTemplateDto): void {
-    this.selectedTemplateId.set(template.id);
+  /** Selects a template by its catalogue id (the database GUID). */
+  protected selectTemplateById(templateId: string): void {
+    this.selectedTemplateId.set(templateId);
+    // An explicit user choice replaces any earlier invalid-template notice.
+    this.invalidTemplateNotice.set(null);
+  }
+
+  /** Clears the current template selection (used by the summary card). */
+  protected clearTemplateSelection(): void {
+    this.selectedTemplateId.set(null);
+    this.invalidTemplateNotice.set(null);
+  }
+
+  /** Scrolls to the template gallery so the user can pick another design. */
+  protected reviewOrChangeTemplate(): void {
+    document.getElementById('template-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /** Opens the larger preview. This never creates a website. */
+  protected openPreview(templateId: string): void {
+    this.previewTemplateId.set(templateId);
+  }
+
+  protected closePreview(): void {
+    this.previewTemplateId.set(null);
+  }
+
+  /** Applies the previewed design and closes the dialog without submitting. */
+  protected applyPreviewedTemplate(): void {
+    const item = this.previewItem();
+
+    if (item) {
+      this.selectedTemplateId.set(item.template.id);
+    }
+
+    this.previewTemplateId.set(null);
   }
 
   /** Honors /websites/new?restaurantId={guid} from the onboarding flow. */
@@ -176,6 +265,85 @@ export class CreateWebsite {
     if (this.restaurants().items.some(item => item.id === restaurantId)) {
       this.selectedRestaurantId.set(restaurantId);
     }
+  }
+
+  /**
+   * Honors /websites/new?templateId={guid} coming from the dedicated template
+   * preview page's "Use This Template" action. The value is the catalogue
+   * template id (`WebsiteTemplateDto.id`), which is exactly what
+   * `CreateWebsiteRequest.websiteTemplateId` expects — the template **key**
+   * is a different field and is never accepted here.
+   *
+   * Resolution rules:
+   * - No query parameter        -> existing behavior preserved (no selection).
+   * - Id found in the catalogue -> preselected; the same id is sent as
+   *                               `websiteTemplateId` on submit.
+   * - Catalogue loaded but id
+   *   missing, inactive, or its
+   *   design cannot be parsed   -> explicit notice; nothing is selected and
+   *                               no substitute template is chosen.
+   * - Catalogue failed to load  -> the notice asks for an explicit choice;
+   *                               no background retry loops are started.
+   */
+  private preselectTemplateFromQuery(): void {
+    const templateId = this.route.snapshot.queryParamMap.get('templateId')?.trim() ?? '';
+
+    if (templateId.length === 0) {
+      return;
+    }
+
+    const state = this.templates();
+
+    if (state.state === 'loading') {
+      // Initial fetch in flight; loadTemplates() calls us again when it lands.
+      return;
+    }
+
+    if (state.state === 'error') {
+      // The gallery already shows the load failure with its own retry. Do not
+      // fire duplicate requests behind the user's back; just make clear that
+      // the deep-linked template could not be resolved.
+      this.selectedTemplateId.set(null);
+      this.invalidTemplateNotice.set(
+        'Your selected template could not be verified because the template list failed to load. Retry loading the templates or choose one below.'
+      );
+      return;
+    }
+
+    const match = state.items.find(item => item.id === templateId) ?? null;
+
+    if (match) {
+      // An inactive template is not offered by the catalogue UI, so a deep
+      // link naming one must not silently select it either.
+      if (!match.isActive) {
+        this.selectedTemplateId.set(null);
+        this.invalidTemplateNotice.set(
+          `"${match.name}" is no longer available for new websites. Please choose another template.`
+        );
+        return;
+      }
+
+      // A stale link can still name a template whose configuration is broken;
+      // treat that as unavailable rather than rendering a blank selection.
+      const entry = buildCatalogueItem(match);
+
+      if (entry.designError) {
+        this.selectedTemplateId.set(null);
+        this.invalidTemplateNotice.set(
+          `"${match.name}" could not be preselected because its design configuration could not be read. Please choose another template.`
+        );
+        return;
+      }
+
+      this.selectedTemplateId.set(match.id);
+      this.invalidTemplateNotice.set(null);
+      return;
+    }
+
+    this.selectedTemplateId.set(null);
+    this.invalidTemplateNotice.set(
+      'The template you selected is no longer available, so none was preselected. Please choose a template below.'
+    );
   }
 
   protected selectRestaurant(restaurant: RestaurantDto): void {

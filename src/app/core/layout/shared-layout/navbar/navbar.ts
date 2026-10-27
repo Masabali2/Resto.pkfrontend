@@ -12,11 +12,14 @@ import { catchError, finalize, of } from 'rxjs';
 import { AuthStateService } from '../../../services/auth-state.service';
 import { AuthService } from '../../../services/auth.service';
 import { NotificationService } from '../../../services/notification.service';
+import { AuthorizationService } from '../../../services/authorization.service';
+import { ActiveRestaurantStateService } from '../../../services/active-restaurant-state.service';
+import { RestaurantContext } from './restaurant-context/restaurant-context';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, RestaurantContext],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './navbar.html',
   styleUrl: './navbar.css'
@@ -25,7 +28,15 @@ export class Navbar {
   private readonly authState = inject(AuthStateService);
   private readonly authService = inject(AuthService);
   private readonly notificationService = inject(NotificationService);
+  private readonly authorization = inject(AuthorizationService);
   private readonly router = inject(Router);
+
+  /**
+   * Shared state of the restaurant the user is working with. The navbar owns
+   * no restaurant of its own: it only renders what this service resolved for
+   * the active tenant.
+   */
+  protected readonly activeRestaurant = inject(ActiveRestaurantStateService);
 
   readonly menuClick = output<void>();
   readonly globalSearch = output<string>();
@@ -34,12 +45,11 @@ export class Navbar {
   protected readonly signingOut = signal(false);
   protected readonly searchQuery = signal('');
 
-  protected readonly restaurant = {
-    name: 'Brewed & Co.',
-    category: 'Restaurant workspace',
-    initials: 'BC',
-    status: 'Active'
-  };
+  protected readonly restaurant = this.activeRestaurant.restaurant;
+  protected readonly restaurants = this.activeRestaurant.restaurants;
+  protected readonly restaurantState = this.activeRestaurant.state;
+  protected readonly restaurantLoading = this.activeRestaurant.loading;
+  protected readonly restaurantError = this.activeRestaurant.errorMessage;
 
   protected readonly user = computed(
     () => this.authState.authResult()?.user ?? null
@@ -47,6 +57,15 @@ export class Navbar {
 
   protected readonly activeTenantName = computed(
     () => this.authState.authResult()?.activeTenant?.name ?? null
+  );
+
+  /** The restaurant card only exists for an active tenant. */
+  protected readonly hasActiveTenant = computed(
+    () => this.authState.authResult()?.activeTenant != null
+  );
+
+  protected readonly canCreateRestaurant = computed(() =>
+    this.authorization.hasPermission('Restaurant.Create')
   );
 
   protected readonly displayName = computed(() => {
@@ -75,6 +94,16 @@ export class Navbar {
 
   protected toggleMenu(): void {
     this.menuClick.emit();
+  }
+
+  /** Moves the restaurant selection inside the active tenant. */
+  protected onRestaurantSelected(restaurantId: string): void {
+    this.activeRestaurant.selectRestaurant(restaurantId);
+  }
+
+  /** Reads the restaurants of the active tenant again. */
+  protected retryRestaurant(): void {
+    this.activeRestaurant.refresh();
   }
 
   protected toggleAccount(): void {

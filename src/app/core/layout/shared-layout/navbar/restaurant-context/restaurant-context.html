@@ -1,0 +1,84 @@
+
+@if (restaurant(); as restaurant) {
+  <div class="restaurant-card" [attr.title]="restaurant.name">
+    <div class="restaurant-logo" aria-hidden="true">
+      {{ initials() }}
+    </div>
+
+    <div class="restaurant-details">
+      <span class="restaurant-name">{{ restaurant.name }}</span>
+
+      @if (location()) {
+        <span class="restaurant-subtitle">{{ location() }}</span>
+      }
+    </div>
+
+    <span class="restaurant-status" [attr.data-tone]="status().tone">
+      <span class="status-dot" aria-hidden="true"></span>
+      {{ status().label }}
+    </span>
+
+    @if (showSelector()) {
+      <app-restaurant-selector
+        [restaurants]="restaurants()"
+        [selectedId]="restaurant.id"
+        (select)="restaurantSelected.emit($event)"
+      />
+    }
+  </div>
+} @else if (loading()) {
+  <div class="restaurant-card is-skeleton" role="status" aria-live="polite">
+    <span class="restaurant-skeleton-logo" aria-hidden="true"></span>
+
+    <span class="restaurant-skeleton-copy" aria-hidden="true">
+      <span class="restaurant-skeleton-line"></span>
+      <span class="restaurant-skeleton-line is-short"></span>
+    </span>
+
+    <span class="restaurant-skeleton-label">Loading restaurant</span>
+  </div>
+} @else if (state() === 'empty') {
+  <div class="restaurant-card is-placeholder">
+    <span class="restaurant-placeholder" aria-hidden="true">?</span>
+
+    <span class="restaurant-placeholder-copy">
+      <span class="restaurant-placeholder-title">No restaurant yet</span>
+
+      @if (canCreateRestaurant()) {
+        <a class="restaurant-placeholder-action" routerLink="/setup/restaurant">
+          Set up
+        </a>
+      }
+    </span>
+  </div>
+} @else if (state() === 'forbidden') {
+  <div class="restaurant-card is-placeholder">
+    <span class="restaurant-placeholder" aria-hidden="true">–</span>
+
+    <span class="restaurant-placeholder-copy">
+      <span class="restaurant-placeholder-title">
+        Restaurant access unavailable
+      </span>
+    </span>
+  </div>
+} @else if (state() === 'error') {
+  <div
+    class="restaurant-card is-placeholder is-error"
+    role="status"
+    [attr.title]="errorMessage() ?? ''"
+  >
+    <span class="restaurant-placeholder" aria-hidden="true">!</span>
+
+    <span class="restaurant-placeholder-copy">
+      <span class="restaurant-placeholder-title">Restaurant unavailable</span>
+
+      <button
+        type="button"
+        class="restaurant-retry"
+        (click)="retry.emit()"
+      >
+        Retry
+      </button>
+    </span>
+  </div>
+}

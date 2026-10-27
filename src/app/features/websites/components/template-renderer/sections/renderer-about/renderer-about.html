@@ -1,0 +1,20 @@
+<section class="tpl-about">
+  <div class="tpl-about-visual" aria-hidden="true">
+    <span class="tpl-about-disc"></span>
+    <span class="tpl-about-line"></span>
+  </div>
+
+  <div class="tpl-about-copy">
+    <p class="tpl-eyebrow">Our story</p>
+    <h3 class="tpl-section-title">Crafted with care</h3>
+    <p class="tpl-about-text">{{ description() }}</p>
+
+    @if (highlights().length > 0) {
+      <ul class="tpl-about-highlights">
+        @for (highlight of highlights(); track highlight) {
+          <li class="tpl-about-chip">{{ highlight }}</li>
+        }
+      </ul>
+    }
+  </div>
+</section>

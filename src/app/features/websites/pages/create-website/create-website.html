@@ -17,6 +17,41 @@
       <app-inline-error [message]="generalError()" />
     }
 
+    @if (invalidTemplateNotice()) {
+      <div class="template-notice" role="alert">
+        <span class="template-notice-icon" aria-hidden="true">&#9888;</span>
+        <p>{{ invalidTemplateNotice() }}</p>
+      </div>
+    }
+
+    @if (selectedCatalogueItem(); as item) {
+      <aside class="selected-template-card" aria-label="Selected template">
+        <div class="selected-template-body">
+          <p class="selected-template-eyebrow">Selected template</p>
+          <h2 class="selected-template-name">{{ item.template.name }}</h2>
+          @if (item.template.description) {
+            <p class="selected-template-desc">{{ item.template.description }}</p>
+          }
+          <div class="selected-template-meta">
+            @if (item.category) {
+              <span class="meta-chip">{{ item.category }}</span>
+            }
+            @for (tag of item.tags; track tag) {
+              <span class="meta-chip meta-chip-muted">{{ tag }}</span>
+            }
+          </div>
+        </div>
+        <div class="selected-template-actions">
+          <app-button variant="outline" size="sm" [fullWidth]="false" (click)="openPreview(item.template.id)">
+            Review preview
+          </app-button>
+          <app-button variant="secondary" size="sm" [fullWidth]="false" (click)="clearTemplateSelection()">
+            Change
+          </app-button>
+        </div>
+      </aside>
+    }
+
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <section class="form-section" aria-labelledby="restaurant-title">
         <h2 id="restaurant-title" class="section-title">
@@ -71,38 +106,24 @@
       <section class="form-section" aria-labelledby="template-title">
         <h2 id="template-title" class="section-title">
           <span class="step-badge" aria-hidden="true">2</span>
-          Choose a template
+          Choose your restaurant website design
         </h2>
 
-        @if (templates().state === 'loading') {
-          <div class="inline-state" role="status" aria-live="polite">
-            <app-loading-spinner [size]="24" />
-            <span>Loading templates&hellip;</span>
-          </div>
-        } @else if (templates().state === 'error') {
-          <div class="section-error" role="alert">
-            <p>{{ templates().error }}</p>
-            <app-button variant="outline" size="sm" [fullWidth]="false" (click)="loadTemplates()">
-              Try again
-            </app-button>
-          </div>
-        } @else if (templates().items.length === 0) {
-          <div class="section-empty">
-            <p>No templates are available yet.</p>
-            <p class="section-hint">Website templates will appear here once they are added in the back office.</p>
-          </div>
-        } @else {
-          <div class="template-grid">
-            @for (template of templates().items; track template.id) {
-              <app-template-picker-card
-                [template]="template"
-                [selected]="selectedTemplateId() === template.id"
-                [previewImageUrl]="null"
-                (select)="selectTemplate(template)"
-              />
-            }
-          </div>
-        }
+        <p class="section-hint section-hint-lead">
+          Every design is fully responsive and can be customised later — colours,
+          sections and content are all editable once the website is created.
+        </p>
+
+        <app-template-gallery
+          [items]="catalogue()"
+          [selectedId]="selectedTemplateId()"
+          [loading]="templates().state === 'loading'"
+          [error]="templates().state === 'error' ? templates().error : null"
+          [previewImageUrl]="null"
+          (select)="selectTemplateById($event)"
+          (preview)="openPreview($event)"
+          (retry)="loadTemplates()"
+        />
       </section>
 
       <section class="form-section" aria-labelledby="details-title">
@@ -175,3 +196,13 @@
     </form>
   </div>
 </main>
+
+@if (previewItem(); as item) {
+  <app-template-preview-dialog
+    [template]="item.template"
+    [design]="item.design"
+    [designError]="item.designError"
+    (closed)="closePreview()"
+    (useTemplate)="applyPreviewedTemplate()"
+  />
+}

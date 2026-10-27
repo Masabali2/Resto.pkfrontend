@@ -1,22 +1,12 @@
-import type { PagedResult } from './paged-result.model';
+import type { PagedResult } from '../../../core/models/paged-result.model';
+import type { RestaurantDto } from '../../../core/models/restaurant.model';
 
-/** Mirrors backend RestaurantDto (RestaurantDtos.cs). Address fields are flattened. */
-export interface RestaurantDto {
-  id: string;
-  tenantId: string;
-  name: string;
-  description: string | null;
-  phone: string | null;
-  email: string | null;
-  addressLine1: string;
-  addressLine2: string | null;
-  city: string;
-  country: string;
-  timeZone: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string | null;
-}
+/**
+ * The restaurant DTO is shared by the whole application and is therefore
+ * declared once, in the core models. It is re-exported here so the existing
+ * feature imports keep working.
+ */
+export type { RestaurantDto };
 
 export type RestaurantsPage = PagedResult<RestaurantDto>;
 

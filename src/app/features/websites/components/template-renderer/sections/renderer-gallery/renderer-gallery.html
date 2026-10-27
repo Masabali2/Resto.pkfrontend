@@ -1,0 +1,19 @@
+<section class="tpl-gallery">
+  <header class="tpl-section-head">
+    <p class="tpl-eyebrow">Gallery</p>
+    <h3 class="tpl-section-title">A look inside</h3>
+  </header>
+
+  <ul
+    class="tpl-gallery-grid"
+    [class.tpl-gallery-grid--masonry]="layout() === 'masonry'"
+    [class.tpl-gallery-grid--grid]="layout() === 'grid'"
+    [class.tpl-gallery-grid--strip]="layout() === 'strip'"
+    [class.tpl-gallery-grid--carousel]="layout() === 'carousel'"
+    aria-hidden="true"
+  >
+    @for (tile of tiles(); track tile) {
+      <li class="tpl-gallery-tile" [attr.data-tone]="tile"></li>
+    }
+  </ul>
+</section>

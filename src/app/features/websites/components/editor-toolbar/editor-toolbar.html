@@ -1,0 +1,113 @@
+<header class="editor-toolbar" role="banner" aria-label="Editor toolbar">
+  <div class="toolbar-left">
+    <button type="button" class="back-link" (click)="backClick.emit()" [disabled]="editorState() === 'loading'" aria-label="Back to website management">
+      <span class="back-icon" aria-hidden="true">←</span>
+      <span class="back-text">Manage</span>
+    </button>
+
+    @if (website(); as site) {
+      <div class="toolbar-title">
+        <h1>{{ site.name }}</h1>
+        <div class="toolbar-meta">
+          <span class="status-badge">{{ publicationLabel() }}</span>
+          <span class="save-state" [attr.data-state]="saveState()" role="status" aria-live="polite">
+            {{ saveLabel() }}
+          </span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="toolbar-center">
+    <div class="viewport-controls" role="group" aria-label="Viewport size">
+      @for (mode of viewportModes; track mode) {
+        <button
+          type="button"
+          class="viewport-btn"
+          [class.active]="viewportMode() === mode"
+          (click)="onViewportClick(mode)"
+          [attr.aria-pressed]="viewportMode() === mode"
+          [attr.aria-label]="viewportInfo[mode].label + ' view (' + viewportInfo[mode].width + 'px)'"
+        >
+          <span class="viewport-icon" aria-hidden="true">{{ viewportInfo[mode].icon }}</span>
+          <span class="viewport-label">{{ viewportInfo[mode].label }}</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="toolbar-right">
+    @if (publicSiteUrl(); as url) {
+      <a class="live-link" [href]="url" target="_blank" rel="noopener noreferrer" aria-label="View live site">
+        <span class="live-icon" aria-hidden="true">↗</span>
+        <span>Live Site</span>
+      </a>
+    }
+
+    @if (website(); as current) {
+      @if (current.isPublished) {
+        <button
+          type="button"
+          class="action-btn outline"
+          [disabled]="publishState() !== 'idle'"
+          (click)="unpublishClick.emit()"
+          aria-label="Unpublish website"
+        >
+          <span class="btn-icon" aria-hidden="true">🔒</span>
+          <span>Unpublish</span>
+        </button>
+      } @else {
+        <button
+          type="button"
+          class="action-btn secondary"
+          [disabled]="!canPublish() || !!publishBlockedReason() || publishState() !== 'idle'"
+          (click)="publishClick.emit()"
+          [attr.aria-disabled]="!canPublish() || !!publishBlockedReason() || publishState() !== 'idle'"
+        >
+          <span class="btn-icon" aria-hidden="true">🚀</span>
+          <span>Publish</span>
+        </button>
+      }
+    }
+
+    <button
+      type="button"
+      class="action-btn secondary"
+      [disabled]="isSaveDisabled()"
+      (click)="saveClick.emit()"
+      [attr.aria-disabled]="isSaveDisabled()"
+    >
+      <span class="btn-icon" aria-hidden="true">💾</span>
+      <span>Save Draft</span>
+    </button>
+
+    <button
+      type="button"
+      class="action-btn secondary"
+      [disabled]="!website()"
+      (click)="previewClick.emit()"
+      aria-label="Full screen preview"
+    >
+      <span class="btn-icon" aria-hidden="true">👁️</span>
+      <span>Preview</span>
+    </button>
+
+    <button
+      type="button"
+      class="action-btn outline"
+      [disabled]="!website() || isComparing()"
+      (click)="compareClick.emit()"
+      [attr.aria-pressed]="isComparing()"
+      aria-label="Compare with published version"
+    >
+      <span class="btn-icon" aria-hidden="true">🔍</span>
+      <span>Compare</span>
+    </button>
+  </div>
+
+  @if (publishBlockedReason(); as reason) {
+    <div class="publish-hint" role="status" aria-live="polite">
+      {{ reason }}
+    </div>
+  }
+</header>

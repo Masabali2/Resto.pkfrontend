@@ -1,0 +1,26 @@
+<section class="tpl-menu">
+  <header class="tpl-section-head">
+    <p class="tpl-eyebrow">Signature dishes</p>
+    <h3 class="tpl-section-title">From our kitchen</h3>
+  </header>
+
+  @if (dishes().length > 0) {
+    <ul
+      class="tpl-dishes"
+      [class.tpl-dishes--featured]="layout() === 'featured-cards'"
+      [class.tpl-dishes--compact]="layout() === 'compact-cards'"
+      [class.tpl-dishes--editorial]="layout() === 'editorial-list'"
+      [class.tpl-dishes--grid]="layout() === 'grid-cards'"
+      [class.tpl-dishes--rows]="layout() === 'list-rows'"
+    >
+      @for (dish of dishes(); track dish.name) {
+        <li class="tpl-dish">
+          <span class="tpl-dish-name">{{ dish.name }}</span>
+          @if (dish.price) {
+            <span class="tpl-dish-price">{{ dish.price }}</span>
+          }
+        </li>
+      }
+    </ul>
+  }
+</section>

@@ -6,12 +6,12 @@ import {
   inject,
   signal
 } from '@angular/core';
-import { DatePipe, NgIf, NgForOf } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
-import { RestaurantService } from '../../../websites/services/restaurant.service';
+import { RestaurantService } from '../../../../core/services/restaurant.service';
 import { MenuService } from '../../services/menu.service';
 import { AuthorizationService } from '../../../../core/services/authorization.service';
 import { TenantContextService } from '../../../../core/services/tenant-context.service';
@@ -31,8 +31,6 @@ type PageState = 'loading' | 'list' | 'empty' | 'no-workspace' | 'forbidden' | '
   standalone: true,
   imports: [
     DatePipe,
-    NgIf,
-    NgForOf,
     RouterLink,
     Button,
     LoadingSpinner,
@@ -104,8 +102,6 @@ export class MenuList {
         const queryId = params.get('restaurantId') ?? null;
         this.resolveRestaurantSelection(queryId);
       });
-
-    this.loadRestaurants();
   }
 
   protected loadRestaurants(): void {
@@ -127,7 +123,6 @@ export class MenuList {
     this.errorMessage.set('');
 
     this.restaurantService.getRestaurants()
-      .pipe(finalize(() => {}))
       .subscribe({
         next: (response: ApiResponse<{ items: RestaurantDto[] }>) => {
           if (!this.isCurrent(requestId, tenantId)) {
@@ -336,7 +331,6 @@ export class MenuList {
     }
 
     this.menuService.setMenuActive(menu.id, isActive)
-      .pipe(finalize(() => {}))
       .subscribe({
         next: response => {
           if (!response.success || !response.data) {

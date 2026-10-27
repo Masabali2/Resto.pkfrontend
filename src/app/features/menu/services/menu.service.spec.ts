@@ -172,13 +172,25 @@ describe('MenuService', () => {
     req.flush({ success: true, data: [], message: null, errorCode: null, errors: null, traceId: null } as unknown as ApiResponse<never[]>);
   });
 
-  it('getCategoryItems lists paged items of a category', () => {
+  it('getCategoryItems lists paged items of a category (explicit page size respected)', () => {
     service.getCategoryItems('cat-1', 3, 20).subscribe();
 
     const req = expectRequest(
       httpMock,
       'GET',
       `${API_ROOT}/menu-categories/cat-1/items?page=3&pageSize=20`
+    );
+
+    req.flush({ success: true, data: { items: [], totalCount: 0 }, message: null, errorCode: null, errors: null, traceId: null } as ApiResponse<{ items: never[]; totalCount: number }>);
+  });
+
+  it('getCategoryItems defaults to pageSize=50 when omitted (backend convention)', () => {
+    service.getCategoryItems('cat-1').subscribe();
+
+    const req = expectRequest(
+      httpMock,
+      'GET',
+      `${API_ROOT}/menu-categories/cat-1/items?page=1&pageSize=50`
     );
 
     req.flush({ success: true, data: { items: [], totalCount: 0 }, message: null, errorCode: null, errors: null, traceId: null } as ApiResponse<{ items: never[]; totalCount: number }>);

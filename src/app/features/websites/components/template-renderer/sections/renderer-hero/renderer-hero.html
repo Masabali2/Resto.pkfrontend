@@ -1,0 +1,34 @@
+<section
+  class="tpl-hero"
+  [class.tpl-hero--split]="layout() === 'split'"
+  [class.tpl-hero--centered]="layout() === 'centered'"
+  [class.tpl-hero--image-led]="layout() === 'image-led'"
+  [class.tpl-hero--cinematic]="layout() === 'cinematic'"
+  [class.tpl-hero--asymmetric]="layout() === 'asymmetric'"
+>
+  <div class="tpl-hero-copy">
+    @if (content().eyebrow) {
+      <p class="tpl-eyebrow">{{ content().eyebrow }}</p>
+    }
+
+    <h2 class="tpl-hero-title">{{ content().heroTitle }}</h2>
+
+    @if (content().heroDescription) {
+      <p class="tpl-hero-text">{{ content().heroDescription }}</p>
+    }
+
+    @if (content().primaryActionLabel) {
+      @if (mode() === 'full') {
+        <button type="button" class="tpl-button">{{ content().primaryActionLabel }}</button>
+      } @else {
+        <span class="tpl-button">{{ content().primaryActionLabel }}</span>
+      }
+    }
+  </div>
+
+  <div class="tpl-hero-visual" aria-hidden="true">
+    <span class="tpl-visual-glow"></span>
+    <span class="tpl-visual-plate"></span>
+    <span class="tpl-visual-garnish"></span>
+  </div>
+</section>

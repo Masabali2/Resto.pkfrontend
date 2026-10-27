@@ -1,0 +1,62 @@
+<div class="compare-backdrop" (click)="closeDialog()" role="dialog" aria-modal="true" aria-labelledby="compare-title">
+  <div class="compare-panel" (click)="$event.stopPropagation()">
+    <header class="compare-header">
+      <h2 id="compare-title">Compare Changes</h2>
+      <button type="button" class="compare-close" (click)="closeDialog()" aria-label="Close comparison">✕</button>
+    </header>
+
+    @if (!data()) {
+      <div class="compare-empty">
+        <p>No published version to compare against.</p>
+      </div>
+    } @else if (!hasDifferences()) {
+      <div class="compare-empty">
+        <p>No differences found. Your draft matches the published version.</p>
+      </div>
+    } @else {
+      <div class="compare-summary">
+        <span class="diff-count">{{ differenceCount() }} change{{ differenceCount() !== 1 ? 's' : '' }} found</span>
+        <span class="diff-legend">
+          <span class="legend-item added">+ Added</span>
+          <span class="legend-item removed">− Removed</span>
+          <span class="legend-item changed">≠ Changed</span>
+        </span>
+      </div>
+
+      <div class="compare-diffs" role="list" aria-label="Configuration differences">
+        @for (section of sections(); track section) {
+          <details class="diff-section" open>
+            <summary class="diff-section-header">
+              <span class="diff-section-name">{{ formatSectionName(section) }}</span>
+              <span class="diff-section-count">{{ groupedDifferences()[section].length }}</span>
+            </summary>
+            <div class="diff-section-body">
+              @for (diff of groupedDifferences()[section]; track diff.path) {
+                <div class="diff-item" [class]="getDiffClass(diff.type)" role="listitem">
+                  <div class="diff-path">{{ diff.path }}</div>
+                  <div class="diff-values">
+                    @if (diff.type !== 'removed') {
+                      <div class="diff-value draft">
+                        <span class="diff-label">Draft</span>
+                        <pre class="diff-content">{{ formatValue(diff.draftValue) }}</pre>
+                      </div>
+                    }
+                    @if (diff.type !== 'added') {
+                      <div class="diff-value published">
+                        <span class="diff-label">Published</span>
+                        <pre class="diff-content">{{ formatValue(diff.publishedValue) }}</pre>
+                      </div>
+                    }
+                  </div>
+                  <span class="diff-badge" [class]="getDiffClass(diff.type)" aria-label="{{ diff.type }}">{{ getDiffIcon(diff.type) }}</span>
+                </div>
+              }
+            </div>
+          </details>
+        }
+      </div>
+    }
+  </div>
+</div>
+
+(End of file - total 58 lines)

@@ -1,0 +1,91 @@
+:host {
+  display: block;
+}
+
+.tpl-about {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: calc(28px * var(--tpl-scale));
+  align-items: center;
+  padding: var(--tpl-section-gap) calc(24px * var(--tpl-scale));
+  background: var(--tpl-background);
+}
+
+.tpl-about-visual {
+  position: relative;
+  display: grid;
+  min-height: calc(160px * var(--tpl-scale));
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--tpl-radius);
+  background:
+    linear-gradient(
+      200deg,
+      color-mix(in srgb, var(--tpl-accent) 55%, var(--tpl-surface)),
+      color-mix(in srgb, var(--tpl-primary) 70%, var(--tpl-text))
+    );
+}
+
+.tpl-about-disc {
+  width: calc(84px * var(--tpl-scale));
+  height: calc(84px * var(--tpl-scale));
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 40% 35%,
+    color-mix(in srgb, var(--tpl-surface) 85%, var(--tpl-accent)),
+    color-mix(in srgb, var(--tpl-accent) 60%, var(--tpl-primary)) 55%,
+    transparent 56%
+  );
+  box-shadow: 0 calc(8px * var(--tpl-scale)) calc(24px * var(--tpl-scale)) rgb(15 23 42 / 25%);
+}
+
+.tpl-about-line {
+  position: absolute;
+  inset-inline: 10%;
+  bottom: 18%;
+  height: calc(2px * var(--tpl-scale));
+  background: color-mix(in srgb, var(--tpl-surface) 65%, transparent);
+}
+
+.tpl-eyebrow {
+  margin-bottom: calc(6px * var(--tpl-scale));
+  color: var(--tpl-accent);
+  font-size: calc(11px * var(--tpl-scale));
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.tpl-section-title {
+  font-size: calc(26px * var(--tpl-scale));
+}
+
+.tpl-about-text {
+  margin-top: calc(10px * var(--tpl-scale));
+  color: var(--tpl-muted);
+  font-size: calc(14px * var(--tpl-scale));
+  line-height: 1.7;
+}
+
+.tpl-about-highlights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(8px * var(--tpl-scale));
+  margin-top: calc(16px * var(--tpl-scale));
+}
+
+.tpl-about-chip {
+  padding: calc(5px * var(--tpl-scale)) calc(12px * var(--tpl-scale));
+  border: 1px solid var(--tpl-border);
+  border-radius: var(--tpl-button-radius);
+  color: var(--tpl-primary);
+  font-size: calc(11px * var(--tpl-scale));
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+@media (max-width: 640px) {
+  .tpl-about {
+    grid-template-columns: 1fr;
+  }
+}
