@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   signal
 } from '@angular/core';
@@ -10,25 +11,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { forkJoin } from 'rxjs';
-import {
-  LucideAlertCircle,
-  LucideArrowDown,
-  LucideArrowUp,
-  LucideCheck,
-  LucideEdit3,
-  LucideFlame,
-  LucideGripVertical,
-  LucideImageOff,
-  LucideLayers,
-  LucidePercent,
-  LucidePlus,
-  LucideSearch,
-  LucideSparkles,
-  LucideTag,
-  LucideTrash2,
-  LucideUtensilsCrossed,
-  LucideX
-} from '@lucide/angular';
 import { MenuService } from '../../services/menu.service';
 import { AuthorizationService } from '../../../../core/services/authorization.service';
 import { TenantContextService } from '../../../../core/services/tenant-context.service';
@@ -45,7 +27,6 @@ import { formatPrice } from '../../models/menu-price.util';
 
 type PageState = 'loading' | 'list' | 'not-found' | 'no-workspace' | 'forbidden' | 'error';
 
-/** One loaded page of items for a single category (GET .../items is paged). */
 interface CategoryItemState {
   items: MenuItemDto[];
   page: number;
@@ -57,15 +38,6 @@ interface CategoryItemState {
 
 const ITEMS_PAGE_SIZE = 50;
 
-/**
- * Screen 4 — "Digital Menu & Category Organizer".
- *
- * Two-column workspace: category rail on the left (select / reorder / add),
- * live item list on the right (instant optimistic availability toggles,
- * search, per-item actions) plus the Bulk Price Adjustment dialog. All data
- * flows through MenuService against the real backend endpoints; nothing is
- * mocked.
- */
 @Component({
   selector: 'app-menu-detail',
   standalone: true,
@@ -73,24 +45,7 @@ const ITEMS_PAGE_SIZE = 50;
     FormsModule,
     ConfirmationDialog,
     LoadingSpinner,
-    BulkPriceDialog,
-    LucideAlertCircle,
-    LucideArrowDown,
-    LucideArrowUp,
-    LucideCheck,
-    LucideEdit3,
-    LucideFlame,
-    LucideGripVertical,
-    LucideImageOff,
-    LucideLayers,
-    LucidePercent,
-    LucidePlus,
-    LucideSearch,
-    LucideSparkles,
-    LucideTag,
-    LucideTrash2,
-    LucideUtensilsCrossed,
-    LucideX
+    BulkPriceDialog
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './menu-detail.html',
@@ -110,7 +65,6 @@ export class MenuDetail {
   protected readonly menu = signal<MenuDetailsDto | null>(null);
   protected readonly categoryItemState = signal<Record<string, CategoryItemState>>({});
 
-  // --- Screen-4 UI state ---------------------------------------------------
   protected readonly activeCategoryId = signal<string | null>(null);
   protected readonly searchQuery = signal('');
   protected readonly isAddingCategory = signal(false);
@@ -126,42 +80,33 @@ export class MenuDetail {
   protected readonly canUpdateMenu = computed(() =>
     this.authorization.hasPermission('Menu.Update')
   );
+
   protected readonly canCreateCategory = computed(() =>
     this.authorization.hasPermission('MenuCategory.Create')
   );
+
   protected readonly canManageCategories = computed(() =>
     this.authorization.hasPermission('MenuCategory.Update')
   );
+
   protected readonly canDeleteCategory = computed(() =>
     this.authorization.hasPermission('MenuCategory.Delete')
   );
+
   protected readonly canCreateItem = computed(() =>
     this.authorization.hasPermission('MenuItem.Create')
   );
+
   protected readonly canManageItems = computed(() =>
     this.authorization.hasPermission('MenuItem.Update')
   );
+
   protected readonly canDeleteItem = computed(() =>
     this.authorization.hasPermission('MenuItem.Delete')
   );
 
   protected readonly isArchived = computed(() => this.menu()?.status === 'Archived');
 
-  protected readonly activeCategory = computed(() => {
-    const menu = this.menu();
-    const activeId = this.activeCategoryId();
-    if (!menu || !activeId) {
-      return null;
-    }
-    return menu.categories.find(c => c.id === activeId) ?? null;
-  });
-
-  protected readonly activeItems = computed(() => {
-    const id = this.activeCategoryId();
-    return id ? (this.categoryItemState()[id]?.items ?? []) : [];
-  });
-
-  /** Read-only menus cannot be mutated from this screen. */
   protected readonly isReadOnly = computed(() => this.isArchived());
 
   protected readonly categories = computed(
@@ -172,14 +117,12 @@ export class MenuDetail {
     const categories = this.categories();
     const activeId = this.activeCategoryId();
 
-    return (
-      categories.find(c => c.id === activeId) ?? categories[0] ?? null
-    );
+    return categories.find(c => c.id === activeId) ?? categories[0] ?? null;
   });
 
-  /** Active category first, then the rest — mirrors the design's stacked view. */
   protected readonly orderedCategories = computed(() => {
     const active = this.activeCategory();
+
     if (!active) {
       return [];
     }
@@ -211,7 +154,7 @@ export class MenuDetail {
   });
 
   protected readonly availableCount = computed(
-    () => this.activeItems().filter(i => i.isAvailable).length
+    () => this.activeItems().filter(item => item.isAvailable).length
   );
 
   protected readonly outOfStockCount = computed(
@@ -220,10 +163,9 @@ export class MenuDetail {
 
   private loadedTenantId: string | null = null;
   private requestSequence = 0;
+  private suppressTenantReload = false;
 
   constructor() {
-    // React to active-tenant changes: reset all context so nothing from the
-    // previous workspace remains visible (stale-data protection).
     toObservable(this.tenantContext.activeTenantId)
       .pipe(takeUntilDestroyed())
       .subscribe(tenantId => {
@@ -240,6 +182,7 @@ export class MenuDetail {
         this.searchQuery.set('');
 
         const menuId = this.route.snapshot.paramMap.get('menuId');
+
         if (menuId) {
           this.loadMenu(menuId);
         }
@@ -249,26 +192,24 @@ export class MenuDetail {
       .pipe(takeUntilDestroyed())
       .subscribe(params => {
         const menuId = params.get('menuId');
+
         if (!menuId) {
           return;
         }
 
-        // Switching menus clears the previous selection so a stale category
-        // id can never survive into the newly loaded menu.
         this.activeCategoryId.set(null);
         this.loadMenu(menuId);
       });
 
-    // Whenever the active category resolves to a real id, make sure its
-    // items are loaded exactly once (the per-category loading flag guards
-    // against duplicate requests).
     effect(() => {
       const categoryId = this.activeCategoryId();
+
       if (!categoryId) {
         return;
       }
 
       const state = this.categoryItemState()[categoryId];
+
       if (!state && !this.categoryItemLoadingGuard(categoryId)) {
         queueMicrotask(() => {
           if (!this.categoryItemState()[categoryId]) {
@@ -279,15 +220,13 @@ export class MenuDetail {
     });
   }
 
-  /** Guards against two concurrent loads of the same category. */
   private categoryItemLoadingGuard(categoryId: string): boolean {
     return !!this.categoryItemState()[categoryId]?.loading;
   }
 
-  // --- Data loading ---------------------------------------------------------
-
   private loadMenu(menuId: string): void {
     const tenantId = this.tenantContext.activeTenantId();
+
     if (tenantId === null) {
       this.pageState.set('no-workspace');
       return;
@@ -316,10 +255,8 @@ export class MenuDetail {
 
         if (
           this.activeCategoryId() === null ||
-          !menu.categories.some(c => c.id === this.activeCategoryId())
+          !menu.categories.some(category => category.id === this.activeCategoryId())
         ) {
-          // Default to the second section when present (matches the design's
-          // intent of landing on a populated category), else the first.
           const preferred = menu.categories[1] ?? menu.categories[0];
           this.activeCategoryId.set(preferred?.id ?? null);
         }
@@ -354,12 +291,11 @@ export class MenuDetail {
 
   protected retry(): void {
     const menuId = this.route.snapshot.paramMap.get('menuId');
+
     if (menuId) {
       this.loadMenu(menuId);
     }
   }
-
-  // --- Category rail --------------------------------------------------------
 
   protected selectCategory(categoryId: string): void {
     if (this.activeCategoryId() === categoryId) {
@@ -373,6 +309,7 @@ export class MenuDetail {
 
   private ensureActiveItemsLoaded(): void {
     const category = this.activeCategory();
+
     if (!category) {
       return;
     }
@@ -426,9 +363,11 @@ export class MenuDetail {
         }
 
         const created = response.data;
-        this.menu.update(m =>
-          m ? { ...m, categories: [...m.categories, created] } : null
+
+        this.menu.update(current =>
+          current ? { ...current, categories: [...current.categories, created] } : null
         );
+
         this.activeCategoryId.set(created.id);
         this.isAddingCategory.set(false);
         this.newCategoryName.set('');
@@ -446,32 +385,42 @@ export class MenuDetail {
 
   protected moveCategory(index: number, direction: 'up' | 'down'): void {
     const menu = this.menu();
+
     if (!menu || !this.canManageCategories() || this.isReadOnly()) {
       return;
     }
 
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
+
     if (index < 0 || targetIndex < 0 || targetIndex >= menu.categories.length) {
       return;
     }
 
-    const cats = [...menu.categories];
-    [cats[index], cats[targetIndex]] = [cats[targetIndex], cats[index]];
-    const previous = menu.categories;
-    const ordered = cats.map(c => c.id);
+    const categories = [...menu.categories];
+    [categories[index], categories[targetIndex]] = [
+      categories[targetIndex],
+      categories[index]
+    ];
 
-    this.menu.update(m => (m ? { ...m, categories: cats } : null));
+    const previous = menu.categories;
+    const ordered = categories.map(category => category.id);
+
+    this.menu.update(current =>
+      current ? { ...current, categories } : null
+    );
 
     this.menuService.reorderCategories(menu.id, ordered).subscribe({
       next: response => {
         if (response.success && response.data) {
-          this.menu.update(m =>
-            m ? { ...m, categories: response.data! } : null
+          this.menu.update(current =>
+            current ? { ...current, categories: response.data! } : null
           );
         }
       },
       error: () => {
-        this.menu.update(m => (m ? { ...m, categories: previous } : null));
+        this.menu.update(current =>
+          current ? { ...current, categories: previous } : null
+        );
         this.errorMessage.set(
           'The category order could not be saved. The previous order was restored.'
         );
@@ -479,18 +428,20 @@ export class MenuDetail {
     });
   }
 
-  // Category persistence operations ---------------------------------------------
-
   protected editCategory(category: MenuCategoryDto): void {
     const menu = this.menu();
+
     if (!menu || !this.canManageCategories()) {
       return;
     }
 
-    void this.router.navigate(['/menus', menu.id, 'categories', category.id, 'edit'], {
-      queryParams: { restaurantId: menu.restaurantId },
-      queryParamsHandling: 'merge'
-    });
+    void this.router.navigate(
+      ['/menus', menu.id, 'categories', category.id, 'edit'],
+      {
+        queryParams: { restaurantId: menu.restaurantId },
+        queryParamsHandling: 'merge'
+      }
+    );
   }
 
   protected toggleCategoryActive(category: MenuCategoryDto): void {
@@ -508,15 +459,22 @@ export class MenuDetail {
         }
 
         const updated = response.data;
-        this.menu.update(m => {
-          if (!m) return null;
+
+        this.menu.update(current => {
+          if (!current) {
+            return null;
+          }
+
           return {
-            ...m,
-            categories: m.categories.map(c =>
-              c.id === updated.id ? { ...c, isActive: updated.isActive } : c
+            ...current,
+            categories: current.categories.map(existing =>
+              existing.id === updated.id
+                ? { ...existing, isActive: updated.isActive }
+                : existing
             )
           };
         });
+
         this.notificationService.success(
           `Category "${updated.name}" ${updated.isActive ? 'activated' : 'deactivated'}.`
         );
@@ -542,6 +500,7 @@ export class MenuDetail {
 
   private deleteCategory(): void {
     const target = this.dialogTarget();
+
     if (!target || this.dialogKind() !== 'category') {
       return;
     }
@@ -550,21 +509,27 @@ export class MenuDetail {
 
     this.menuService.deleteCategory(target.id).subscribe({
       next: () => {
-        this.menu.update(m => {
-          if (!m) return null;
+        this.menu.update(current => {
+          if (!current) {
+            return null;
+          }
+
           return {
-            ...m,
-            categories: m.categories.filter(c => c.id !== target.id)
+            ...current,
+            categories: current.categories.filter(category => category.id !== target.id)
           };
         });
+
         this.categoryItemState.update(states => {
-          const { [target.id]: _removed, ...rest } = states;
-          return rest;
+          const { [target.id]: removed, ...remaining } = states;
+          return remaining;
         });
+
         if (this.activeCategoryId() === target.id) {
           this.activeCategoryId.set(null);
           this.ensureActiveItemsLoaded();
         }
+
         this.notificationService.success(`"${target.name}" has been deleted.`);
       },
       error: error => {
@@ -584,23 +549,11 @@ export class MenuDetail {
     });
   }
 
-  // --- Items panel ----------------------------------------------------------
-
-  protected isLastCategory(categoryId: string): boolean {
-    const categories = this.menu()?.categories ?? [];
-    return categories.length > 0 && categories[categories.length - 1].id === categoryId;
-  }
-
-  // --- Items panel ------------------------------------------------------------
-
   protected loadCategoryItems(categoryId: string, page = 1): void {
     const current = this.categoryItemState();
     const existing = current[categoryId];
-    if (existing?.loading) {
-      return;
-    }
 
-    if (!this.menu()) {
+    if (existing?.loading || !this.menu()) {
       return;
     }
 
@@ -635,6 +588,7 @@ export class MenuDetail {
           }
 
           const data = response.data;
+
           this.categoryItemState.update(states => ({
             ...states,
             [categoryId]: {
@@ -670,15 +624,21 @@ export class MenuDetail {
     categoryId: string
   ): { page: number; pageSize: number; totalCount: number } | null {
     const state = this.categoryItemState()[categoryId];
+
     if (!state) {
       return null;
     }
 
-    return { page: state.page, pageSize: state.pageSize, totalCount: state.totalCount };
+    return {
+      page: state.page,
+      pageSize: state.pageSize,
+      totalCount: state.totalCount
+    };
   }
 
   protected totalPages(categoryId: string): number {
     const page = this.categoryPage(categoryId);
+
     if (!page) {
       return 1;
     }
@@ -698,11 +658,6 @@ export class MenuDetail {
     return this.pendingToggles().has(itemId);
   }
 
-  /**
-   * Instant availability toggle with optimistic UI: the switch flips
-   * immediately, PATCH .../availability runs in the background and the row
-   * rolls back with an error toast if the request fails.
-   */
   protected toggleItemAvailability(item: MenuItemDto): void {
     if (!this.canManageItems() || this.isReadOnly() || this.isTogglePending(item.id)) {
       return;
@@ -712,14 +667,14 @@ export class MenuDetail {
     const previous = item.isAvailable;
 
     this.applyAvailabilityLocally(item.id, nextState);
-    this.pendingToggles.update(set => new Set(set).add(item.id));
+    this.pendingToggles.update(pending => new Set(pending).add(item.id));
 
     this.menuService.setItemAvailability(item.id, nextState).subscribe({
       next: response => {
-        this.pendingToggles.update(set => {
-          const copy = new Set(set);
-          copy.delete(item.id);
-          return copy;
+        this.pendingToggles.update(pending => {
+          const updated = new Set(pending);
+          updated.delete(item.id);
+          return updated;
         });
 
         if (!response.success || !response.data) {
@@ -738,10 +693,10 @@ export class MenuDetail {
         );
       },
       error: error => {
-        this.pendingToggles.update(set => {
-          const copy = new Set(set);
-          copy.delete(item.id);
-          return copy;
+        this.pendingToggles.update(pending => {
+          const updated = new Set(pending);
+          updated.delete(item.id);
+          return updated;
         });
 
         this.applyAvailabilityLocally(item.id, previous);
@@ -755,18 +710,21 @@ export class MenuDetail {
 
   private applyAvailabilityLocally(itemId: string, isAvailable: boolean): void {
     this.categoryItemState.update(states => {
-      for (const [cid, state] of Object.entries(states)) {
-        if (state.items.some(i => i.id === itemId)) {
-          states[cid] = {
+      const updated = { ...states };
+
+      for (const [categoryId, state] of Object.entries(updated)) {
+        if (state.items.some(item => item.id === itemId)) {
+          updated[categoryId] = {
             ...state,
-            items: state.items.map(i =>
-              i.id === itemId ? { ...i, isAvailable } : i
+            items: state.items.map(item =>
+              item.id === itemId ? { ...item, isAvailable } : item
             )
           };
           break;
         }
       }
-      return states;
+
+      return updated;
     });
   }
 
@@ -799,6 +757,7 @@ export class MenuDetail {
   protected createItem(): void {
     const menu = this.menu();
     const category = this.activeCategory();
+
     if (!menu || !category || !this.canCreateItem() || this.isReadOnly()) {
       return;
     }
@@ -814,6 +773,7 @@ export class MenuDetail {
 
   protected editItem(item: MenuItemDto): void {
     const menu = this.menu();
+
     if (!menu || !this.canManageItems()) {
       return;
     }
@@ -847,24 +807,24 @@ export class MenuDetail {
 
   private deleteItem(): void {
     const target = this.dialogTarget();
+
     if (!target || this.dialogKind() !== 'item') {
       return;
     }
 
     this.closeDialog();
 
-    // Find the category the item belongs to so its page can be refreshed.
     let categoryId = '';
-    for (const [cid, state] of Object.entries(this.categoryItemState())) {
-      if (state.items.some(i => i.id === target.id)) {
-        categoryId = cid;
+
+    for (const [currentCategoryId, state] of Object.entries(this.categoryItemState())) {
+      if (state.items.some(item => item.id === target.id)) {
+        categoryId = currentCategoryId;
         break;
       }
     }
 
     this.menuService.deleteItem(target.id).subscribe({
       next: response => {
-        // Strict success contract — removal happens only for successful envelopes.
         if (!response.success) {
           this.errorMessage.set(
             response.message ?? 'Unable to delete the item. Please try again.'
@@ -873,12 +833,14 @@ export class MenuDetail {
         }
 
         this.removeItemFromCategory(target.id);
+
         if (categoryId) {
           this.loadCategoryItems(
             categoryId,
             this.categoryItemState()[categoryId]?.page ?? 1
           );
         }
+
         this.notificationService.success(`"${target.name}" has been deleted.`);
       },
       error: error => {
@@ -890,35 +852,37 @@ export class MenuDetail {
     });
   }
 
-  /** Swaps displayOrder with the neighbouring item, then refreshes the page. */
   protected moveItem(index: number, direction: 'up' | 'down'): void {
     const category = this.activeCategory();
+
     if (!category || !this.canManageItems() || this.isReadOnly()) {
       return;
     }
 
     const state = this.categoryItemState()[category.id];
+
     if (!state) {
       return;
     }
 
     const items = state.items;
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
+
     if (index < 0 || targetIndex < 0 || targetIndex >= items.length) {
       return;
     }
 
-    const a = items[index];
-    const b = items[targetIndex];
+    const currentItem = items[index];
+    const targetItem = items[targetIndex];
 
     forkJoin([
-      this.menuService.updateItem(a.id, {
-        displayOrder: b.displayOrder,
+      this.menuService.updateItem(currentItem.id, {
+        displayOrder: targetItem.displayOrder,
         imageFileId: null,
         clearImage: false
       }),
-      this.menuService.updateItem(b.id, {
-        displayOrder: a.displayOrder,
+      this.menuService.updateItem(targetItem.id, {
+        displayOrder: currentItem.displayOrder,
         imageFileId: null,
         clearImage: false
       })
@@ -936,15 +900,19 @@ export class MenuDetail {
   private updateItemInCategory(updated: MenuItemDto): void {
     this.categoryItemState.update(states => {
       const next = { ...states };
-      for (const [cid, state] of Object.entries(next)) {
-        if (state.items.some(i => i.id === updated.id)) {
-          next[cid] = {
+
+      for (const [categoryId, state] of Object.entries(next)) {
+        if (state.items.some(item => item.id === updated.id)) {
+          next[categoryId] = {
             ...state,
-            items: state.items.map(i => (i.id === updated.id ? updated : i))
+            items: state.items.map(item =>
+              item.id === updated.id ? updated : item
+            )
           };
           break;
         }
       }
+
       return next;
     });
   }
@@ -952,23 +920,24 @@ export class MenuDetail {
   private removeItemFromCategory(itemId: string): void {
     this.categoryItemState.update(states => {
       const next = { ...states };
-      for (const [cid, state] of Object.entries(next)) {
-        if (state.items.some(i => i.id === itemId)) {
-          next[cid] = {
+
+      for (const [categoryId, state] of Object.entries(next)) {
+        if (state.items.some(item => item.id === itemId)) {
+          next[categoryId] = {
             ...state,
-            items: state.items.filter(i => i.id !== itemId)
+            items: state.items.filter(item => item.id !== itemId)
           };
           break;
         }
       }
+
       return next;
     });
   }
 
-  // --- Menu header actions --------------------------------------------------
-
   protected setMenuActive(isActive: boolean): void {
     const menu = this.menu();
+
     if (!menu || !this.canUpdateMenu() || this.isArchived()) {
       return;
     }
@@ -981,7 +950,11 @@ export class MenuDetail {
         }
 
         const updated = response.data;
-        this.menu.update(m => (m ? { ...m, isActive: updated.isActive } : null));
+
+        this.menu.update(current =>
+          current ? { ...current, isActive: updated.isActive } : null
+        );
+
         this.notificationService.success(
           `Menu "${updated.name}" ${updated.isActive ? 'activated' : 'deactivated'}.`
         );
@@ -997,6 +970,7 @@ export class MenuDetail {
 
   protected editMenu(): void {
     const menu = this.menu();
+
     if (!menu || !this.canUpdateMenu()) {
       return;
     }
@@ -1006,8 +980,6 @@ export class MenuDetail {
       queryParamsHandling: 'merge'
     });
   }
-
-  // --- Bulk price adjustment ------------------------------------------------
 
   protected openBulkPriceDialog(): void {
     if (!this.canManageItems() || this.isReadOnly()) {
@@ -1023,6 +995,7 @@ export class MenuDetail {
 
   protected onBulkPricesApplied(): void {
     const category = this.activeCategory();
+
     if (category) {
       this.loadCategoryItems(
         category.id,
@@ -1032,8 +1005,6 @@ export class MenuDetail {
 
     this.notificationService.success('Bulk price adjustment applied.');
   }
-
-  // --- Dialog helpers ---------------------------------------------------------
 
   protected cancelDialog(): void {
     this.closeDialog();
@@ -1060,8 +1031,6 @@ export class MenuDetail {
     this.dialogKind.set(null);
     this.dialogTarget.set(null);
   }
-
-  // --- Presentation helpers ---------------------------------------------------
 
   protected clearSearch(): void {
     this.searchQuery.set('');
@@ -1110,14 +1079,6 @@ export class MenuDetail {
     );
   }
 
-  private isCurrent(requestId: number, tenantId: string): boolean {
-    return (
-      requestId === this.requestSequence &&
-      this.tenantContext.activeTenantId() === tenantId
-    );
-  }
-
-  /** Test-only: prevents the tenant-change subscription from reloading data. */
   public setTenantReloadSuppressedForTests(suppress: boolean): void {
     this.suppressTenantReload = suppress;
   }
