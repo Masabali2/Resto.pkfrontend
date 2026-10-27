@@ -84,7 +84,7 @@
   text-transform: capitalize;
 }
 
-@media (max-width: 640px) {
+@container (max-width: 640px) {
   .tpl-about {
     grid-template-columns: 1fr;
   }

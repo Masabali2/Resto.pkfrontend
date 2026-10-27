@@ -3,34 +3,118 @@
     <p class="templates-eyebrow">Template Showcase</p>
     <h2 id="templates-title">Beautiful Templates for Every Restaurant</h2>
     <p class="templates-intro">
-      Choose from professionally designed templates tailored to your restaurant type.
+      Explore website designs from the Resto.pk catalogue. Every card is rendered from the
+      template's real design configuration — open one to browse its full, interactive preview.
     </p>
 
-    <!-- Four animated template cards, rendered from the typed TEMPLATE_CARDS model -->
-    <div
-      #templateGrid
-      class="templates-grid"
-      [class.templates-grid-pending]="revealState() === 'pending'"
-      [class.templates-grid-revealed]="revealState() === 'revealed'"
-    >
-      @for (tpl of templates; track tpl.id) {
-        <app-template-card
-          class="templates-grid-item"
-          [template]="tpl"
-          [index]="$index"
-          (preview)="openPreview(tpl)"
-          (useTemplate)="useTemplate()"
-        />
-      }
-    </div>
+    @if (loading()) {
+      <div class="templates-grid" aria-hidden="true">
+        @for (skeleton of [1, 2, 3, 4]; track skeleton) {
+          <div class="tpl-card tpl-card-skeleton">
+            <div class="tpl-skeleton-media"></div>
+            <div class="tpl-skeleton-body">
+              <span class="tpl-skeleton-line"></span>
+              <span class="tpl-skeleton-line tpl-skeleton-line-short"></span>
+            </div>
+          </div>
+        }
+      </div>
+      <p class="templates-status" role="status" aria-live="polite">Loading templates…</p>
+    } @else if (errorMessage()) {
+      <div class="templates-state templates-state-error" role="alert">
+        <p class="templates-state-title">Templates could not be loaded</p>
+        <p class="templates-state-text">{{ errorMessage() }}</p>
+        <div class="templates-state-actions">
+          <app-button variant="outline" size="md" [fullWidth]="false" (click)="loadTemplates()">
+            Try again
+          </app-button>
+        </div>
+      </div>
+    } @else if (templates().length === 0) {
+      <div class="templates-state" role="status">
+        <p class="templates-state-title">No templates are available yet</p>
+        <p class="templates-state-text">
+          The platform catalogue is currently empty. New designs will appear here as soon as
+          they are published.
+        </p>
+      </div>
+    } @else {
+      <div
+        #templateGrid
+        class="templates-grid"
+        [class.templates-grid-pending]="revealState() === 'pending'"
+        [class.templates-grid-revealed]="revealState() === 'revealed'"
+      >
+        @for (item of templates(); track item.template.id; let idx = $index) {
+          <article
+            class="tpl-card templates-grid-item"
+            [style.animation-delay]="idx * 90 + 'ms'"
+          >
+            <button
+              type="button"
+              class="tpl-media"
+              (click)="openPreview(item.template.id)"
+              [attr.aria-label]="'Open the full preview of the ' + item.template.name + ' template'"
+            >
+              @if (item.design; as design) {
+                <span class="tpl-frame" aria-hidden="true">
+                  <app-template-renderer [viewModel]="design" mode="card" />
+                </span>
+              } @else {
+                <span class="tpl-media-fallback" aria-hidden="true">
+                  <span class="tpl-media-mark"></span>
+                  <span>Preview unavailable</span>
+                </span>
+              }
 
-    <p class="templates-note">
-      All four designs are showcased as concept previews on this page — none is a live
-      restaurant website, and “Use Template” simply starts free sign-up.
-    </p>
+              @if (item.category) {
+                <span class="tpl-category-pill">{{ item.category }}</span>
+              }
+
+              <span class="tpl-media-hint" aria-hidden="true">Open preview</span>
+            </button>
+
+            <div class="tpl-body">
+              <div class="tpl-title-row">
+                <h3 class="tpl-name">{{ item.template.name }}</h3>
+                @if (item.featured) {
+                  <span class="tpl-featured">Featured</span>
+                }
+              </div>
+
+              <p class="tpl-desc">
+                {{ item.template.description || 'Professional restaurant website template.' }}
+              </p>
+
+              <div class="tpl-actions">
+                <app-button
+                  variant="outline"
+                  size="md"
+                  [fullWidth]="false"
+                  (click)="openPreview(item.template.id)"
+                  [attr.aria-label]="'Preview the ' + item.template.name + ' template design'"
+                >
+                  Preview
+                </app-button>
+                <app-button
+                  variant="primary"
+                  size="md"
+                  [fullWidth]="false"
+                  (click)="useTemplate()"
+                  [attr.aria-label]="'Use the ' + item.template.name + ' template — opens sign up'"
+                >
+                  Use Template
+                </app-button>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+
+      <p class="templates-note">
+        Previews open on their own page and are rendered live from each template's stored
+        design configuration. Nothing is created or published from a preview.
+      </p>
+    }
   </div>
 </section>
-
-@if (previewingTemplate(); as tpl) {
-  <app-template-preview-modal [template]="tpl" (closed)="closePreview()" />
-}

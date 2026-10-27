@@ -3,7 +3,8 @@
   --tpl-section-gap: calc(56px * var(--tpl-scale));
 
   display: block;
-  overflow: hidden;
+  container-type: inline-size;
+  overflow: clip;
   background: var(--tpl-background);
   color: var(--tpl-text);
   font-family: var(--tpl-body-font);

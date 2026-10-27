@@ -13,7 +13,13 @@
     <nav class="tpl-footer-nav" aria-label="Footer links">
       @for (link of links(); track link.target) {
         @if (mode() === 'full') {
-          <a class="tpl-footer-link" href="#{{ link.target }}">{{ link.label }}</a>
+          <a
+            class="tpl-footer-link"
+            href="#{{ link.target }}"
+            (click)="onLinkClick($event, link.target)"
+          >
+            {{ link.label }}
+          </a>
         } @else {
           <span class="tpl-footer-link">{{ link.label }}</span>
         }

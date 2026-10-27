@@ -41,10 +41,7 @@ describe('template catalogue routes', () => {
   const authenticatedLayout = routes.find(route => route.children);
 
   it('registers the catalogue inside the authenticated layout under Website.View', () => {
-    const templates = authenticatedLayout?.children?.find(route => route.path === 'templates');
-    const catalogue = templates?.children?.find(
-      route => route.path === '' && route.pathMatch === 'full'
-    );
+    const catalogue = authenticatedLayout?.children?.find(route => route.path === 'templates');
 
     expect(catalogue).toBeTruthy();
     expect(catalogue?.title).toBe('Templates — Resto.pk');
@@ -52,15 +49,19 @@ describe('template catalogue routes', () => {
     expect(typeof catalogue?.loadComponent).toBe('function');
   });
 
-  it('keeps the intended preview path present so previews do not dead-end', () => {
-    const templates = authenticatedLayout?.children?.find(route => route.path === 'templates');
-    const preview = templates?.children?.find(route => route.path === ':id/preview');
+  it('registers the dedicated preview as a single public top-level route', () => {
+    const previewRoutes = routes.filter(route => route.path === 'templates/:id/preview');
 
-    expect(preview).toBeTruthy();
-    // The dedicated TemplatePreview page is registered lazily (Task 2); no
-    // redirect placeholder remains, so previews resolve to a real component.
-    expect(preview?.redirectTo).toBeUndefined();
-    expect(typeof preview?.loadComponent).toBe('function');
-    expect(preview?.data).toEqual({ permission: 'Website.View' });
+    expect(previewRoutes).toHaveLength(1);
+    expect(previewRoutes[0].title).toBe('Template Preview — Resto.pk');
+    expect(previewRoutes[0].redirectTo).toBeUndefined();
+    expect(previewRoutes[0].canActivate).toBeUndefined();
+    expect(typeof previewRoutes[0].loadComponent).toBe('function');
+
+    // The authenticated layout must not keep a second, guarded preview route.
+    const templates = authenticatedLayout?.children?.find(route => route.path === 'templates');
+    const nestedPreview = templates?.children?.find(route => route.path === ':id/preview');
+
+    expect(nestedPreview).toBeUndefined();
   });
 });

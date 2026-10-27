@@ -104,6 +104,8 @@ export class TemplateCatalogue {
 
   /** Opens the dedicated preview page for a real catalogue template id. */
   protected openPreview(templateId: string): void {
-    void this.router.navigate(['/templates', templateId, 'preview']);
+    void this.router.navigate(['/templates', templateId, 'preview'], {
+      queryParams: { from: 'catalogue' }
+    });
   }
 }

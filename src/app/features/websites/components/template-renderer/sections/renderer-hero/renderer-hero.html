@@ -19,7 +19,19 @@
 
     @if (content().primaryActionLabel) {
       @if (mode() === 'full') {
-        <button type="button" class="tpl-button">{{ content().primaryActionLabel }}</button>
+        <button
+          type="button"
+          class="tpl-button"
+          [disabled]="!hasMenu()"
+          [attr.title]="
+            hasMenu()
+              ? 'Scroll to the menu section'
+              : 'This template does not render a menu section'
+          "
+          (click)="onPrimaryAction()"
+        >
+          {{ content().primaryActionLabel }}
+        </button>
       } @else {
         <span class="tpl-button">{{ content().primaryActionLabel }}</span>
       }

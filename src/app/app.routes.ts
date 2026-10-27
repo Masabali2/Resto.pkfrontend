@@ -50,6 +50,18 @@ export const routes: Routes = [
       )
   },
   {
+    // Public URL so previews survive refreshes and deep links. The template
+    // data comes from the anonymous public catalogue endpoint
+    // (`GET api/v1/public/website-templates`), so signed-out visitors can
+    // browse a real preview without signing in.
+    path: 'templates/:id/preview',
+    title: 'Template Preview — Resto.pk',
+    loadComponent: () =>
+      import('./features/templates/pages/template-preview/template-preview').then(
+        m => m.TemplatePreview
+      )
+  },
+  {
     path: '',
     canActivate: [authGuard],
     loadComponent: () =>
@@ -92,32 +104,14 @@ export const routes: Routes = [
       },
       {
         path: 'templates',
-        children: [
-          {
-            path: '',
-            pathMatch: 'full',
-            title: 'Templates — Resto.pk',
-            canActivate: [permissionGuard],
-            data: { permission: 'Website.View' },
-            loadComponent: () =>
-              import('./features/templates/pages/template-catalogue/template-catalogue').then(
-                m => m.TemplateCatalogue
-              )
-          },
-          {
-            // Dedicated template preview page. The route parameter is the
-            // template id (GUID) used by CreateWebsiteRequest.websiteTemplateId.
-            path: ':id/preview',
-            pathMatch: 'full',
-            title: 'Template Preview — Resto.pk',
-            canActivate: [permissionGuard],
-            data: { permission: 'Website.View' },
-            loadComponent: () =>
-              import('./features/templates/pages/template-preview/template-preview').then(
-                m => m.TemplatePreview
-              )
-          }
-        ]
+        pathMatch: 'full',
+        title: 'Templates — Resto.pk',
+        canActivate: [permissionGuard],
+        data: { permission: 'Website.View' },
+        loadComponent: () =>
+          import('./features/templates/pages/template-catalogue/template-catalogue').then(
+            m => m.TemplateCatalogue
+          )
       },
       {
         path: 'websites',

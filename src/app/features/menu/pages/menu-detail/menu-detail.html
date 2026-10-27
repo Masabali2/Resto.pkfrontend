@@ -1,39 +1,22 @@
 <div class="organizer">
-  <!-- Screen 4: Title & action bar -->
   <header class="organizer__topbar">
     <div class="organizer__heading">
-      <span class="organizer__heading-icon" aria-hidden="true">
-        <lucide-utensils-crossed />
-      </span>
+      <span class="organizer__heading-icon" aria-hidden="true"><i class="bi bi-egg-fried"></i></span>
       <div>
         <h1 class="organizer__title">Digital Menu &amp; Category Organizer</h1>
-        <p class="organizer__subtitle">
-          Re-order sections, toggle availability instantly, and calibrate prices in bulk.
-        </p>
+        <p class="organizer__subtitle">Re-order sections, toggle availability instantly, and calibrate prices in bulk.</p>
       </div>
     </div>
 
     @if (menu(); as currentMenu) {
       <div class="organizer__menu-actions">
-        <span
-          class="organizer__status"
-          [class]="'organizer__status organizer__status--' + currentMenu.status.toLowerCase()"
-        >
-          {{ currentMenu.status }}
-        </span>
+        <span class="organizer__status" [class]="'organizer__status organizer__status--' + currentMenu.status.toLowerCase()">{{ currentMenu.status }}</span>
         @if (canUpdateMenu() && !isArchived()) {
-          <button
-            type="button"
-            class="organizer__chip-btn"
-            (click)="setMenuActive(!currentMenu.isActive)"
-          >
-            <lucide-sparkles />
+          <button type="button" class="organizer__chip-btn" (click)="setMenuActive(!currentMenu.isActive)">
+            <i class="bi bi-stars" aria-hidden="true"></i>
             {{ currentMenu.isActive ? 'Deactivate menu' : 'Activate menu' }}
           </button>
-          <button type="button" class="organizer__chip-btn" (click)="editMenu()">
-            <lucide-edit3 />
-            Edit menu
-          </button>
+          <button type="button" class="organizer__chip-btn" (click)="editMenu()"><i class="bi bi-pencil-square" aria-hidden="true"></i> Edit menu</button>
         }
         @if (canUpdateMenu()) {
           <button app-button variant="outline" [disabled]="isArchived()" (click)="editMenu()">Edit Menu</button>
@@ -42,235 +25,99 @@
     }
   </header>
 
-  <!-- Global page states -->
   @switch (pageState()) {
-    @case ('loading') {
-      <div class="organizer__loading">
-        <app-loading-spinner />
-      </div>
-    }
+    @case ('loading') { <div class="organizer__loading"><app-loading-spinner /></div> }
     @case ('error') {
       <div class="organizer__notice organizer__notice--error" role="alert">
-        <lucide-alert-circle />
-        <span>{{ errorMessage() }}</span>
+        <i class="bi bi-exclamation-circle" aria-hidden="true"></i><span>{{ errorMessage() }}</span>
         <button type="button" class="organizer__chip-btn" (click)="retry()">Retry</button>
       </div>
     }
-    @case ('not-found') {
-      <div class="organizer__notice" role="alert">Menu not found.</div>
-    }
-    @case ('forbidden') {
-      <div class="organizer__notice" role="alert">
-        You do not have permission to view this menu.
-      </div>
-    }
-    @case ('no-workspace') {
-      <div class="organizer__notice" role="alert">No active workspace.</div>
-    }
+    @case ('not-found') { <div class="organizer__notice" role="alert">Menu not found.</div> }
+    @case ('forbidden') { <div class="organizer__notice" role="alert">You do not have permission to view this menu.</div> }
+    @case ('no-workspace') { <div class="organizer__notice" role="alert">No active workspace.</div> }
   }
 
   @if (errorMessage() && pageState() === 'list') {
     <div class="organizer__notice organizer__notice--error organizer__notice--dismissible" role="alert">
-      <lucide-alert-circle />
-      <span>{{ errorMessage() }}</span>
-      <button
-        type="button"
-        class="organizer__notice-close"
-        aria-label="Dismiss message"
-        (click)="errorMessage.set('')"
-      >
-        <lucide-x />
-      </button>
+      <i class="bi bi-exclamation-circle" aria-hidden="true"></i><span>{{ errorMessage() }}</span>
+      <button type="button" class="organizer__notice-close" aria-label="Dismiss message" (click)="errorMessage.set('')"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
     </div>
   }
 
   @if (pageState() === 'list' && menu(); as currentMenu) {
     @if (isArchived()) {
-      <div class="organizer__notice organizer__notice--warning">
-        <lucide-flame />
-        This menu is archived — the organizer is read-only.
-      </div>
+      <div class="organizer__notice organizer__notice--warning"><i class="bi bi-fire" aria-hidden="true"></i> This menu is archived — the organizer is read-only.</div>
     }
 
     <div class="organizer__grid">
-      <!-- Left rail: categories -->
       <aside class="panel panel--rail" aria-label="Menu categories">
         <div class="panel__head">
-          <div>
-            <h2 class="panel__title">Menu Categories</h2>
-            <p class="panel__hint">Select to manage · arrows re-order the sequence</p>
-          </div>
+          <div><h2 class="panel__title">Menu Categories</h2><p class="panel__hint">Select to manage · arrows re-order the sequence</p></div>
           <span class="panel__count">{{ categories().length }} total</span>
         </div>
 
         <ul class="rail">
           @for (category of categories(); track category.id; let idx = $index) {
-            <li
-              class="rail__item"
-              [class.rail__item--active]="activeCategory()?.id === category.id"
-              [class.rail__item--inactive]="!category.isActive"
-            >
-              <button
-                type="button"
-                class="rail__select"
-                (click)="selectCategory(category.id)"
-                [attr.aria-pressed]="activeCategory()?.id === category.id"
-              >
-                <lucide-grip-vertical class="rail__grip" aria-hidden="true" />
+            <li class="rail__item" [class.rail__item--active]="activeCategory()?.id === category.id" [class.rail__item--inactive]="!category.isActive">
+              <button type="button" class="rail__select" (click)="selectCategory(category.id)" [attr.aria-pressed]="activeCategory()?.id === category.id">
+                <i class="bi bi-grip-vertical rail__grip" aria-hidden="true"></i>
                 <span class="rail__name">{{ category.name }}</span>
                 <span class="rail__meta">({{ categoryPage(category.id)?.totalCount ?? '…' }})</span>
               </button>
-
               <div class="rail__controls">
-                <button
-                  type="button"
-                  class="icon-btn"
-                  title="Move up"
-                  aria-label="Move category up"
-                  [disabled]="!canManageCategories() || isReadOnly() || isFirstCategory(idx)"
-                  (click)="moveCategory(idx, 'up')"
-                >
-                  <lucide-arrow-up />
-                </button>
-                <button
-                  type="button"
-                  class="icon-btn"
-                  title="Move down"
-                  aria-label="Move category down"
-                  [disabled]="!canManageCategories() || isReadOnly() || isLastCategory(idx)"
-                  (click)="moveCategory(idx, 'down')"
-                >
-                  <lucide-arrow-down />
-                </button>
+                <button type="button" class="icon-btn" title="Move up" aria-label="Move category up" [disabled]="!canManageCategories() || isReadOnly() || isFirstCategory(idx)" (click)="moveCategory(idx, 'up')"><i class="bi bi-arrow-up" aria-hidden="true"></i></button>
+                <button type="button" class="icon-btn" title="Move down" aria-label="Move category down" [disabled]="!canManageCategories() || isReadOnly() || isLastCategory(idx)" (click)="moveCategory(idx, 'down')"><i class="bi bi-arrow-down" aria-hidden="true"></i></button>
               </div>
             </li>
           }
         </ul>
 
-        @if (categories().length === 0 && !isAddingCategory()) {
-          <p class="rail__empty">No categories yet — add the first section below.</p>
-        }
-
+        @if (categories().length === 0 && !isAddingCategory()) { <p class="rail__empty">No categories yet — add the first section below.</p> }
         @if (canCreateCategory() && !isReadOnly()) {
           @if (!isAddingCategory()) {
-            <button type="button" class="rail__add" (click)="startAddCategory()">
-              <lucide-plus />
-              Add new category
-            </button>
+            <button type="button" class="rail__add" (click)="startAddCategory()"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add new category</button>
           } @else {
             <form class="rail__form" (submit)="$event.preventDefault(); submitAddCategory()">
-              <input
-                type="text"
-                class="rail__input"
-                placeholder="e.g. Sizzling Skillets"
-                maxlength="150"
-                [value]="newCategoryName()"
-                (input)="onNewCategoryNameChange($any($event.target).value)"
-                aria-label="New category name"
-              />
+              <input type="text" class="rail__input" placeholder="e.g. Sizzling Skillets" maxlength="150" [value]="newCategoryName()" (input)="onNewCategoryNameChange($any($event.target).value)" aria-label="New category name" />
               <div class="rail__form-actions">
                 <button type="button" class="btn btn--ghost" (click)="cancelAddCategory()">Cancel</button>
-                <button
-                  type="submit"
-                  class="btn btn--primary"
-                  [disabled]="newCategoryName().trim().length === 0 || addingCategory()"
-                >
-                  {{ addingCategory() ? 'Saving…' : 'Save' }}
-                </button>
+                <button type="submit" class="btn btn--primary" [disabled]="newCategoryName().trim().length === 0 || addingCategory()">{{ addingCategory() ? 'Saving…' : 'Save' }}</button>
               </div>
             </form>
           }
         }
       </aside>
 
-      <!-- Right panel: items of the active category -->
       <section class="panel panel--items" aria-label="Menu items">
         <div class="panel__head panel__head--items">
           <div>
-            <h2 class="panel__title panel__title--lg">
-              Items in “{{ activeCategory()?.name ?? '—' }}”
-            </h2>
-            <p class="panel__hint">
-              {{ pluralize(activeItems().length, 'dish') }} loaded ·
-              {{ availableCount() }} available · {{ outOfStockCount() }} out of stock
-            </p>
+            <h2 class="panel__title panel__title--lg">Items in “{{ activeCategory()?.name ?? '—' }}”</h2>
+            <p class="panel__hint">{{ pluralize(activeItems().length, 'dish') }} loaded · {{ availableCount() }} available · {{ outOfStockCount() }} out of stock</p>
           </div>
-
           <div class="panel__toolbar">
             <div class="search">
-              <lucide-search aria-hidden="true" />
-              <input
-                type="text"
-                class="search__input"
-                placeholder="Search dishes…"
-                aria-label="Search dishes"
-                [value]="searchQuery()"
-                (input)="onSearchChange($any($event.target).value)"
-              />
-              @if (searchQuery()) {
-                <button type="button" class="search__clear" aria-label="Clear search" (click)="clearSearch()">
-                  <lucide-x />
-                </button>
-              }
+              <i class="bi bi-search" aria-hidden="true"></i>
+              <input type="text" class="search__input" placeholder="Search dishes…" aria-label="Search dishes" [value]="searchQuery()" (input)="onSearchChange($any($event.target).value)" />
+              @if (searchQuery()) { <button type="button" class="search__clear" aria-label="Clear search" (click)="clearSearch()"><i class="bi bi-x-lg" aria-hidden="true"></i></button> }
             </div>
-
             @if (canManageItems() && !isReadOnly()) {
-              <button
-                type="button"
-                class="btn btn--outline"
-                [disabled]="filteredItems().length === 0"
-                (click)="openBulkPriceDialog()"
-              >
-                <lucide-percent />
-                Bulk price adjustment
-              </button>
+              <button type="button" class="btn btn--outline" [disabled]="filteredItems().length === 0" (click)="openBulkPriceDialog()"><i class="bi bi-percent" aria-hidden="true"></i> Bulk price adjustment</button>
             }
-            @if (canCreateItem() && !isReadOnly()) {
-              <button type="button" class="btn btn--primary" (click)="createItem()">
-                <lucide-plus />
-                New menu item
-              </button>
-            }
+            @if (canCreateItem() && !isReadOnly()) { <button type="button" class="btn btn--primary" (click)="createItem()"><i class="bi bi-plus-lg" aria-hidden="true"></i> New menu item</button> }
           </div>
         </div>
 
-        <!-- Active category body -->
         @if (activeCategory(); as category) {
           @if (categoryError(category.id); as error) {
-            <div class="organizer__notice organizer__notice--error" role="alert">
-              <lucide-alert-circle />
-              <span>{{ error }}</span>
-              <button
-                type="button"
-                class="organizer__chip-btn"
-                (click)="loadCategoryItems(category.id, categoryPage(category.id)?.page ?? 1)"
-              >
-                Retry
-              </button>
-            </div>
+            <div class="organizer__notice organizer__notice--error" role="alert"><i class="bi bi-exclamation-circle" aria-hidden="true"></i><span>{{ error }}</span><button type="button" class="organizer__chip-btn" (click)="loadCategoryItems(category.id, categoryPage(category.id)?.page ?? 1)">Retry</button></div>
           }
-
-          @if (activeItemsLoading()) {
-            <div class="organizer__loading organizer__loading--inline">
-              <app-loading-spinner />
-            </div>
-          }
-
+          @if (activeItemsLoading()) { <div class="organizer__loading organizer__loading--inline"><app-loading-spinner /></div> }
           @if (filteredItems().length === 0 && !activeItemsLoading() && !categoryError(category.id)) {
             <div class="items__empty">
-              <lucide-layers aria-hidden="true" />
-              @if (searchQuery()) {
-                <p>No dishes match “{{ searchQuery() }}” in this section.</p>
-                <button type="button" class="btn btn--outline" (click)="clearSearch()">Clear search</button>
-              } @else {
-                <p>No menu items in this category yet.</p>
-                @if (canCreateItem() && !isReadOnly()) {
-                  <button type="button" class="btn btn--primary" (click)="createItem()">
-                    <lucide-plus />
-                    Add first item
-                  </button>
-                }
-              }
+              <i class="bi bi-layers" aria-hidden="true"></i>
+              @if (searchQuery()) { <p>No dishes match “{{ searchQuery() }}” in this section.</p><button type="button" class="btn btn--outline" (click)="clearSearch()">Clear search</button> }
+              @else { <p>No menu items in this category yet.</p>@if (canCreateItem() && !isReadOnly()) { <button type="button" class="btn btn--primary" (click)="createItem()"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add first item</button> } }
             </div>
           }
 
@@ -279,111 +126,34 @@
               <li class="item" [class.item--off]="!item.isAvailable">
                 <div class="item__main">
                   <span class="item__photo" aria-hidden="true">
-                    @if (item.imageFileId) {
-                      <img
-                        [src]="'/api/v1/files/' + item.imageFileId"
-                        [alt]="item.name"
-                        loading="lazy"
-                      />
-                    } @else {
-                      <lucide-image-off class="item__photo-placeholder" />
-                    }
+                    @if (item.imageFileId) { <img [src]="'/api/v1/files/' + item.imageFileId" [alt]="item.name" loading="lazy" /> }
+                    @else { <i class="bi bi-image item__photo-placeholder" aria-hidden="true"></i> }
                   </span>
-
                   <div class="item__body">
                     <div class="item__title-row">
                       <h3 class="item__name">{{ item.name }}</h3>
-                      @if (!item.isActive) {
-                        <span class="item__badge item__badge--hidden">Hidden</span>
-                      }
-                      @if (!item.isAvailable) {
-                        <span class="item__badge item__badge--out">Out of stock</span>
-                      } @else if (item.isActive) {
-                        <span class="item__badge item__badge--live">
-                          <svg lucideCheck [size]="12" [strokeWidth]="3" aria-hidden="true"></svg>
-                          Live
-                        </span>
-                      }
+                      @if (!item.isActive) { <span class="item__badge item__badge--hidden">Hidden</span> }
+                      @if (!item.isAvailable) { <span class="item__badge item__badge--out">Out of stock</span> }
+                      @else if (item.isActive) { <span class="item__badge item__badge--live"><i class="bi bi-check-lg" aria-hidden="true"></i> Live</span> }
                       <span class="item__order">#{{ item.displayOrder }}</span>
                     </div>
-                    @if (item.description) {
-                      <p class="item__description">{{ item.description }}</p>
-                    }
-                    <div class="item__price-row">
-                      <span class="item__price">{{ formatMoney(item.price) }}</span>
-                      <span class="item__currency">{{ item.currency }}</span>
-                    </div>
+                    @if (item.description) { <p class="item__description">{{ item.description }}</p> }
+                    <div class="item__price-row"><span class="item__price">{{ formatMoney(item.price) }}</span><span class="item__currency">{{ item.currency }}</span></div>
                   </div>
                 </div>
 
                 <div class="item__controls">
                   <div class="toggle-group">
-                    <span class="toggle-group__label">
-                      {{ item.isAvailable ? 'Available' : 'Out of Stock' }}
-                    </span>
-                    <button
-                      type="button"
-                      role="switch"
-                      [attr.aria-checked]="item.isAvailable"
-                      class="toggle"
-                      [class.toggle--on]="item.isAvailable"
-                      [disabled]="!canManageItems() || isReadOnly() || isTogglePending(item.id)"
-                      [title]="item.isAvailable ? 'Mark out of stock' : 'Mark available'"
-                      (click)="toggleItemAvailability(item)"
-                    >
-                      <span class="toggle__thumb"></span>
-                    </button>
-                    @if (isTogglePending(item.id)) {
-                      <span class="toggle-group__pending" aria-live="polite">Saving…</span>
-                    }
+                    <span class="toggle-group__label">{{ item.isAvailable ? 'Available' : 'Out of Stock' }}</span>
+                    <button type="button" role="switch" [attr.aria-checked]="item.isAvailable" class="toggle" [class.toggle--on]="item.isAvailable" [disabled]="!canManageItems() || isReadOnly() || isTogglePending(item.id)" [title]="item.isAvailable ? 'Mark out of stock' : 'Mark available'" (click)="toggleItemAvailability(item)"><span class="toggle__thumb"></span></button>
+                    @if (isTogglePending(item.id)) { <span class="toggle-group__pending" aria-live="polite">Saving…</span> }
                   </div>
-
                   <div class="item__actions">
-                    <button
-                      type="button"
-                      class="icon-btn"
-                      [title]="item.isActive ? 'Hide from menu' : 'Show on menu'"
-                      [disabled]="!canManageItems() || isReadOnly()"
-                      (click)="toggleItemActive(item)"
-                    >
-                      <lucide-tag />
-                    </button>
-                    <button
-                      type="button"
-                      class="icon-btn"
-                      title="Edit dish"
-                      [disabled]="!canManageItems()"
-                      (click)="editItem(item)"
-                    >
-                      <lucide-edit3 />
-                    </button>
-                    <button
-                      type="button"
-                      class="icon-btn icon-btn--danger"
-                      title="Delete dish"
-                      [disabled]="!canDeleteItem() || isReadOnly()"
-                      (click)="openDeleteItemDialog(item)"
-                    >
-                      <lucide-trash2 />
-                    </button>
-                    <button
-                      type="button"
-                      class="icon-btn"
-                      title="Move up"
-                      [disabled]="!canManageItems() || isReadOnly() || isFirstItem(idx)"
-                      (click)="moveItem(idx, 'up')"
-                    >
-                      <lucide-arrow-up />
-                    </button>
-                    <button
-                      type="button"
-                      class="icon-btn"
-                      title="Move down"
-                      [disabled]="!canManageItems() || isReadOnly() || isLastItem(idx)"
-                      (click)="moveItem(idx, 'down')"
-                    >
-                      <lucide-arrow-down />
-                    </button>
+                    <button type="button" class="icon-btn" [title]="item.isActive ? 'Hide from menu' : 'Show on menu'" [disabled]="!canManageItems() || isReadOnly()" (click)="toggleItemActive(item)"><i class="bi bi-tag" aria-hidden="true"></i></button>
+                    <button type="button" class="icon-btn" title="Edit dish" [disabled]="!canManageItems()" (click)="editItem(item)"><i class="bi bi-pencil-square" aria-hidden="true"></i></button>
+                    <button type="button" class="icon-btn icon-btn--danger" title="Delete dish" [disabled]="!canDeleteItem() || isReadOnly()" (click)="openDeleteItemDialog(item)"><i class="bi bi-trash3" aria-hidden="true"></i></button>
+                    <button type="button" class="icon-btn" title="Move up" [disabled]="!canManageItems() || isReadOnly() || isFirstItem(idx)" (click)="moveItem(idx, 'up')"><i class="bi bi-arrow-up" aria-hidden="true"></i></button>
+                    <button type="button" class="icon-btn" title="Move down" [disabled]="!canManageItems() || isReadOnly() || isLastItem(idx)" (click)="moveItem(idx, 'down')"><i class="bi bi-arrow-down" aria-hidden="true"></i></button>
                   </div>
                 </div>
               </li>
@@ -393,75 +163,34 @@
           @if (categoryPage(category.id); as page) {
             @if (totalPages(category.id) > 1) {
               <div class="items__pager">
-                <button
-                  type="button"
-                  class="btn btn--outline"
-                  [disabled]="page.page <= 1 || activeItemsLoading()"
-                  (click)="loadCategoryItems(category.id, page.page - 1)"
-                >
-                  Previous
-                </button>
-                <span class="items__pager-label">
-                  Page {{ page.page }} of {{ totalPages(category.id) }} · {{ page.totalCount }} items
-                </span>
-                <button
-                  type="button"
-                  class="btn btn--outline"
-                  [disabled]="page.page * page.pageSize >= page.totalCount || activeItemsLoading()"
-                  (click)="loadCategoryItems(category.id, page.page + 1)"
-                >
-                  Next
-                </button>
+                <button type="button" class="btn btn--outline" [disabled]="page.page <= 1 || activeItemsLoading()" (click)="loadCategoryItems(category.id, page.page - 1)">Previous</button>
+                <span class="items__pager-label">Page {{ page.page }} of {{ totalPages(category.id) }} · {{ page.totalCount }} items</span>
+                <button type="button" class="btn btn--outline" [disabled]="page.page * page.pageSize >= page.totalCount || activeItemsLoading()" (click)="loadCategoryItems(category.id, page.page + 1)">Next</button>
               </div>
             }
           }
         } @else {
-          <div class="items__empty">
-            <lucide-layers aria-hidden="true" />
-            <p>Create a category to start building the digital menu.</p>
-          </div>
+          <div class="items__empty"><i class="bi bi-layers" aria-hidden="true"></i><p>Create a category to start building the digital menu.</p></div>
         }
       </section>
     </div>
 
-    <!-- Other sections, quick-jump -->
     @if (orderedCategories().length > 1) {
       <nav class="sections" aria-label="Jump to section">
         <span class="sections__label">Other sections</span>
         <div class="sections__chips">
           @for (category of orderedCategories().slice(1); track category.id) {
-            <button
-              type="button"
-              class="sections__chip"
-              [class.sections__chip--inactive]="!category.isActive"
-              (click)="selectCategory(category.id)"
-            >
-              <lucide-grip-vertical aria-hidden="true" />
-              {{ category.name }}
-              <span class="sections__chip-count">
-                {{ categoryPage(category.id)?.totalCount ?? '…' }}
-              </span>
+            <button type="button" class="sections__chip" [class.sections__chip--inactive]="!category.isActive" (click)="selectCategory(category.id)">
+              <i class="bi bi-grip-vertical" aria-hidden="true"></i>{{ category.name }}
+              <span class="sections__chip-count">{{ categoryPage(category.id)?.totalCount ?? '…' }}</span>
             </button>
           }
         </div>
       </nav>
     }
 
-    <app-bulk-price-dialog
-      [open]="bulkPriceOpen()"
-      [items]="filteredItems()"
-      [categoryName]="activeCategory()?.name ?? ''"
-      (closed)="closeBulkPriceDialog()"
-      (applied)="onBulkPricesApplied()"
-    />
+    <app-bulk-price-dialog [open]="bulkPriceOpen()" [items]="filteredItems()" [categoryName]="activeCategory()?.name ?? ''" (closed)="closeBulkPriceDialog()" (applied)="onBulkPricesApplied()" />
   }
 
-  <app-confirmation-dialog
-    [open]="dialogOpen()"
-    [title]="dialogKind() === 'category' ? 'Delete category' : 'Delete item'"
-    [message]="dialogConfirmMessage()"
-    [confirmLabel]="'Delete'"
-    (confirmed)="confirmDialog()"
-    (cancelled)="cancelDialog()"
-  ></app-confirmation-dialog>
+  <app-confirmation-dialog [open]="dialogOpen()" [title]="dialogKind() === 'category' ? 'Delete category' : 'Delete item'" [message]="dialogConfirmMessage()" [confirmLabel]="'Delete'" (confirmed)="confirmDialog()" (cancelled)="cancelDialog()"></app-confirmation-dialog>
 </div>

@@ -1,15 +1,50 @@
-
 <section id="hero" class="hero-section" aria-labelledby="hero-title">
-  
+  <!-- Dynamic Ambient Decorative Backdrop with glowing nodes and orbit paths -->
   <div class="hero-backdrop" aria-hidden="true">
-    <svg class="hero-contours" focusable="false" viewBox="0 0 1440 640" preserveAspectRatio="none">
-      <path d="M-40 120 C 320 40 720 200 1120 110 S 1500 60 1520 130" />
-      <path d="M-40 260 C 360 180 760 340 1160 250 S 1500 200 1520 270" />
-      <path d="M-40 420 C 340 340 740 500 1140 410 S 1500 360 1520 430" />
+    <svg class="hero-orbits" viewBox="0 0 1440 760" fill="none" preserveAspectRatio="none">
+      <!-- Ambient orbital curves -->
+      <path class="orbit-path orbit-path--1" d="M 680,180 C 880,70 1150,90 1380,220 C 1480,280 1540,400 1520,520" />
+      <path class="orbit-path orbit-path--2" d="M 720,380 C 920,230 1200,250 1420,440" />
+      <path class="orbit-path orbit-path--3" d="M 580,540 C 820,410 1080,580 1320,500" />
+      
+      <!-- Glowing Connection Nodes -->
+      <g class="orbit-node node-1">
+        <circle cx="850" cy="130" r="14" fill="rgba(240, 90, 36, 0.12)" />
+        <circle cx="850" cy="130" r="4.5" fill="#f05a24" />
+      </g>
+      <g class="orbit-node node-2">
+        <circle cx="1090" cy="115" r="16" fill="rgba(240, 90, 36, 0.14)" />
+        <circle cx="1090" cy="115" r="5" fill="#f05a24" />
+      </g>
+      <g class="orbit-node node-3">
+        <circle cx="690" cy="450" r="14" fill="rgba(240, 90, 36, 0.14)" />
+        <circle cx="690" cy="450" r="4.5" fill="#f05a24" />
+      </g>
+      <g class="orbit-node node-4">
+        <circle cx="1020" cy="540" r="18" fill="rgba(240, 90, 36, 0.12)" />
+        <circle cx="1020" cy="540" r="5.5" fill="#f05a24" />
+      </g>
+      <g class="orbit-node node-5">
+        <circle cx="1360" cy="350" r="12" fill="rgba(255, 255, 255, 0.8)" />
+        <circle cx="1360" cy="350" r="4" fill="#f05a24" />
+      </g>
     </svg>
+
+    <!-- Floating blurred Resto brand tiles creating photographic depth-of-field -->
+    <div class="bokeh-tile bokeh-tile--1" aria-hidden="true">
+      <span class="bokeh-logo">R</span>
+    </div>
+    <div class="bokeh-tile bokeh-tile--2" aria-hidden="true">
+      <span class="bokeh-logo">R</span>
+    </div>
+    <div class="bokeh-tile bokeh-tile--3" aria-hidden="true">
+      <span class="bokeh-logo">R</span>
+    </div>
+    <div class="glow-orb glow-orb--center" aria-hidden="true"></div>
   </div>
 
   <div class="section-inner">
+    <!-- Left Column: Copy & CTAs -->
     <div class="hero-content">
       <p class="hero-eyebrow" [style.--hero-delay]="'0ms'">
         <span class="eyebrow-dot" aria-hidden="true"></span>
@@ -20,7 +55,7 @@
         <span class="title-line" [style.--hero-delay]="'90ms'">Your Restaurant</span>
         <span class="title-line" [style.--hero-delay]="'190ms'">Deserves a</span>
         <span class="title-line accent-line" [style.--hero-delay]="'290ms'">
-          <span class="accent-word">Beautiful Website</span>
+          <span class="accent-word">Beautiful Website.</span>
           <svg class="accent-underline" aria-hidden="true" focusable="false" viewBox="0 0 300 14" preserveAspectRatio="none">
             <path d="M4 9 C 70 3, 150 12, 220 5 S 292 8, 296 7" />
           </svg>
@@ -57,82 +92,155 @@
       </ul>
     </div>
 
+    <!-- Right Column: 3D Showcase matching Image 2 exactly -->
     <div
       class="hero-showcase"
       [style.--hero-delay]="'260ms'"
       role="img"
-      aria-label="Illustrative preview of a restaurant website on desktop and mobile, featuring a restaurant menu and featured dish."
+      aria-label="Interactive preview of Spice Garden restaurant website with featured live menu"
     >
       <div class="showcase-glow" aria-hidden="true"></div>
 
-      <div class="mockup-frame">
+      <!-- 3D Perspective Isometric Browser Container -->
+      <div class="perspective-stage">
         <div class="browser-window">
+          <!-- Top Window Navigation Bar with Mac Dots & Address -->
           <div class="browser-bar" aria-hidden="true">
             <div class="dots-wrapper">
               <span class="browser-dot dot-red"></span>
               <span class="browser-dot dot-yellow"></span>
               <span class="browser-dot dot-green"></span>
             </div>
-            <div class="browser-address">spice-garden.example</div>
+            <div class="browser-address">
+              <span class="address-text">spice-garden.example</span>
+            </div>
           </div>
 
+          <!-- Browser Inner Website Content -->
           <div class="browser-body">
+            <!-- Restaurant Website Header -->
             <header class="site-header">
-              <span class="site-brand">Spice Garden</span>
+              <div class="site-brand">Spice Garden</div>
               <nav class="site-nav" aria-hidden="true">
-                <span>Menu</span>
-                <span>Navigation ▾</span>
-                <span>Pricing</span>
-                <span>Contact</span>
-                <span class="btn-book-table">Book Table</span>
+                <span class="site-nav-link site-nav-link--active">Menu</span>
+                <span class="site-nav-link">Navigation <span class="nav-arrow">▾</span></span>
+                <span class="site-nav-link">Pricing</span>
+                <span class="site-nav-link">Contact</span>
+                <button type="button" class="btn-book-table">Book Table</button>
               </nav>
             </header>
 
+            <!-- Hero Food Showcase Image Container -->
             <div class="site-photo-container">
               <img
                 src="assets/images/hero-food-preview.jpg"
-                alt=""
+                alt="Sizzling Chicken Karahi served at Spice Garden restaurant"
                 width="1200"
-                height="900"
+                height="800"
                 loading="eager"
                 decoding="async"
               />
 
-              <div class="floating-tag tag-special" aria-hidden="true">
+              <!-- Floating Tag: Top Left "Today's Special" -->
+              <div class="floating-tag float-card tag-special" aria-hidden="true">
                 Today's Special
               </div>
-              <div class="floating-tag tag-fresh" aria-hidden="true">
-                <span class="dot-orange">●</span> Fresh Food
+
+              <!-- Floating Tag: Top Right "4.9 ⭐ Rating" -->
+              <div class="floating-tag float-card tag-rating" aria-hidden="true">
+                <span class="rating-val">4.9</span>
+                <span class="rating-star">⭐</span>
+                <span class="rating-text">Rating</span>
+              </div>
+
+              <!-- Floating Tag: Bottom Left "🍊 Fresh Food" -->
+              <div class="floating-tag float-card tag-fresh" aria-hidden="true">
+                <span class="fresh-food-icon">🍊</span>
+                <span class="fresh-food-text">Fresh Food</span>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="phone-frame" aria-hidden="true">
-        <div class="phone-notch"></div>
-        <div class="phone-screen">
-          <span class="phone-brand">Spice Garden</span>
-          <span class="phone-photo"></span>
-          <span class="phone-line line-lg"></span>
-          <span class="phone-line line-sm"></span>
-          <span class="phone-item"><span>Chicken Karahi</span><span>Rs. 780</span></span>
-          <span class="phone-item"><span>Butter Naan</span><span>Rs. 120</span></span>
-          <span class="phone-cta">View full menu</span>
-        </div>
-      </div>
+        <!-- Overlapping 3D Floating Menu Card on Bottom Right -->
+        <aside class="floating-menu-card" aria-label="Featured Menu Preview">
+          <ul class="floating-menu-list">
+            <!-- Item 1: Chicken Karahi -->
+            <li class="menu-item-row menu-item-row--highlight">
+              <div class="menu-item-thumb">
+                <img
+                  src="assets/images/dish-chicken-karahi.jpg"
+                  alt="Chicken Karahi dish"
+                  width="50"
+                  height="50"
+                  loading="lazy"
+                />
+              </div>
+              <div class="menu-item-info">
+                <h4 class="menu-item-title">Chicken Karahi</h4>
+                <p class="menu-item-price-sub">Rs. 780</p>
+              </div>
+              <div class="menu-item-action-wrap">
+                <button type="button" class="menu-item-badge-btn" aria-label="Order Chicken Karahi for Rs. 780">
+                  Rs. 780
+                </button>
+                <!-- Hand pointer cursor simulating live customer interaction -->
+                <div class="cursor-pointer" aria-hidden="true">
+                  <svg class="hand-icon" viewBox="0 0 24 24" fill="none" stroke="#1e293b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/>
+                    <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v6"/>
+                    <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/>
+                    <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>
+                  </svg>
+                </div>
+              </div>
+            </li>
 
-      <div class="float-card float-dish" aria-hidden="true">
-        <span class="dish-swatch">🍲</span>
-        <span class="float-copy">
-          <strong>Today's Special</strong>
-          <small>Chicken Karahi · Rs. 780</small>
-        </span>
-      </div>
+            <!-- Item 2: Butter Naan -->
+            <li class="menu-item-row">
+              <div class="menu-item-thumb">
+                <img
+                  src="assets/images/dish-butter-naan.jpg"
+                  alt="Butter Naan"
+                  width="50"
+                  height="50"
+                  loading="lazy"
+                />
+              </div>
+              <div class="menu-item-info">
+                <h4 class="menu-item-title">Butter Naan</h4>
+                <p class="menu-item-price-sub">Rs. 120</p>
+              </div>
+              <div class="menu-item-action-wrap">
+                <button type="button" class="menu-item-badge-btn" aria-label="Order Butter Naan for Rs. 120">
+                  Rs. 120
+                </button>
+              </div>
+            </li>
 
-      <div class="float-card float-chip" aria-hidden="true">
-        <span class="chip-sparkle">✦</span>
-        <strong>Your brand, online</strong>
+            <!-- Item 3: Mango Lassi -->
+            <li class="menu-item-row">
+              <div class="menu-item-thumb">
+                <img
+                  src="assets/images/dish-mango-lassi.jpg"
+                  alt="Mango Lassi"
+                  width="50"
+                  height="50"
+                  loading="lazy"
+                />
+              </div>
+              <div class="menu-item-info">
+                <h4 class="menu-item-title">Mango Lassi</h4>
+                <p class="menu-item-price-sub">Rs. 250</p>
+              </div>
+              <div class="menu-item-action-wrap">
+                <button type="button" class="menu-item-badge-btn" aria-label="Order Mango Lassi for Rs. 250">
+                  Rs. 250
+                </button>
+              </div>
+            </li>
+          </ul>
+        </aside>
       </div>
     </div>
   </div>

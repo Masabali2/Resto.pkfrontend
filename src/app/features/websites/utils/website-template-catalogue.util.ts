@@ -1,5 +1,5 @@
 import type { WebsiteTemplateCatalogueItem } from '../models/website-template-catalogue.model';
-import type { WebsiteTemplateDto } from '../models/website-template.model';
+import type { PublicWebsiteTemplateDto } from '../models/website-template.model';
 import { parseWebsiteTemplateDesign } from './website-template-design.util';
 
 /**
@@ -10,7 +10,9 @@ import { parseWebsiteTemplateDesign } from './website-template-design.util';
  * be read still appears in the gallery — it simply renders a safe fallback
  * and carries an actionable message.
  */
-export function buildCatalogueItem(template: WebsiteTemplateDto): WebsiteTemplateCatalogueItem {
+export function buildCatalogueItem<T extends PublicWebsiteTemplateDto>(
+  template: T
+): WebsiteTemplateCatalogueItem<T> {
   const parsed = parseWebsiteTemplateDesign(template.designConfigurationJson);
   const configuration = parsed.viewModel?.configuration ?? null;
 

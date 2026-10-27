@@ -103,7 +103,7 @@
   min-height: calc(110px * var(--tpl-scale));
 }
 
-@media (max-width: 640px) {
+@container (max-width: 640px) {
   .tpl-gallery-grid--grid,
   .tpl-gallery-grid--masonry {
     grid-template-columns: repeat(2, minmax(0, 1fr));

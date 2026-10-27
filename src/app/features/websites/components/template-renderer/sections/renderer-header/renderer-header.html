@@ -3,22 +3,54 @@
   [class.tpl-header--centered]="layout() === 'centered'"
   [class.tpl-header--left]="layout() === 'left'"
   [class.tpl-header--split]="layout() === 'split'"
+  (keydown.escape)="closeNav()"
 >
-  <span class="tpl-brand">{{ brandName() }}</span>
+  <div class="tpl-header-top">
+    <span class="tpl-brand">{{ brandName() }}</span>
 
-  <nav class="tpl-nav" aria-label="Restaurant sections">
-    @for (item of navItems(); track item.target) {
-      @if (mode() === 'full') {
-        <a class="tpl-nav-link" href="#{{ item.target }}">{{ item.label }}</a>
-      } @else {
-        <span class="tpl-nav-link">{{ item.label }}</span>
+    <nav
+      class="tpl-nav"
+      [class.tpl-nav--open]="navOpen()"
+      aria-label="Restaurant sections"
+    >
+      @for (item of navItems(); track item.target) {
+        @if (mode() === 'full') {
+          <a
+            class="tpl-nav-link"
+            href="#{{ item.target }}"
+            (click)="onNavClick($event, item.target)"
+          >
+            {{ item.label }}
+          </a>
+        } @else {
+          <span class="tpl-nav-link">{{ item.label }}</span>
+        }
       }
-    }
-  </nav>
+    </nav>
 
-  @if (mode() === 'full') {
-    <button type="button" class="tpl-pill">Order</button>
-  } @else {
-    <span class="tpl-pill">Order</span>
-  }
+    @if (mode() === 'full') {
+      <button
+        type="button"
+        class="tpl-pill"
+        disabled
+        title="Online ordering is not available in this template preview"
+      >
+        Order
+      </button>
+
+      <button
+        type="button"
+        class="tpl-nav-toggle"
+        [attr.aria-expanded]="navOpen()"
+        [attr.aria-label]="
+          navOpen() ? 'Close section navigation' : 'Open section navigation'
+        "
+        (click)="toggleNav()"
+      >
+        {{ navOpen() ? 'Close' : 'Menu' }}
+      </button>
+    } @else {
+      <span class="tpl-pill">Order</span>
+    }
+  </div>
 </header>

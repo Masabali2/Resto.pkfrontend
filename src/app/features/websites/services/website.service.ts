@@ -4,7 +4,10 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import type { ApiResponse } from '../../../core/models/api-response.model';
 import type { WebsiteDraftDto } from '../models/website-draft.model';
-import type { WebsiteTemplateDto } from '../models/website-template.model';
+import type {
+  PublicWebsiteTemplateDto,
+  WebsiteTemplateDto
+} from '../models/website-template.model';
 import type {
   CreateWebsiteRequest,
   SaveWebsiteDraftRequest,
@@ -22,6 +25,21 @@ export class WebsiteService {
   getTemplates(): Observable<ApiResponse<WebsiteTemplateDto[]>> {
     return this.http.get<ApiResponse<WebsiteTemplateDto[]>>(
       `${this.apiUrl}/templates`
+    );
+  }
+
+  /**
+   * Anonymous public catalogue for the marketing site.
+   *
+   * Verified against `PublicWebsiteTemplatesController`:
+   * GET api/v1/public/website-templates. It is `[AllowAnonymous]`, returns
+   * active templates only and projects just the public fields, so the
+   * showcase and preview never depend on a signed-in tenant. The tenant
+   * catalogue above stays on the protected endpoint.
+   */
+  getPublicTemplates(): Observable<ApiResponse<PublicWebsiteTemplateDto[]>> {
+    return this.http.get<ApiResponse<PublicWebsiteTemplateDto[]>>(
+      `${environment.apiUrl}/v1/public/website-templates`
     );
   }
 

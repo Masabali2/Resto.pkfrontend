@@ -291,7 +291,9 @@ describe('TemplateCatalogue', () => {
     previewButton!.click();
     fixture.detectChanges();
 
-    expect(navigateSpy).toHaveBeenCalledWith(['/templates', 't1', 'preview']);
+    expect(navigateSpy).toHaveBeenCalledWith(['/templates', 't1', 'preview'], {
+      queryParams: { from: 'catalogue' }
+    });
   });
 
   it('uses the same preview navigation when the card itself is selected', async () => {
@@ -309,6 +311,8 @@ describe('TemplateCatalogue', () => {
     selectButton!.click();
     fixture.detectChanges();
 
-    expect(navigateSpy).toHaveBeenCalledWith(['/templates', 't1', 'preview']);
+    expect(navigateSpy).toHaveBeenCalledWith(['/templates', 't1', 'preview'], {
+      queryParams: { from: 'catalogue' }
+    });
   });
 });

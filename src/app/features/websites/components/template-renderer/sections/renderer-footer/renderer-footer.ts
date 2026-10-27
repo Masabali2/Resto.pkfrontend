@@ -1,7 +1,9 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   computed,
+  inject,
   input
 } from '@angular/core';
 import type {
@@ -9,6 +11,7 @@ import type {
   TemplateSectionType,
   WebsiteTemplateDesignViewModel
 } from '../../../../models/website-template-design.model';
+import { scrollToTemplateSection } from '../../../../utils/template-section-navigation.util';
 
 interface FooterLink {
   label: string;
@@ -17,7 +20,8 @@ interface FooterLink {
 
 /**
  * Footer section of the generic renderer. The arrangement comes from
- * `layout.footer`.
+ * `layout.footer`. In `full` mode its links scroll to the rendered sections,
+ * matching the header navigation.
  */
 @Component({
   selector: 'app-renderer-footer',
@@ -27,6 +31,8 @@ interface FooterLink {
   styleUrl: './renderer-footer.css'
 })
 export class RendererFooter {
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
   readonly viewModel = input.required<WebsiteTemplateDesignViewModel>();
   readonly mode = input<TemplateRendererMode>('card');
   readonly brandName = input('Your Restaurant');
@@ -47,4 +53,10 @@ export class RendererFooter {
 
     return candidates.filter(link => enabled.has(link.target));
   });
+
+  protected onLinkClick(event: Event, target: TemplateSectionType): void {
+    if (scrollToTemplateSection(this.host.nativeElement, target)) {
+      event.preventDefault();
+    }
+  }
 }

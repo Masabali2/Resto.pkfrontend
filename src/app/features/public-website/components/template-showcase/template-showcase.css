@@ -45,7 +45,7 @@
   line-height: 1.65;
 }
 
-/* ---------- Animated template card grid ---------- */
+/* ---------- Card grid ---------- */
 
 .templates-grid {
   display: grid;
@@ -62,15 +62,295 @@
 
 .templates-grid-revealed .templates-grid-item {
   visibility: visible;
+  animation: tpl-reveal 460ms ease both;
+}
+
+@keyframes tpl-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.tpl-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    transform var(--transition-base);
+}
+
+.tpl-card:hover {
+  border-color: var(--resto-orange-soft);
+  box-shadow: var(--shadow-dropdown);
+  transform: translateY(-3px);
+}
+
+.tpl-card:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-focus-ring), var(--shadow-sm);
+}
+
+/* ---------- Rendered template thumbnail ---------- */
+
+.tpl-media {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 210px;
+  flex-shrink: 0;
+  padding: 0;
+  overflow: hidden;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-secondary);
+  cursor: pointer;
+  text-align: left;
+}
+
+.tpl-media:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 3px var(--color-primary);
+}
+
+.tpl-frame {
+  display: block;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.tpl-frame app-template-renderer {
+  display: block;
+  height: 100%;
+}
+
+.tpl-media-fallback {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-surface-secondary));
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: 650;
+}
+
+.tpl-media-mark {
+  width: 42px;
+  height: 42px;
+  border: 2px dashed var(--color-input-hover-border);
+  border-radius: 50%;
+}
+
+.tpl-category-pill {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  max-width: calc(100% - 24px);
+  overflow: hidden;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 2px 8px rgb(15 23 42 / 14%);
+  color: var(--color-primary-hover);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tpl-media-hint {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  background: rgb(30 41 59 / 82%);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.tpl-media:hover .tpl-media-hint,
+.tpl-media:focus-visible .tpl-media-hint {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- Card body ---------- */
+
+.tpl-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 1rem 1.1rem 1.15rem;
+}
+
+.tpl-title-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tpl-name {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.02rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.tpl-featured {
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-hover);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tpl-desc {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.tpl-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.65rem;
+}
+
+/* ---------- Loading / empty / error states ---------- */
+
+.templates-status {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.tpl-card-skeleton {
+  pointer-events: none;
+}
+
+.tpl-skeleton-media {
+  height: 210px;
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-secondary) 25%,
+    #e9eef5 50%,
+    var(--color-surface-secondary) 75%
+  );
+  background-size: 200% 100%;
+  animation: tpl-skeleton-sweep 1.4s ease-in-out infinite;
+}
+
+.tpl-skeleton-body {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+}
+
+.tpl-skeleton-line {
+  height: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-secondary);
+}
+
+.tpl-skeleton-line-short {
+  width: 58%;
+}
+
+.templates-state {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  max-width: 44rem;
+  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface-secondary);
+}
+
+.templates-state-error {
+  border-color: var(--color-danger-border);
+  background: var(--color-danger-soft);
+}
+
+.templates-state-title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.templates-state-text {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+}
+
+.templates-state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 0.35rem;
 }
 
 .templates-note {
   max-width: 46rem;
-  margin: 0 0 2.5rem;
+  margin: 1rem 0 0;
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
   line-height: 1.6;
 }
+
+@keyframes tpl-skeleton-sweep {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ---------- Responsive ---------- */
 
 @media (max-width: 1023px) {
   .templates-grid {
@@ -79,13 +359,35 @@
 }
 
 @media (max-width: 639px) {
+  .templates-section {
+    padding: 3rem 1.1rem;
+  }
+
   .templates-grid {
     grid-template-columns: 1fr;
+  }
+
+  .tpl-media {
+    height: 190px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .templates-grid-revealed .templates-grid-item {
     visibility: visible;
+    animation: none;
+  }
+
+  .tpl-card,
+  .tpl-media-hint {
+    transition: none;
+  }
+
+  .tpl-card:hover {
+    transform: none;
+  }
+
+  .tpl-skeleton-media {
+    animation: none;
   }
 }

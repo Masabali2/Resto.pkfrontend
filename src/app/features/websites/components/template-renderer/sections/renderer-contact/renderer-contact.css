@@ -58,7 +58,7 @@
   font-size: calc(13px * var(--tpl-scale));
 }
 
-@media (max-width: 640px) {
+@container (max-width: 640px) {
   .tpl-contact {
     grid-template-columns: 1fr;
   }

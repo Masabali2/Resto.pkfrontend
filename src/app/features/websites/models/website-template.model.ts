@@ -19,3 +19,18 @@ export interface WebsiteTemplateDto {
    */
   designConfigurationJson: string | null;
 }
+
+/**
+ * Entry of the ANONYMOUS public template catalogue.
+ *
+ * Backend contract: `PublicWebsiteTemplateDto` returned by
+ * `GET api/v1/public/website-templates`. It is a strict subset of the tenant
+ * catalogue entry — only these five fields exist, because the endpoint must
+ * not expose administrative metadata (`isActive`, `createdAt`) or storage
+ * references (`previewImageFileId`). Display order, when present, lives inside
+ * `designConfigurationJson` and is read by the validated design parser.
+ */
+export type PublicWebsiteTemplateDto = Pick<
+  WebsiteTemplateDto,
+  'id' | 'name' | 'description' | 'templateKey' | 'designConfigurationJson'
+>;

@@ -67,6 +67,16 @@
   background: color-mix(in srgb, var(--tpl-primary) 86%, var(--tpl-text));
 }
 
+.tpl-button:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+.tpl-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
 /* ---------------- decorative visual ---------------- */
 
 .tpl-hero-visual {
@@ -193,7 +203,7 @@
   transform: translateY(calc(12px * var(--tpl-scale)));
 }
 
-@media (max-width: 640px) {
+@container (max-width: 640px) {
   .tpl-hero--split,
   .tpl-hero--asymmetric {
     grid-template-columns: 1fr;
