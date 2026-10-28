@@ -137,6 +137,21 @@
   transform: rotate(24deg);
 }
 
+/* ---------------- configured hero image ---------------- */
+
+.tpl-hero-visual--image {
+  background: var(--tpl-surface);
+}
+
+.tpl-hero-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
 /* ---------------- variants ---------------- */
 
 .tpl-hero--split {

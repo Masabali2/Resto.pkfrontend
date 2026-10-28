@@ -172,4 +172,59 @@ describe('TemplatePickerCard', () => {
 
     expect(el('.picker-featured')).toBeTruthy();
   });
+
+  it('renders the hero image that ships in the template design configuration', () => {
+    const document = JSON.parse(DESIGN);
+
+    document.design.sections = [{ type: 'hero', enabled: true, order: 1 }];
+    document.assets = [
+      {
+        assetId: 'sg-hero',
+        url: '/assets/images/SpiceGarden/spicegarden1.png',
+        alt: 'A shared feast on a linen table',
+        width: 2400,
+        height: 1792
+      }
+    ];
+    document.previewContent.heroAssetId = 'sg-hero';
+
+    const json = JSON.stringify(document);
+
+    fixture.componentRef.setInput('template', template({ designConfigurationJson: json }));
+    fixture.componentRef.setInput('design', parseWebsiteTemplateDesign(json).viewModel);
+    fixture.detectChanges();
+
+    const image = el<HTMLImageElement>('.picker-media app-renderer-hero img');
+
+    expect(image?.getAttribute('src')).toBe(
+      '/assets/images/SpiceGarden/spicegarden1.png'
+    );
+    expect(image?.getAttribute('alt')).toBe('A shared feast on a linen table');
+    expect(image?.getAttribute('width')).toBe('2400');
+    // Catalogue cards never compete with the page for bandwidth.
+    expect(image?.getAttribute('loading')).toBe('lazy');
+  });
+
+  it('never renders an image URL that is not a same-origin path', () => {
+    const document = JSON.parse(DESIGN);
+
+    document.design.sections = [{ type: 'hero', enabled: true, order: 1 }];
+    document.assets = [
+      {
+        assetId: 'sg-hero',
+        url: 'javascript:alert(1)',
+        alt: 'Injected image'
+      }
+    ];
+    document.previewContent.heroAssetId = 'sg-hero';
+
+    const json = JSON.stringify(document);
+
+    fixture.componentRef.setInput('template', template({ designConfigurationJson: json }));
+    fixture.componentRef.setInput('design', parseWebsiteTemplateDesign(json).viewModel);
+    fixture.detectChanges();
+
+    expect(el('.picker-media app-renderer-hero img')).toBeNull();
+    expect(el('.picker-fallback')).toBeNull();
+  });
 });

@@ -47,6 +47,19 @@
   background: color-mix(in srgb, var(--tpl-surface) 65%, transparent);
 }
 
+.tpl-about-visual--image {
+  background: var(--tpl-surface);
+}
+
+.tpl-about-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
 .tpl-eyebrow {
   margin-bottom: calc(6px * var(--tpl-scale));
   color: var(--tpl-accent);

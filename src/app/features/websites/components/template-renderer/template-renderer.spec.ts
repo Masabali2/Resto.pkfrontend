@@ -156,4 +156,234 @@ describe('TemplateRenderer', () => {
     expect(el('app-renderer-header')).toBeNull();
     expect(el('app-renderer-hero')).toBeNull();
   });
+
+  describe('configured images', () => {
+    const IMAGE_ASSETS = [
+      {
+        assetId: 'sg-hero',
+        url: '/assets/images/SpiceGarden/spicegarden1.png',
+        alt: 'A shared feast on a linen table',
+        width: 2400,
+        height: 1792
+      },
+      {
+        assetId: 'sg-about',
+        url: '/assets/images/SpiceGarden/spicegarden2.png',
+        alt: 'A chef garnishing a copper karahi',
+        width: 2400,
+        height: 1792
+      },
+      {
+        assetId: 'sg-gallery-first',
+        url: '/assets/images/SpiceGarden/spicegarden8.png',
+        alt: 'A softly lit dining room',
+        width: 2528,
+        height: 1696
+      },
+      {
+        assetId: 'sg-gallery-second',
+        url: '/assets/images/SpiceGarden/spicegarden3.png',
+        alt: 'Brass bowls of spices',
+        width: 2528,
+        height: 1696
+      }
+    ];
+
+    function imageDesign(): string {
+      const document = JSON.parse(DESIGN);
+
+      document.design.sections = [
+        { type: 'hero', enabled: true, order: 1 },
+        { type: 'about', enabled: true, order: 2 },
+        { type: 'gallery', enabled: true, order: 3 }
+      ];
+      document.assets = IMAGE_ASSETS;
+      document.previewContent = {
+        ...document.previewContent,
+        heroAssetId: 'sg-hero',
+        aboutAssetId: 'sg-about',
+        galleryAssetIds: ['sg-gallery-first', 'sg-gallery-second']
+      };
+
+      return JSON.stringify(document);
+    }
+
+    it('renders the hero, about and gallery images from the registry', () => {
+      render(imageDesign());
+
+      const hero = el<HTMLImageElement>('app-renderer-hero img');
+      const about = el<HTMLImageElement>('app-renderer-about img');
+      const gallery = Array.from(
+        fixture.nativeElement.querySelectorAll(
+          'app-renderer-gallery .tpl-gallery-tile--image img'
+        ) as NodeListOf<HTMLImageElement>
+      );
+
+      expect(hero?.getAttribute('src')).toBe(IMAGE_ASSETS[0].url);
+      expect(hero?.getAttribute('alt')).toBe(IMAGE_ASSETS[0].alt);
+      expect(hero?.getAttribute('width')).toBe('2400');
+      expect(hero?.getAttribute('height')).toBe('1792');
+
+      expect(about?.getAttribute('src')).toBe(IMAGE_ASSETS[1].url);
+      expect(about?.getAttribute('alt')).toBe(IMAGE_ASSETS[1].alt);
+
+      expect(gallery.map(image => image.getAttribute('src'))).toEqual([
+        IMAGE_ASSETS[2].url,
+        IMAGE_ASSETS[3].url
+      ]);
+      expect(gallery.map(image => image.getAttribute('alt'))).toEqual([
+        IMAGE_ASSETS[2].alt,
+        IMAGE_ASSETS[3].alt
+      ]);
+    });
+
+    it('loads the hero eagerly only in the full preview', () => {
+      render(imageDesign(), 'card');
+      const cardHero = el<HTMLImageElement>('app-renderer-hero img');
+
+      expect(cardHero?.getAttribute('loading')).toBe('lazy');
+      expect(cardHero?.getAttribute('fetchpriority')).toBeNull();
+
+      render(imageDesign(), 'full');
+      const fullHero = el<HTMLImageElement>('app-renderer-hero img');
+
+      expect(fullHero?.getAttribute('loading')).toBe('eager');
+      expect(fullHero?.getAttribute('fetchpriority')).toBe('high');
+    });
+
+    it('lazy-loads the about and gallery images', () => {
+      render(imageDesign(), 'full');
+
+      expect(el('app-renderer-about img')?.getAttribute('loading')).toBe('lazy');
+
+      const gallery = Array.from(
+        fixture.nativeElement.querySelectorAll(
+          'app-renderer-gallery .tpl-gallery-tile--image img'
+        ) as NodeListOf<HTMLImageElement>
+      );
+
+      expect(gallery.map(image => image.getAttribute('loading'))).toEqual([
+        'lazy',
+        'lazy'
+      ]);
+    });
+
+    it('restores the decorative hero visual when the hero image fails', () => {
+      render(imageDesign());
+
+      const hero = el<HTMLImageElement>('app-renderer-hero img');
+
+      expect(hero).toBeTruthy();
+      expect(el('app-renderer-hero .tpl-visual-plate')).toBeNull();
+
+      hero?.dispatchEvent(new Event('error'));
+      fixture.detectChanges();
+
+      expect(el('app-renderer-hero img')).toBeNull();
+      expect(el('app-renderer-hero .tpl-visual-plate')).toBeTruthy();
+      expect(el('app-renderer-hero .tpl-hero-visual--image')).toBeNull();
+    });
+
+    it('restores the decorative about visual when the about image fails', () => {
+      render(imageDesign());
+
+      el<HTMLImageElement>('app-renderer-about img')?.dispatchEvent(new Event('error'));
+      fixture.detectChanges();
+
+      expect(el('app-renderer-about img')).toBeNull();
+      expect(el('app-renderer-about .tpl-about-disc')).toBeTruthy();
+    });
+
+    it('removes only the failed gallery image and keeps the declared order', () => {
+      render(imageDesign());
+
+      const images = Array.from(
+        fixture.nativeElement.querySelectorAll(
+          'app-renderer-gallery .tpl-gallery-tile--image img'
+        ) as NodeListOf<HTMLImageElement>
+      );
+
+      images[0].dispatchEvent(new Event('error'));
+      fixture.detectChanges();
+
+      const remaining = Array.from(
+        fixture.nativeElement.querySelectorAll(
+          'app-renderer-gallery .tpl-gallery-tile--image img'
+        ) as NodeListOf<HTMLImageElement>
+      );
+
+      expect(remaining.map(image => image.getAttribute('src'))).toEqual([
+        IMAGE_ASSETS[3].url
+      ]);
+    });
+
+    it('falls back to the decorative gallery tiles when every image fails', () => {
+      render(imageDesign());
+
+      const images = Array.from(
+        fixture.nativeElement.querySelectorAll(
+          'app-renderer-gallery .tpl-gallery-tile--image img'
+        ) as NodeListOf<HTMLImageElement>
+      );
+
+      images.forEach(image => image.dispatchEvent(new Event('error')));
+      fixture.detectChanges();
+
+      expect(el('app-renderer-gallery img')).toBeNull();
+      expect(
+        fixture.nativeElement.querySelectorAll(
+          'app-renderer-gallery .tpl-gallery-tile:not(.tpl-gallery-tile--image)'
+        ).length
+      ).toBeGreaterThan(0);
+    });
+
+    it('renders a second template registry through the same resolver', () => {
+      const document = JSON.parse(DESIGN);
+      const assets = [
+        {
+          assetId: 'urban-slice-urban-slice1-png',
+          url: '/assets/images/Urban-Slice/urban-slice1.png',
+          alt: 'A slice of pepperoni pizza',
+          width: 1120,
+          height: 400
+        },
+        {
+          assetId: 'urban-slice-urban-slice2-png',
+          url: '/assets/images/Urban-Slice/urban-slice2.png',
+          alt: 'A crispy chicken burger',
+          width: 168,
+          height: 180
+        }
+      ];
+
+      document.design.sections = [
+        { type: 'hero', enabled: true, order: 1 },
+        { type: 'gallery', enabled: true, order: 2 }
+      ];
+      document.assets = assets;
+      document.previewContent = {
+        ...document.previewContent,
+        heroAssetId: 'urban-slice-urban-slice1-png',
+        galleryAssetIds: ['urban-slice-urban-slice2-png']
+      };
+
+      render(JSON.stringify(document));
+
+      expect(el<HTMLImageElement>('app-renderer-hero img')?.getAttribute('src')).toBe(
+        assets[0].url
+      );
+      expect(
+        el<HTMLImageElement>('app-renderer-gallery img')?.getAttribute('src')
+      ).toBe(assets[1].url);
+    });
+
+    it('renders no images for a template without an asset registry', () => {
+      render(DESIGN);
+
+      expect(el('app-renderer-hero img')).toBeNull();
+      expect(el('app-renderer-about img')).toBeNull();
+      expect(el('app-renderer-gallery img')).toBeNull();
+      expect(el('app-renderer-hero .tpl-visual-plate')).toBeTruthy();
+    });
+  });
 });

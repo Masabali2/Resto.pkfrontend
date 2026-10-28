@@ -4,7 +4,8 @@ import {
   ElementRef,
   computed,
   inject,
-  input
+  input,
+  signal
 } from '@angular/core';
 import type {
   TemplateRendererMode,
@@ -16,6 +17,11 @@ import { scrollToTemplateSection } from '../../../../utils/template-section-navi
  * Hero section of the generic renderer. Five allow-listed layout variants
  * (`split`, `centered`, `image-led`, `cinematic`, `asymmetric`) drive the
  * composition; the copy comes from the design configuration.
+ *
+ * When the configuration registers a hero asset, the section renders it from
+ * that reference. Templates without an asset registry keep the decorative
+ * palette-only visual, and a failed image load falls back to it instead of
+ * leaving a broken image in the preview.
  *
  * In `full` mode the configured primary action behaves like the real site's
  * "view the menu" link: it scrolls to the rendered menu section. When the
@@ -43,11 +49,23 @@ export class RendererHero {
     () => this.viewModel().configuration.previewContent
   );
 
+  protected readonly heroAsset = computed(() => this.viewModel().media.hero);
+
+  private readonly imageFailed = signal(false);
+
+  protected readonly showHeroImage = computed(
+    () => this.heroAsset() !== null && !this.imageFailed()
+  );
+
   protected readonly hasMenu = computed(
     () => this.viewModel().sections.some(section => section.type === 'menu')
   );
 
   protected onPrimaryAction(): void {
     scrollToTemplateSection(this.host.nativeElement, 'menu');
+  }
+
+  protected onImageError(): void {
+    this.imageFailed.set(true);
   }
 }

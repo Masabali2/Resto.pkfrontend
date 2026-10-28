@@ -38,9 +38,29 @@
     }
   </div>
 
-  <div class="tpl-hero-visual" aria-hidden="true">
-    <span class="tpl-visual-glow"></span>
-    <span class="tpl-visual-plate"></span>
-    <span class="tpl-visual-garnish"></span>
+  <div
+    class="tpl-hero-visual"
+    [class.tpl-hero-visual--image]="showHeroImage()"
+    [attr.aria-hidden]="showHeroImage() ? null : 'true'"
+  >
+    @if (showHeroImage()) {
+      @if (heroAsset(); as asset) {
+        <img
+          class="tpl-hero-image"
+          [src]="asset.url"
+          [alt]="asset.alt"
+          [attr.width]="asset.width"
+          [attr.height]="asset.height"
+          [attr.loading]="mode() === 'full' ? 'eager' : 'lazy'"
+          [attr.fetchpriority]="mode() === 'full' ? 'high' : null"
+          decoding="async"
+          (error)="onImageError()"
+        />
+      }
+    } @else {
+      <span class="tpl-visual-glow"></span>
+      <span class="tpl-visual-plate"></span>
+      <span class="tpl-visual-garnish"></span>
+    }
   </div>
 </section>

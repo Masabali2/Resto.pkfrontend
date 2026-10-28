@@ -4,16 +4,42 @@
     <h3 class="tpl-section-title">A look inside</h3>
   </header>
 
-  <ul
-    class="tpl-gallery-grid"
-    [class.tpl-gallery-grid--masonry]="layout() === 'masonry'"
-    [class.tpl-gallery-grid--grid]="layout() === 'grid'"
-    [class.tpl-gallery-grid--strip]="layout() === 'strip'"
-    [class.tpl-gallery-grid--carousel]="layout() === 'carousel'"
-    aria-hidden="true"
-  >
-    @for (tile of tiles(); track tile) {
-      <li class="tpl-gallery-tile" [attr.data-tone]="tile"></li>
-    }
-  </ul>
+  @if (visibleAssets().length > 0) {
+    <ul
+      class="tpl-gallery-grid"
+      [class.tpl-gallery-grid--masonry]="layout() === 'masonry'"
+      [class.tpl-gallery-grid--grid]="layout() === 'grid'"
+      [class.tpl-gallery-grid--strip]="layout() === 'strip'"
+      [class.tpl-gallery-grid--carousel]="layout() === 'carousel'"
+      aria-label="Gallery images"
+    >
+      @for (asset of visibleAssets(); track asset.assetId) {
+        <li class="tpl-gallery-tile tpl-gallery-tile--image">
+          <img
+            class="tpl-gallery-image"
+            [src]="asset.url"
+            [alt]="asset.alt"
+            [attr.width]="asset.width"
+            [attr.height]="asset.height"
+            loading="lazy"
+            decoding="async"
+            (error)="onImageError(asset.assetId)"
+          />
+        </li>
+      }
+    </ul>
+  } @else {
+    <ul
+      class="tpl-gallery-grid"
+      [class.tpl-gallery-grid--masonry]="layout() === 'masonry'"
+      [class.tpl-gallery-grid--grid]="layout() === 'grid'"
+      [class.tpl-gallery-grid--strip]="layout() === 'strip'"
+      [class.tpl-gallery-grid--carousel]="layout() === 'carousel'"
+      aria-hidden="true"
+    >
+      @for (tile of tiles(); track tile) {
+        <li class="tpl-gallery-tile" [attr.data-tone]="tile"></li>
+      }
+    </ul>
+  }
 </section>

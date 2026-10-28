@@ -2,7 +2,8 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  input
+  input,
+  signal
 } from '@angular/core';
 import type {
   TemplateRendererMode,
@@ -12,6 +13,10 @@ import type {
 /**
  * About section of the generic renderer. It reuses the safe sample copy and
  * the category tags that ship with the design configuration.
+ *
+ * When an About asset is registered it replaces the decorative visual; a
+ * template without one (or with a failed image load) keeps the original
+ * palette-only illustration.
  */
 @Component({
   selector: 'app-renderer-about',
@@ -34,6 +39,14 @@ export class RendererAbout {
       .map(tag => tag.replace(/-/g, ' '))
   );
 
+  protected readonly aboutAsset = computed(() => this.viewModel().media.about);
+
+  private readonly imageFailed = signal(false);
+
+  protected readonly showAboutImage = computed(
+    () => this.aboutAsset() !== null && !this.imageFailed()
+  );
+
   protected readonly description = computed(() => {
     const content = this.configuration().previewContent;
 
@@ -42,4 +55,8 @@ export class RendererAbout {
       'A kitchen shaped by its ingredients, its people and the guests who keep coming back.'
     );
   });
+
+  protected onImageError(): void {
+    this.imageFailed.set(true);
+  }
 }

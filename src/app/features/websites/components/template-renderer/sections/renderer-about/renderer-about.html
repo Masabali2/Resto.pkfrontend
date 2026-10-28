@@ -1,7 +1,26 @@
 <section id="about" class="tpl-about">
-  <div class="tpl-about-visual" aria-hidden="true">
-    <span class="tpl-about-disc"></span>
-    <span class="tpl-about-line"></span>
+  <div
+    class="tpl-about-visual"
+    [class.tpl-about-visual--image]="showAboutImage()"
+    [attr.aria-hidden]="showAboutImage() ? null : 'true'"
+  >
+    @if (showAboutImage()) {
+      @if (aboutAsset(); as asset) {
+        <img
+          class="tpl-about-image"
+          [src]="asset.url"
+          [alt]="asset.alt"
+          [attr.width]="asset.width"
+          [attr.height]="asset.height"
+          loading="lazy"
+          decoding="async"
+          (error)="onImageError()"
+        />
+      }
+    } @else {
+      <span class="tpl-about-disc"></span>
+      <span class="tpl-about-line"></span>
+    }
   </div>
 
   <div class="tpl-about-copy">

@@ -129,12 +129,34 @@ export interface WebsiteTemplateSampleDish {
   price: string;
 }
 
+/**
+ * A reusable image registered by a template's design configuration.
+ *
+ * `assetId` is a stable identity independent from `url`: the same asset can be
+ * re-pointed at a new URL without breaking the references held by sections.
+ * Only same-origin, root-relative URLs survive parsing; anything else
+ * (absolute URLs, protocol-relative URLs, schemes or traversal) is dropped.
+ */
+export interface WebsiteTemplateAsset {
+  assetId: string;
+  url: string;
+  alt: string;
+  width: number | null;
+  height: number | null;
+}
+
 export interface WebsiteTemplatePreviewContent {
   eyebrow: string;
   heroTitle: string;
   heroDescription: string;
   primaryActionLabel: string;
   sampleDishes: WebsiteTemplateSampleDish[];
+  /** Reference to the hero image, resolved through the asset registry. */
+  heroAssetId: string | null;
+  /** Reference to the About image, when the design supports one. */
+  aboutAssetId: string | null;
+  /** Ordered gallery references; the declared order is preserved. */
+  galleryAssetIds: string[];
 }
 
 export interface WebsiteTemplateDesignConfiguration {
@@ -145,6 +167,18 @@ export interface WebsiteTemplateDesignConfiguration {
   displayOrder: number;
   design: WebsiteTemplateDesign;
   previewContent: WebsiteTemplatePreviewContent;
+  /**
+   * Reusable image registry. Empty for templates that do not ship images,
+   * which keeps every pre-existing template rendering exactly as before.
+   */
+  assets: WebsiteTemplateAsset[];
+}
+
+/** Section-ready image references, resolved once by the parser. */
+export interface WebsiteTemplateMedia {
+  hero: WebsiteTemplateAsset | null;
+  about: WebsiteTemplateAsset | null;
+  gallery: WebsiteTemplateAsset[];
 }
 
 /**
@@ -157,6 +191,8 @@ export interface WebsiteTemplateDesignViewModel {
   sections: WebsiteTemplateSection[];
   /** Resolved CSS custom properties (safe, validated values only). */
   cssVariables: Readonly<Record<string, string>>;
+  /** Images resolved against the asset registry; empty media if none. */
+  media: WebsiteTemplateMedia;
 }
 
 export interface WebsiteTemplateDesignParseResult {

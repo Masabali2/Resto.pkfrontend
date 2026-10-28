@@ -20,16 +20,29 @@ import {
   type TemplateHeroLayout,
   type TemplateMenuLayout,
   type TemplateSectionType,
+  type WebsiteTemplateAsset,
   type WebsiteTemplateDesignParseResult,
   type WebsiteTemplateDesignViewModel,
   type WebsiteTemplateLayout,
+  type WebsiteTemplateMedia,
   type WebsiteTemplatePalette,
+  type WebsiteTemplatePreviewContent,
   type WebsiteTemplateSampleDish,
   type WebsiteTemplateSection,
   type WebsiteTemplateTypography
 } from '../models/website-template-design.model';
 
 const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+
+const ASSET_ID_PATTERN = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
+const ASSET_URL_PATTERN = /^\/[A-Za-z0-9._~%/-]+$/;
+
+const MAX_ASSETS = 32;
+const MAX_GALLERY_ASSETS = 12;
+const MAX_ASSET_ID_LENGTH = 100;
+const MAX_ASSET_URL_LENGTH = 300;
+const MAX_ALT_LENGTH = 240;
+const MAX_IMAGE_DIMENSION = 20_000;
 
 const HEADING_FONT_STACKS: Record<TemplateHeadingFont, string> = {
   'serif-editorial': "Georgia, 'Iowan Old Style', 'Times New Roman', serif",
@@ -116,6 +129,39 @@ export function isTemplateBodyFont(value: unknown): value is TemplateBodyFont {
 }
 
 /**
+ * Mirrors the backend asset-ID rule: a lower-case slug of letters, digits and
+ * dashes. Asset identity is separate from the URL, so a section reference can
+ * survive a URL change.
+ */
+export function isSafeTemplateAssetId(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    value.length > 0 &&
+    value.length <= MAX_ASSET_ID_LENGTH &&
+    ASSET_ID_PATTERN.test(value)
+  );
+}
+
+/**
+ * Mirror of the backend URL rule: same-origin, root-relative image paths only.
+ * Absolute URLs, protocol-relative URLs, schemes (`javascript:`, `data:`),
+ * backslashes, double slashes and parent-directory traversal are rejected.
+ * The backend already enforces this; re-checking here is defence in depth so
+ * an unsafe value can never reach the DOM through a compromised response.
+ */
+export function isSafeTemplateAssetUrl(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    value.length > 0 &&
+    value.length <= MAX_ASSET_URL_LENGTH &&
+    ASSET_URL_PATTERN.test(value) &&
+    !value.startsWith('//') &&
+    !value.includes('//') &&
+    !value.includes('..')
+  );
+}
+
+/**
  * Parses the raw `designConfigurationJson` of a catalogue entry into the
  * typed view model the generic renderer consumes.
  *
@@ -183,6 +229,7 @@ export function parseWebsiteTemplateDesign(
   }
 
   const previewContent = parsePreviewContent(parsed['previewContent']);
+  const assets = parseAssets(parsed['assets']);
 
   const configuration = {
     schemaVersion: WEBSITE_TEMPLATE_DESIGN_SCHEMA_VERSION,
@@ -196,7 +243,8 @@ export function parseWebsiteTemplateDesign(
       layout: layoutResult.layout,
       sections: sectionsResult.sections
     },
-    previewContent
+    previewContent,
+    assets
   };
 
   const enabledSections = configuration.design.sections
@@ -207,7 +255,8 @@ export function parseWebsiteTemplateDesign(
     viewModel: {
       configuration,
       sections: enabledSections,
-      cssVariables: buildCssVariables(configuration.design)
+      cssVariables: buildCssVariables(configuration.design),
+      media: resolveMedia(assets, previewContent)
     },
     error: null
   };
@@ -407,13 +456,7 @@ function parseSections(design: unknown):
   return { sections };
 }
 
-function parsePreviewContent(raw: unknown): {
-  eyebrow: string;
-  heroTitle: string;
-  heroDescription: string;
-  primaryActionLabel: string;
-  sampleDishes: WebsiteTemplateSampleDish[];
-} {
+function parsePreviewContent(raw: unknown): WebsiteTemplatePreviewContent {
   const record = isRecord(raw) ? raw : undefined;
 
   const dishes: WebsiteTemplateSampleDish[] = [];
@@ -436,13 +479,132 @@ function parsePreviewContent(raw: unknown): {
     });
   }
 
+  const galleryAssetIds: string[] = [];
+  const rawGallery = record ? record['galleryAssetIds'] : undefined;
+
+  if (Array.isArray(rawGallery)) {
+    const seen = new Set<string>();
+
+    for (const entry of rawGallery.slice(0, MAX_GALLERY_ASSETS)) {
+      if (!isSafeTemplateAssetId(entry) || seen.has(entry)) {
+        continue;
+      }
+
+      seen.add(entry);
+      galleryAssetIds.push(entry);
+    }
+  }
+
   return {
     eyebrow: (record ? readString(record['eyebrow']) : null) ?? '',
     heroTitle: (record ? readString(record['heroTitle']) : null) ?? '',
     heroDescription: (record ? readString(record['heroDescription']) : null) ?? '',
     primaryActionLabel: (record ? readString(record['primaryActionLabel']) : null) ?? '',
-    sampleDishes: dishes
+    sampleDishes: dishes,
+    heroAssetId: readAssetReference(record ? record['heroAssetId'] : undefined),
+    aboutAssetId: readAssetReference(record ? record['aboutAssetId'] : undefined),
+    galleryAssetIds
   };
+}
+
+/**
+ * Parses the optional asset registry. Invalid entries are skipped rather than
+ * invalidating the whole template: a single mistyped URL or missing alt text
+ * must never take down an otherwise renderable preview. References to skipped
+ * entries are dropped by {@link resolveMedia}.
+ */
+function parseAssets(raw: unknown): WebsiteTemplateAsset[] {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+
+  const assets: WebsiteTemplateAsset[] = [];
+  const seenIds = new Set<string>();
+  const seenUrls = new Set<string>();
+
+  for (const entry of raw.slice(0, MAX_ASSETS)) {
+    if (!isRecord(entry)) {
+      continue;
+    }
+
+    const assetId = entry['assetId'];
+    const url = entry['url'];
+    const alt = entry['alt'];
+
+    if (!isSafeTemplateAssetId(assetId) || seenIds.has(assetId)) {
+      continue;
+    }
+
+    if (!isSafeTemplateAssetUrl(url) || seenUrls.has(url)) {
+      continue;
+    }
+
+    if (typeof alt !== 'string') {
+      continue;
+    }
+
+    const trimmedAlt = alt.trim();
+
+    if (
+      trimmedAlt.length === 0 ||
+      trimmedAlt.length > MAX_ALT_LENGTH ||
+      /[<>\u0000-\u001f]/.test(trimmedAlt)
+    ) {
+      continue;
+    }
+
+    seenIds.add(assetId);
+    seenUrls.add(url);
+
+    assets.push({
+      assetId,
+      url,
+      alt: trimmedAlt,
+      width: readImageDimension(entry['width']),
+      height: readImageDimension(entry['height'])
+    });
+  }
+
+  return assets;
+}
+
+/** Resolves section references against the registry; unknown IDs drop out. */
+function resolveMedia(
+  assets: WebsiteTemplateAsset[],
+  previewContent: WebsiteTemplatePreviewContent
+): WebsiteTemplateMedia {
+  const byId = new Map(assets.map(asset => [asset.assetId, asset] as const));
+  const resolve = (assetId: string | null): WebsiteTemplateAsset | null =>
+    assetId ? (byId.get(assetId) ?? null) : null;
+
+  const gallery: WebsiteTemplateAsset[] = [];
+
+  for (const assetId of previewContent.galleryAssetIds) {
+    const asset = byId.get(assetId);
+
+    if (asset && !gallery.includes(asset)) {
+      gallery.push(asset);
+    }
+  }
+
+  return {
+    hero: resolve(previewContent.heroAssetId),
+    about: resolve(previewContent.aboutAssetId),
+    gallery
+  };
+}
+
+function readAssetReference(value: unknown): string | null {
+  return isSafeTemplateAssetId(value) ? value : null;
+}
+
+function readImageDimension(value: unknown): number | null {
+  return typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= 1 &&
+    value <= MAX_IMAGE_DIMENSION
+    ? value
+    : null;
 }
 
 /**
