@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { TenantService } from '../../../../core/services/tenant.service';
 import { TenantContextService } from '../../../../core/services/tenant-context.service';
@@ -37,9 +37,13 @@ export class WorkspaceSetup {
   private readonly notificationService = inject(NotificationService);
   private readonly httpErrorHandler = inject(HttpErrorHandlerService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly submitting = signal(false);
   protected readonly generalError = signal('');
+
+  /** Template id carried through the onboarding flow, when present. */
+  protected readonly templateId = this.route.snapshot.queryParamMap.get('templateId') ?? null;
 
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(150)]],
@@ -102,6 +106,13 @@ export class WorkspaceSetup {
               this.notificationService.success(
                 `${createdTenant.name} workspace created. Start your free trial to activate it.`
               );
+
+              if (this.templateId) {
+                void this.router.navigate(['/setup', 'restaurant'], {
+                  queryParams: { templateId: this.templateId }
+                });
+                return;
+              }
 
               void this.router.navigate(['/dashboard']);
             },

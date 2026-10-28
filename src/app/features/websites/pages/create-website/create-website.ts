@@ -115,6 +115,9 @@ export class CreateWebsite {
   protected readonly generalError = signal('');
   protected readonly fieldErrors = signal<Record<string, string>>({});
 
+  /** Template id carried through the workflow from the preview page, when present. */
+  protected readonly templateId = this.route.snapshot.queryParamMap.get('templateId') ?? null;
+
   /**
    * Set when /websites/new?templateId={guid} names a template that does not
    * exist (or whose design cannot be read). The requested template is never
@@ -452,7 +455,14 @@ export class CreateWebsite {
             `Website "${response.data.name}" created. Configure and publish it from its management page.`
           );
 
-          void this.router.navigate(['/websites', response.data.id]);
+          // When the user came from a template preview, continue directly to
+          // the editor so the selected template configuration can be applied.
+          // Otherwise keep the existing behaviour (website management page).
+          if (this.templateId) {
+            void this.router.navigate(['/websites', response.data.id, 'editor']);
+          } else {
+            void this.router.navigate(['/websites', response.data.id]);
+          }
         },
         error: (error: unknown) => {
           this.handleSubmitError(error);

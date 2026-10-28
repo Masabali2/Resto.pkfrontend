@@ -143,6 +143,7 @@
               }
               <app-editor-settings-panel
                 [config]="config()!"
+                [websiteId]="website()?.id ?? null"
                 [restaurant]="restaurant()"
                 [menuItems]="menuItems()"
                 [templates]="templates()"
@@ -151,6 +152,7 @@
                 (sectionConfigChange)="onSectionConfigChange($event)"
                 (featuredDishesChange)="onFeaturedDishesChange($event)"
                 (templateChange)="onTemplateChange($event)"
+                (logoChange)="onLogoAssetChange($event)"
               />
             }
           </aside>

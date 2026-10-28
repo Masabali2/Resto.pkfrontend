@@ -5,8 +5,8 @@ import {
   inject,
   viewChildren
 } from '@angular/core';
-import {Location} from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Location } from '@angular/common';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs';
 import { OtpService } from '../../../../core/services/otp.service';
@@ -30,6 +30,7 @@ export class VerifyEmail implements AfterViewInit {
   private readonly httpErrorHandler = inject(HttpErrorHandlerService);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
+  private readonly route = inject(ActivatedRoute);
 
   readonly digitInputs = viewChildren<ElementRef<HTMLInputElement>>('digitInput');
 
@@ -40,6 +41,9 @@ export class VerifyEmail implements AfterViewInit {
   verifying = false;
   resending = false;
   cooldownSeconds = 0;
+
+  /** Template id carried through the authentication flow, when present. */
+  protected readonly templateId = this.route.snapshot.queryParamMap.get('templateId') ?? null;
 
   private cooldownTimer: ReturnType<typeof setInterval> | null = null;
 ngAfterViewInit(): void {
@@ -297,6 +301,7 @@ ngAfterViewInit(): void {
 
   private navigateToLoginWithMessage(): void {
     void this.router.navigate(['/login'], {
+      queryParams: { templateId: this.templateId ?? undefined },
       state: { notice: 'Your email is now verified. Please sign in to continue.' }
     });
   }

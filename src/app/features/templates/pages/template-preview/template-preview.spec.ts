@@ -13,6 +13,7 @@ import { vi } from 'vitest';
 import { TemplatePreview } from './template-preview';
 import { WebsiteService } from '../../../websites/services/website.service';
 import { AuthorizationService } from '../../../../core/services/authorization.service';
+import { ActiveRestaurantStateService } from '../../../../core/services/active-restaurant-state.service';
 import type { ApiResponse } from '../../../../core/models/api-response.model';
 import type { PublicWebsiteTemplateDto } from '../../../websites/models/website-template.model';
 
@@ -123,6 +124,10 @@ describe('TemplatePreview', () => {
   };
 
   const isAuthenticated = signal(false);
+  const activeTenantId = signal<string | null>(null);
+  const restaurantState = signal<'idle' | 'loading' | 'resolved' | 'empty' | 'forbidden' | 'error'>('resolved');
+  const hasRestaurant = signal(true);
+
   const paramMap = new BehaviorSubject(convertToParamMap({ id: TEMPLATE_ID }));
   const queryParamMap = new BehaviorSubject(convertToParamMap({}));
 
@@ -132,6 +137,9 @@ describe('TemplatePreview', () => {
     templatesResponse = null;
     templatesError = null;
     isAuthenticated.set(false);
+    activeTenantId.set(null);
+    restaurantState.set('resolved');
+    hasRestaurant.set(true);
     paramMap.next(convertToParamMap({ id: TEMPLATE_ID }));
     queryParamMap.next(convertToParamMap({}));
 
@@ -142,7 +150,20 @@ describe('TemplatePreview', () => {
       providers: [
         provideRouter([]),
         { provide: WebsiteService, useValue: websiteServiceSpy },
-        { provide: AuthorizationService, useValue: { isAuthenticated } },
+        {
+          provide: AuthorizationService,
+          useValue: {
+            isAuthenticated,
+            activeTenantId
+          }
+        },
+        {
+          provide: ActiveRestaurantStateService,
+          useValue: {
+            state: restaurantState.asReadonly(),
+            hasRestaurant: hasRestaurant.asReadonly()
+          }
+        },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -292,7 +313,7 @@ describe('TemplatePreview', () => {
     expect(navigateSpy).toHaveBeenCalledWith(['/templates']);
   });
 
-  it('sends guests to registration and signed-in users to website creation', async () => {
+  it('sends guests to registration with the template id preserved', async () => {
     templatesResponse = apiSuccess([template(TEMPLATE_ID, 'Napoli')]);
 
     const fixture = await createComponent();
@@ -302,10 +323,57 @@ describe('TemplatePreview', () => {
     el<HTMLButtonElement>(fixture, '.template-actions app-button button')?.click();
     fixture.detectChanges();
 
-    expect(navigateSpy).toHaveBeenCalledWith(['/register']);
+    expect(navigateSpy).toHaveBeenCalledWith(['/register'], {
+      queryParams: { templateId: TEMPLATE_ID }
+    });
+  });
 
+  it('sends signed-in users without a workspace to workspace setup with the template id', async () => {
+    templatesResponse = apiSuccess([template(TEMPLATE_ID, 'Napoli')]);
     isAuthenticated.set(true);
+    activeTenantId.set(null);
+
+    const fixture = await createComponent();
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    el<HTMLButtonElement>(fixture, '.template-actions app-button button')?.click();
     fixture.detectChanges();
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/setup', 'workspace'], {
+      queryParams: { templateId: TEMPLATE_ID }
+    });
+  });
+
+  it('sends signed-in users with a workspace but no restaurant to restaurant setup with the template id', async () => {
+    templatesResponse = apiSuccess([template(TEMPLATE_ID, 'Napoli')]);
+    isAuthenticated.set(true);
+    activeTenantId.set('tenant-1');
+    restaurantState.set('empty');
+    hasRestaurant.set(false);
+
+    const fixture = await createComponent();
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    el<HTMLButtonElement>(fixture, '.template-actions app-button button')?.click();
+    fixture.detectChanges();
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/setup', 'restaurant'], {
+      queryParams: { templateId: TEMPLATE_ID }
+    });
+  });
+
+  it('sends signed-in users with workspace and restaurant to website creation with the template id', async () => {
+    templatesResponse = apiSuccess([template(TEMPLATE_ID, 'Napoli')]);
+    isAuthenticated.set(true);
+    activeTenantId.set('tenant-1');
+    restaurantState.set('resolved');
+    hasRestaurant.set(true);
+
+    const fixture = await createComponent();
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
     el<HTMLButtonElement>(fixture, '.template-actions app-button button')?.click();
     fixture.detectChanges();

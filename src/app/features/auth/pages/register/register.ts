@@ -7,7 +7,7 @@ import {
   ValidatorFn,
   Validators
 } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { NotificationService } from '../../../../core/services/notification.service';
@@ -48,6 +48,7 @@ export class Register {
   private readonly authService = inject(AuthService);
   private readonly notificationService = inject(NotificationService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly httpErrorHandler = inject(HttpErrorHandlerService);
 
   readonly form = this.fb.nonNullable.group(
@@ -94,6 +95,9 @@ export class Register {
   passwordVisible = false;
   confirmPasswordVisible = false;
 
+  /** Template id carried through the authentication flow, when present. */
+  protected readonly templateId = this.route.snapshot.queryParamMap.get('templateId') ?? null;
+
   togglePasswordVisibility(): void {
     this.passwordVisible = !this.passwordVisible;
   }
@@ -138,6 +142,7 @@ export class Register {
             'Account created successfully. Please verify your email to continue.'
           );
           void this.router.navigate(['/verify-email'], {
+            queryParams: { templateId: this.templateId ?? undefined },
             state: { email: this.registeredEmail }
           });
         },

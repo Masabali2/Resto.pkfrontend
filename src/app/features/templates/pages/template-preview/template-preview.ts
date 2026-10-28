@@ -6,15 +6,17 @@ import {
   inject,
   signal
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { combineLatest } from 'rxjs';
+import { combineLatest, take } from 'rxjs';
 import { WebsiteService } from '../../../websites/services/website.service';
 import { AuthorizationService } from '../../../../core/services/authorization.service';
 import { HttpErrorHandlerService } from '../../../../core/services/http-error-handler.service';
 import { TemplateRenderer } from '../../../websites/components/template-renderer/template-renderer';
+import { ActiveRestaurantStateService } from '../../../../core/services/active-restaurant-state.service';
 import { Button } from '../../../../shared/components/button/button';
 import type { ApiResponse } from '../../../../core/models/api-response.model';
+import type { ActiveRestaurantState } from '../../../../core/models/active-restaurant.model';
 import type { PublicWebsiteTemplateDto } from '../../../websites/models/website-template.model';
 import type { WebsiteTemplateCatalogueItem } from '../../../websites/models/website-template-catalogue.model';
 import { buildCatalogueItem } from '../../../websites/utils/website-template-catalogue.util';
@@ -56,6 +58,7 @@ const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 export class TemplatePreview {
   private readonly websiteService = inject(WebsiteService);
   private readonly authorization = inject(AuthorizationService);
+  private readonly activeRestaurantState = inject(ActiveRestaurantStateService);
   private readonly httpErrorHandler = inject(HttpErrorHandlerService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -271,9 +274,11 @@ export class TemplatePreview {
 
   /**
    * Starts the existing website-creation workflow with the selected template.
-   * Guests are sent to registration first. This does not create anything by
-   * itself — CreateWebsite still requires restaurant details before calling
-   * the real API.
+   * Guests are sent to registration first with the template id preserved in the
+   * query string. Signed-in users are routed through onboarding (workspace,
+   * restaurant) when prerequisites are missing, otherwise straight to website
+   * creation with the template preselected. The template id survives every
+   * redirect so refreshes and direct navigation keep the original selection.
    */
   protected useThisTemplate(): void {
     const tpl = this.template();
@@ -282,13 +287,62 @@ export class TemplatePreview {
       return;
     }
 
+    const templateId = tpl.id;
+
     if (!this.isAuthenticated()) {
-      void this.router.navigate(['/register']);
+      void this.router.navigate(['/register'], { queryParams: { templateId } });
       return;
     }
 
-    void this.router.navigate(['/websites', 'new'], {
-      queryParams: { templateId: tpl.id }
+    void this.resolveAndNavigate(templateId);
+  }
+
+  /**
+   * Resolves the signed-in user's onboarding state and navigates to the next
+   * required step, always carrying the selected template id.
+   */
+  private resolveAndNavigate(templateId: string): void {
+    const tenantId = this.authorization.activeTenantId();
+
+    if (!tenantId) {
+      void this.router.navigate(['/setup', 'workspace'], {
+        queryParams: { templateId }
+      });
+      return;
+    }
+
+    const state = this.activeRestaurantState.state();
+
+    if (state === 'loading' || state === 'idle') {
+      toObservable(this.activeRestaurantState.state)
+        .pipe(take(1))
+        .subscribe(nextState => {
+          this.afterRestaurantResolved(nextState, templateId);
+        });
+      return;
+    }
+
+    this.afterRestaurantResolved(state, templateId);
+  }
+
+  private afterRestaurantResolved(state: ActiveRestaurantState, templateId: string): void {
+    if (state === 'resolved' && this.activeRestaurantState.hasRestaurant()) {
+      void this.router.navigate(['/websites', 'new'], {
+        queryParams: { templateId }
+      });
+      return;
+    }
+
+    if (state === 'empty') {
+      void this.router.navigate(['/setup', 'restaurant'], {
+        queryParams: { templateId }
+      });
+      return;
+    }
+
+    // Error or forbidden: restaurant setup is the safe next step.
+    void this.router.navigate(['/setup', 'restaurant'], {
+      queryParams: { templateId }
     });
   }
 }

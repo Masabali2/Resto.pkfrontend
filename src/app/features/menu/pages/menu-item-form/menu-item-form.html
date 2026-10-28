@@ -113,6 +113,35 @@
         </p>
       </div>
 
+      <div class="menu-form__field">
+        <label for="item-image">Item Image</label>
+        <app-image-upload
+          id="item-image"
+          label="Upload item image"
+          hint="The uploaded image is attached to this menu item only."
+          [destination]="uploadDestination()"
+          [disabled]="!uploadDestination()"
+          (uploaded)="onImageUploaded($event)"
+        ></app-image-upload>
+        @if (imageUploading()) {
+          <p class="menu-form__hint">Attaching image&hellip;</p>
+        }
+        @if (imageError()) {
+          <p class="menu-form__hint" style="color: var(--color-danger)">{{ imageError() }}</p>
+        }
+        @if (itemImageFileId(); as assetId) {
+          <div class="image-reference" style="margin-top: 0.5rem;">
+            <img
+              class="image-reference__thumb"
+              [src]="'/api/v1/files/' + assetId"
+              [alt]="form.controls.name.value + ' image'"
+              loading="lazy"
+            />
+            <span class="image-reference__label">Asset: {{ assetId }}</span>
+          </div>
+        }
+      </div>
+
       @if (generalError()) {
         <div class="menu-form__general-error" role="alert">
           {{ generalError() }}
@@ -120,13 +149,23 @@
       }
 
       <div class="menu-form__actions">
-        <app-button
-          type="button"
-          variant="secondary"
-          (click)="cancel()"
-        >
-          Cancel
-        </app-button>
+        @if (!this.isEdit && this.createdItemId()) {
+          <app-button
+            type="button"
+            variant="secondary"
+            (click)="finishCreate()"
+          >
+            Done
+          </app-button>
+        } @else {
+          <app-button
+            type="button"
+            variant="secondary"
+            (click)="cancel()"
+          >
+            Cancel
+          </app-button>
+        }
         <app-button
           type="submit"
           variant="primary"

@@ -56,17 +56,37 @@
 
                 <div class="field-group">
                   <label class="field-label" for="hero-image">Hero Image</label>
-                  <div class="image-picker">
-                    <input
-                      id="hero-image"
-                      type="text"
-                      class="field-input"
-                      [value]="hero.settings?.['imageUrl'] ?? ''"
-                      placeholder="Image URL or asset ID"
-                      (input)="updateHeroSetting('imageUrl', $any($event.target).value)"
-                    />
-                    <span class="field-hint">Enter an image URL or asset identifier</span>
-                  </div>
+                  <app-image-upload
+                    id="hero-image"
+                    label="Upload hero image"
+                    hint="The uploaded image is associated with this website's hero section."
+                    [destination]="buildWebsiteSectionDestination('hero', 'imageUrl')"
+                    [disabled]="!buildWebsiteSectionDestination('hero', 'imageUrl')"
+                    (uploaded)="onHeroImageUploaded($event)"
+                  ></app-image-upload>
+                  <div class="field-hint">Stored as the hero image reference in the draft configuration.</div>
+                  @if (heroSection(); as hero) {
+                    @if (heroImageAssetId(); as assetId) {
+                      <div class="image-reference">
+                        <img
+                          class="image-reference__thumb"
+                          [src]="'/api/v1/files/' + assetId"
+                          [alt]="hero.settings?.['heading'] ?? 'Hero image'"
+                          loading="lazy"
+                        />
+                        <span class="image-reference__label">Asset: {{ assetId }}</span>
+                      </div>
+                    }
+                  }
+                  <input
+                    id="hero-image-url"
+                    type="text"
+                    class="field-input"
+                    [value]="hero.settings?.['imageUrl'] ?? ''"
+                    placeholder="Image URL or asset ID"
+                    (input)="updateHeroSetting('imageUrl', $any($event.target).value)"
+                  />
+                  <span class="field-hint">Or enter an image URL or asset identifier directly.</span>
                 </div>
               </div>
             } @else {
@@ -302,10 +322,103 @@
                   ></textarea>
                   <span class="field-hint">Max 2000 characters</span>
                 </div>
+
+                <div class="field-group">
+                  <label class="field-label" for="about-image">About Image</label>
+                  <app-image-upload
+                    id="about-image"
+                    label="Upload about image"
+                    hint="The uploaded image is associated with this website's about section."
+                    [destination]="buildWebsiteSectionDestination('about', 'imageUrl')"
+                    [disabled]="!buildWebsiteSectionDestination('about', 'imageUrl')"
+                    (uploaded)="onAboutImageUploaded($event)"
+                  ></app-image-upload>
+                  <div class="field-hint">Stored as the about image reference in the draft configuration.</div>
+                  @if (aboutImageAssetId(); as assetId) {
+                    <div class="image-reference">
+                      <img
+                        class="image-reference__thumb"
+                        [src]="'/api/v1/files/' + assetId"
+                        [alt]="about.settings?.['heading'] ?? 'About image'"
+                        loading="lazy"
+                      />
+                      <span class="image-reference__label">Asset: {{ assetId }}</span>
+                    </div>
+                  }
+                </div>
               </div>
             } @else {
               <p class="empty-state">No about/story section in current configuration.</p>
             }
+          }
+
+          @case ('gallery') {
+            @if (gallerySection(); as gallery) {
+              <div class="section-fields">
+                <div class="field-group">
+                  <label class="field-label" for="gallery-images">Gallery Images</label>
+                  <app-image-upload
+                    id="gallery-images"
+                    label="Upload gallery images"
+                    hint="Uploaded images are added to this website's gallery in upload order."
+                    [destination]="buildWebsiteSectionDestination('gallery', 'galleryImageIds')"
+                    [disabled]="!buildWebsiteSectionDestination('gallery', 'galleryImageIds')"
+                    [multiple]="true"
+                    (uploaded)="onGalleryImageUploaded($event)"
+                  ></app-image-upload>
+                  <div class="field-hint">Gallery image order is preserved as uploaded.</div>
+                  @if (galleryAssetIds(); as assetIds) {
+                    @if (assetIds.length > 0) {
+                      <div class="image-reference-list">
+                        @for (assetId of assetIds; track assetId) {
+                          <div class="image-reference">
+                            <img
+                              class="image-reference__thumb"
+                              [src]="'/api/v1/files/' + assetId"
+                              [alt]="'Gallery image ' + (assetIds.indexOf(assetId) + 1)"
+                              loading="lazy"
+                            />
+                            <span class="image-reference__label">Asset {{ assetIds.indexOf(assetId) + 1 }}: {{ assetId }}</span>
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <p class="empty-state">No gallery images yet.</p>
+                    }
+                  }
+                </div>
+              </div>
+            } @else {
+              <p class="empty-state">No gallery section in current configuration.</p>
+            }
+          }
+
+          @case ('branding') {
+            <div class="section-fields">
+              <div class="field-group">
+                <label class="field-label" for="logo-image">Restaurant Logo</label>
+                <app-image-upload
+                  id="logo-image"
+                  label="Upload logo"
+                  hint="The uploaded logo is associated with the current restaurant."
+                  [destination]="buildRestaurantLogoDestination()"
+                  [disabled]="!buildRestaurantLogoDestination()"
+                  (uploaded)="onLogoImageUploaded($event)"
+                ></app-image-upload>
+                <div class="field-hint">Stored as the restaurant logo asset.</div>
+                @if (logoAssetId(); as logoAssetId) {
+                  <div class="image-reference">
+                    <img
+                      class="image-reference__thumb"
+                      [src]="'/api/v1/files/' + logoAssetId"
+                      [alt]="restaurant()?.name ?? 'Restaurant logo'"
+                      loading="lazy"
+                    />
+                    <span class="image-reference__label">Logo asset: {{ logoAssetId }}</span>
+                  </div>
+                }
+              </div>
+            </div>
           }
 
           @case ('template') {

@@ -24,6 +24,7 @@ import { EditorSettingsPanel, type SectionConfigChange, type ThemeChange, type T
 import { EditorToolbar, type ViewportMode, type CompareData, type ConfigDifference, type EditorState, type SaveState, type PublishState } from '../../components/editor-toolbar/editor-toolbar';
 import { PreviewCanvas } from '../../components/preview-canvas/preview-canvas';
 import { CompareDialog } from '../../components/compare-dialog/compare-dialog';
+import { ImageUploadComponent } from '../../../../shared/components/image-upload/image-upload.component';
 import {
   createDefaultWebsiteConfig,
   parseWebsiteConfig,
@@ -69,6 +70,7 @@ export function buildPublicSiteUrl(baseUrl: string, slug: string): string | null
     Button,
     LoadingSpinner,
     EditorSettingsPanel,
+    ImageUploadComponent,
     EditorToolbar,
     PreviewCanvas,
     CompareDialog
@@ -360,6 +362,17 @@ export class WebsiteEditor implements OnInit, OnDestroy {
       };
     });
 
+    this.markDirty();
+  }
+
+  protected onLogoAssetChange(assetId: string): void {
+    this.config.update(cfg => {
+      if (!cfg) return cfg;
+      return {
+        ...cfg,
+        settings: { ...cfg.settings, logoAssetId: assetId }
+      };
+    });
     this.markDirty();
   }
 
@@ -701,9 +714,9 @@ export class WebsiteEditor implements OnInit, OnDestroy {
     id: string
   ): Observable<{ ok: boolean; message?: string; notFound?: boolean } | null> {
     return this.loadWebsite(id).pipe(
-      map(result => {
+      switchMap(result => {
         if (!result.ok) {
-          return { ok: false as const, message: result.message, notFound: result.notFound };
+          return of({ ok: false as const, message: result.message, notFound: result.notFound });
         }
 
         this.website.set(result.website);
@@ -711,21 +724,92 @@ export class WebsiteEditor implements OnInit, OnDestroy {
           this.restaurant.set(result.restaurant.data);
         }
 
-        const draft = result.draft;
-        if (draft == null || !draft.success || draft.data == null) {
-          return {
-            ok: false as const,
-            message:
-              (draft?.message ?? 'The draft configuration could not be loaded. Please try again.'),
-            notFound: false
-          };
-        }
+        // Load the catalogue so a website created from a template can be
+        // initialized with that template's design configuration when no draft
+        // exists yet. The catalogue load is part of this chain so stale
+        // responses are discarded when the route id changes mid-flight.
+        return this.websiteService.getTemplates().pipe(
+          map(response => {
+            const templates: WebsiteTemplateCatalogueItem[] = [];
 
-        this.applyDraft(draft.data);
-        // Secondary data belongs to the website we just committed to state.
-        this.loadTemplates(result.website.websiteTemplateId);
-        this.loadMenuItems(result.website.restaurantId);
-        return { ok: true as const };
+            if (response.success && response.data) {
+              const items = response.data
+                .map(t => buildCatalogueItem(t))
+                .sort(
+                  (a, b) =>
+                    a.displayOrder - b.displayOrder ||
+                    a.template.name.localeCompare(b.template.name)
+                );
+              templates.push(...items);
+              this.templates.set(items);
+            }
+
+            const draft = result.draft;
+
+            // Draft load failure → error state.
+            if (draft == null || !draft.success) {
+              return {
+                ok: false as const,
+                message:
+                  (draft?.message ?? 'The draft configuration could not be loaded. Please try again.'),
+                notFound: false
+              };
+            }
+
+            const draftData = draft.data;
+
+            // No draft payload at all → error state.
+            if (draftData == null) {
+              return {
+                ok: false as const,
+                message: 'The draft configuration could not be loaded. Please try again.',
+                notFound: false
+              };
+            }
+
+            // No draft exists yet. If the website references a template,
+            // apply its design configuration as the starting point so the
+            // editor opens with the selected template rather than a blank
+            // default layout. Otherwise fall back to the no-draft entry
+            // point where the user can start from a basic layout.
+            if (!draftData.hasDraft || draftData.configurationJson == null) {
+              const templateId = result.website.websiteTemplateId;
+              const template = templates.find(t => t.template.id === templateId);
+
+              if (template?.design) {
+                const config = this.applyTemplateDesign(
+                  createDefaultWebsiteConfig(),
+                  template.design
+                );
+                this.config.set(config);
+                this.website.update(site =>
+                  site ? {
+                    ...site,
+                    websiteTemplateId: template.template.id,
+                    templateName: template.template.name,
+                    templateKey: template.template.templateKey
+                  } : null
+                );
+                this.startingFromDefault.set(false);
+                this.saveState.set('clean');
+                this.state.set('ready');
+                this.autosaveService.reset();
+              } else {
+                this.config.set(null);
+                this.draftError.set(null);
+                this.saveState.set('clean');
+                this.state.set('no-draft');
+              }
+
+              this.loadMenuItems(result.website.restaurantId);
+              return { ok: true as const };
+            }
+
+            this.applyDraft(draftData);
+            this.loadMenuItems(result.website.restaurantId);
+            return { ok: true as const };
+          })
+        );
       })
     );
   }
@@ -742,19 +826,6 @@ export class WebsiteEditor implements OnInit, OnDestroy {
               }
             }
           });
-        }
-      }
-    });
-  }
-
-  private loadTemplates(currentTemplateId?: string): void {
-    this.websiteService.getTemplates().pipe(takeUntil(this.destroy$)).subscribe({
-      next: (response: ApiResponse<WebsiteTemplateDto[]>) => {
-        if (response.success && response.data) {
-          const items = response.data
-            .map(t => buildCatalogueItem(t))
-            .sort((a, b) => a.displayOrder - b.displayOrder || a.template.name.localeCompare(b.template.name));
-          this.templates.set(items);
         }
       }
     });

@@ -1,0 +1,87 @@
+<div class="image-upload" [class.image-upload--drop-active]="false">
+  <label
+    class="image-upload__dropzone"
+    [attr.aria-label]="label()"
+    [attr.aria-busy]="uploading()"
+    [class.image-upload__dropzone--active]="preview() !== null || error() !== null"
+    (click)="openFilePicker()"
+    role="button"
+    tabindex="0"
+    (keydown.enter)="openFilePicker()"
+    (keydown.space)="openFilePicker()"
+  >
+    <input
+      #fileInput
+      type="file"
+      class="image-upload__file-input"
+      [accept]="acceptedTypes"
+      [multiple]="multiple()"
+      [disabled]="disabled()"
+      (change)="onFileInputChange($event)"
+      aria-hidden="true"
+    />
+
+    @if (preview(); as previewUrl) {
+      <img
+        class="image-upload__preview"
+        [src]="previewUrl"
+        [alt]="label() + ' preview'"
+        draggable="false"
+      />
+      <button
+        class="image-upload__remove"
+        type="button"
+        (click)="cancel()"
+        [attr.aria-label]="'Remove ' + label()"
+      >
+        &times;
+      </button>
+    } @else if (uploading()) {
+      <app-loading-spinner [size]="24" />
+      <span class="image-upload__status">{{ progress() }}% uploaded</span>
+    } @else if (error(); as err) {
+      <span class="image-upload__status image-upload__status--error">{{ err }}</span>
+      <button
+        class="image-upload__retry"
+        type="button"
+        (click)="retry()"
+        [disabled]="uploading()"
+      >
+        Retry
+      </button>
+    } @else {
+      <span class="image-upload__icon" aria-hidden="true">↑</span>
+      <span class="image-upload__prompt">{{ label() }}</span>
+      <span class="image-upload__hint">{{ hint() ?? 'Drag and drop an image, or click to select' }}</span>
+    }
+  </label>
+
+  @if (recentResults().length > 0) {
+    <div class="image-upload__assets" aria-label="Uploaded images">
+      @for (result of recentResults(); track result.assetId) {
+        <div class="image-upload__asset">
+          <img
+            class="image-upload__asset-thumb"
+            [src]="result.previewUrl"
+            [alt]="result.fileName"
+            loading="lazy"
+          />
+          <div class="image-upload__asset-meta">
+            <div class="image-upload__asset-name">{{ result.fileName }}</div>
+            <div class="image-upload__asset-size">
+              {{ fileSizeMebibytes(result.fileSize) }} MiB
+            </div>
+          </div>
+          <button
+            class="image-upload__asset-remove"
+            type="button"
+            (click)="removeAsset(result)"
+            [attr.aria-label]="'Remove ' + result.fileName"
+          >
+            &times;
+          </button>
+        </div>
+      }
+    </div>
+  }
+</div>

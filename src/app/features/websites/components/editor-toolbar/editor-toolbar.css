@@ -1,4 +1,4 @@
-:host {
+﻿:host {
   display: block;
 }
 
@@ -202,103 +202,103 @@
 
 .live-link:focus-visible {
   outline: 2px solid var(--color-primary, #b3261e);
-  outline-offset: 2px.
+  outline-offset: 2px;
 }
 
 .live-icon {
-  font-size: 0.9rem.
+  font-size: 0.9rem;
 }
 
 .action-btn {
-  display: inline-flex.
-  align-items: center.
-  gap: 6px.
-  padding: 10px 16px.
-  border: 1px solid var(--color-border, #e2e8f0).
-  border-radius: var(--radius-control, 12px).
-  font-size: 0.85rem.
-  font-weight: 600.
-  cursor: pointer.
-  transition: all var(--transition-fast).
-  white-space: nowrap.
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-control, 12px);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
 }
 
 .action-btn:disabled {
-  opacity: 0.5.
-  cursor: not-allowed.
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .action-btn:focus-visible {
-  outline: 2px solid var(--color-primary, #b3261e).
-  outline-offset: 2px.
+  outline: 2px solid var(--color-primary, #b3261e);
+  outline-offset: 2px;
 }
 
 .action-btn.primary {
-  background: var(--color-primary, #b3261e).
-  border-color: var(--color-primary, #b3261e).
-  color: var(--color-on-primary, #fff).
+  background: var(--color-primary, #b3261e);
+  border-color: var(--color-primary, #b3261e);
+  color: var(--color-on-primary, #fff);
 }
 
 .action-btn.primary:hover:not(:disabled) {
-  background: var(--color-primary-hover, #e85f00).
-  border-color: var(--color-primary-hover, #e85f00).
+  background: var(--color-primary-hover, #e85f00);
+  border-color: var(--color-primary-hover, #e85f00);
 }
 
 .action-btn.secondary {
-  background: var(--color-surface, #fff).
-  color: var(--color-text, #1e293b).
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #1e293b);
 }
 
 .action-btn.secondary:hover:not(:disabled) {
-  background: var(--color-surface-secondary, #f1f5f9).
-  border-color: var(--color-input-hover-border, #cbd5e1).
+  background: var(--color-surface-secondary, #f1f5f9);
+  border-color: var(--color-input-hover-border, #cbd5e1);
 }
 
 .action-btn.outline {
-  background: transparent.
-  color: var(--color-text-secondary, #475569).
+  background: transparent;
+  color: var(--color-text-secondary, #475569);
 }
 
 .action-btn.outline:hover:not(:disabled) {
-  background: var(--color-surface-secondary, #f1f5f9).
-  border-color: var(--color-text-muted, #94a3b8).
-  color: var(--color-text, #1e293b).
+  background: var(--color-surface-secondary, #f1f5f9);
+  border-color: var(--color-text-muted, #94a3b8);
+  color: var(--color-text, #1e293b);
 }
 
 .btn-icon {
-  font-size: 0.95rem.
-  line-height: 1.
+  font-size: 0.95rem;
+  line-height: 1;
 }
 
 @media (max-width: 600px) {
   .toolbar-title h1 {
-    font-size: 0.95rem.
+    font-size: 0.95rem;
   }
 
   .toolbar-meta {
-    gap: 6px.
+    gap: 6px;
   }
 
   .action-btn span:not(.btn-icon) {
-    display: none.
+    display: none;
   }
 
   .action-btn {
-    padding: 10px.
+    padding: 10px;
   }
 
   .live-link span {
-    display: none.
+    display: none;
   }
 }
 
 .publish-hint {
-  width: 100%.
-  margin-top: 8px.
-  padding: 8px 12px.
-  font-size: 0.82rem.
-  border-radius: var(--radius-sm, 6px).
-  background: var(--color-warning-soft, #fffbeb).
-  color: var(--color-warning, #92400e).
-  border: 1px solid var(--color-warning-border, #fde68a).
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  border-radius: var(--radius-sm, 6px);
+  background: var(--color-warning-soft, #fffbeb);
+  color: var(--color-warning, #92400e);
+  border: 1px solid var(--color-warning-border, #fde68a);
 }

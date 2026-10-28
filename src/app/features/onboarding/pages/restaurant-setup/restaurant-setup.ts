@@ -5,7 +5,7 @@ import {
   ReactiveFormsModule,
   Validators
 } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { RestaurantService } from '../../../../core/services/restaurant.service';
 import { HttpErrorHandlerService } from '../../../../core/services/http-error-handler.service';
@@ -59,9 +59,13 @@ export class RestaurantSetup {
   private readonly notificationService = inject(NotificationService);
   private readonly httpErrorHandler = inject(HttpErrorHandlerService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   /** Shared subscription flow — the same one the dashboard uses. */
   protected readonly subscriptionFlow = inject(SubscriptionFlowService);
+
+  /** Template id carried through the onboarding flow, when present. */
+  protected readonly templateId = this.route.snapshot.queryParamMap.get('templateId') ?? null;
 
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(150)]],
@@ -218,8 +222,8 @@ export class RestaurantSetup {
       return;
     }
 
-    void this.router.navigate(['/websites/new'], {
-      queryParams: { restaurantId: restaurant.id }
+    void this.router.navigate(['/websites', 'new'], {
+      queryParams: { restaurantId: restaurant.id, templateId: this.templateId ?? undefined }
     });
   }
 

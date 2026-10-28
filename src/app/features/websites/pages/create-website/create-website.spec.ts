@@ -484,5 +484,30 @@ describe('CreateWebsite template selection', () => {
       fixture.detectChanges();
       expect(el('.picker-card-selected')).toBeTruthy();
     });
+
+    it('navigates to the editor when creation was started from a template preview', async () => {
+      await createWithQuery({ templateId: TEMPLATE_ID });
+
+      flushInitialLoad();
+      fixture.detectChanges();
+
+      component().selectRestaurant({ id: 'restaurant-1' });
+      fillValidForm();
+      submitForm();
+
+      httpMock.expectOne(
+        req => req.method === 'POST' && req.url === `${environment.apiUrl}/v1/websites`
+      ).flush({
+        success: true,
+        data: { id: 'website-1', name: 'Bella Bistro' },
+        message: null,
+        errors: null
+      });
+
+      await fixture.whenStable();
+
+      const router = TestBed.inject(Router);
+      expect(router.url).toContain('/websites/website-1/editor');
+    });
   });
 });

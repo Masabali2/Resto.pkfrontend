@@ -17,9 +17,11 @@ import { HttpErrorHandlerService } from '../../../../core/services/http-error-ha
 import { NotificationService } from '../../../../core/services/notification.service';
 import { Button } from '../../../../shared/components/button/button';
 import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
+import { ImageUploadComponent } from '../../../../shared/components/image-upload/image-upload.component';
 import type { ApiResponse } from '../../../../core/models/api-response.model';
-import type { MenuItemDto } from '../../models/menu-item.model';
+import type { MenuItemDto, UpdateMenuItemRequest } from '../../models/menu-item.model';
 import { parsePrice, DEFAULT_CURRENCY } from '../../models/menu-price.util';
+import type { MenuItemDestination } from '../../../websites/models/image-upload.model';
 
 function orNull(value: string | null): string | null {
   const trimmed = (value ?? '').trim();
@@ -36,7 +38,8 @@ const DISPLAY_ORDER_PATTERN = /^\d+$/;
   imports: [
     ReactiveFormsModule,
     Button,
-    LoadingSpinner
+    LoadingSpinner,
+    ImageUploadComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './menu-item-form.html',
@@ -75,6 +78,22 @@ export class MenuItemForm {
   protected readonly currency = DEFAULT_CURRENCY;
 
   protected readonly menuName = signal('');
+  protected readonly createdItemId = signal<string | null>(null);
+  protected readonly imageUploading = signal(false);
+  protected readonly imageError = signal('');
+  protected readonly itemImageFileId = signal<string | null>(null);
+
+  /** The item id that image upload targets: existing item on edit, or the
+   * newly created item on create (create-then-upload workflow). */
+  protected readonly uploadItemId = computed(() =>
+    this.isEdit ? this.itemId : this.createdItemId()
+  );
+
+  protected readonly uploadDestination = computed<MenuItemDestination | null>(() => {
+    const id = this.uploadItemId();
+    if (!id) return null;
+    return { kind: 'menu-item', menuItemId: id };
+  });
 
   constructor() {
     if (this.isEdit && this.itemId) {
@@ -89,6 +108,7 @@ export class MenuItemForm {
 
             const item = response.data;
             this.menuName.set(item.name);
+            this.itemImageFileId.set(item.imageFileId ?? null);
             this.form.patchValue({
               name: item.name,
               description: orNull(item.description) ?? '',
@@ -209,10 +229,18 @@ export class MenuItemForm {
           );
           this.form.markAsPristine();
           this.submitted.set(false);
-          void this.router.navigate(['/menus', this.menuId], {
-            queryParams: { restaurantId: this.route.snapshot.queryParamMap.get('restaurantId') },
-            queryParamsHandling: 'merge'
-          });
+
+          if (this.isEdit) {
+            void this.router.navigate(['/menus', this.menuId], {
+              queryParams: { restaurantId: this.route.snapshot.queryParamMap.get('restaurantId') },
+              queryParamsHandling: 'merge'
+            });
+          } else {
+            // Create-then-upload: stay on the form so the user can attach an
+            // image to the newly created item.
+            this.createdItemId.set(response.data.id);
+            this.itemImageFileId.set(response.data.imageFileId ?? null);
+          }
         },
         error: error => {
           const details = this.httpErrorHandler.handle(error, {
@@ -279,6 +307,44 @@ export class MenuItemForm {
   protected cancel(): void {
     this.form.markAsPristine();
     this.submitted.set(false);
+    this.createdItemId.set(null);
+    void this.router.navigate(['/menus', this.menuId], {
+      queryParams: { restaurantId: this.route.snapshot.queryParamMap.get('restaurantId') },
+      queryParamsHandling: 'merge'
+    });
+  }
+
+  protected onImageUploaded(result: { assetId: string }): void {
+    const itemId = this.uploadItemId();
+    if (!itemId) return;
+
+    this.imageUploading.set(true);
+    this.imageError.set('');
+
+    this.menuService
+      .updateItem(itemId, {
+        imageFileId: result.assetId,
+        clearImage: false
+      } as UpdateMenuItemRequest)
+      .pipe(finalize(() => this.imageUploading.set(false)))
+      .subscribe({
+        next: response => {
+          if (response.success && response.data) {
+            this.itemImageFileId.set(response.data.imageFileId ?? null);
+            this.imageError.set('');
+          } else {
+            this.imageError.set(response.message ?? 'Failed to attach the image.');
+          }
+        },
+        error: () => {
+          this.imageError.set('Failed to attach the image. Please try again.');
+        }
+      });
+  }
+
+  protected finishCreate(): void {
+    const itemId = this.createdItemId();
+    if (!itemId) return;
     void this.router.navigate(['/menus', this.menuId], {
       queryParams: { restaurantId: this.route.snapshot.queryParamMap.get('restaurantId') },
       queryParamsHandling: 'merge'
