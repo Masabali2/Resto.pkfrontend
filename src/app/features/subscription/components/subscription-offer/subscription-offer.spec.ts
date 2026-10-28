@@ -19,6 +19,7 @@ function state(overrides: Partial<SubscriptionState> = {}): SubscriptionState {
     availablePlans: [
       {
         id: 'plan-1',
+        code: 'free-trial',
         name: 'Free Trial',
         description: '30-day free trial for a new Resto.pk workspace.',
         price: 0,

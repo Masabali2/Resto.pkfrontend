@@ -67,29 +67,41 @@ export function daysBetween(fromUtc: string, toUtc: string): number {
 }
 
 /**
- * Presents a plan for display.
+ * Formats the entitlement limits of a plan into display strings.
+ * `0` means unlimited.
  */
-export function presentPlan(plan: SubscriptionPlan) {
+export function formatLimits(
+  maxStaff: number,
+  maxMenuItems: number,
+  maxOrdersPerMonth: number,
+): string[] {
   const limits: string[] = [];
 
   limits.push(
-    plan.maxStaff === 0
+    maxStaff === 0
       ? 'Unlimited staff members'
-      : `Up to ${plan.maxStaff} staff member${plan.maxStaff === 1 ? '' : 's'}`
+      : `Up to ${maxStaff} staff member${maxStaff === 1 ? '' : 's'}`,
   );
 
   limits.push(
-    plan.maxMenuItems === 0
+    maxMenuItems === 0
       ? 'Unlimited menu items'
-      : `Up to ${plan.maxMenuItems} menu item${plan.maxMenuItems === 1 ? '' : 's'}`
+      : `Up to ${maxMenuItems} menu item${maxMenuItems === 1 ? '' : 's'}`,
   );
 
   limits.push(
-    plan.maxOrdersPerMonth === 0
+    maxOrdersPerMonth === 0
       ? 'Unlimited monthly orders'
-      : `Up to ${plan.maxOrdersPerMonth} orders per month`
+      : `Up to ${maxOrdersPerMonth} orders per month`,
   );
 
+  return limits;
+}
+
+/**
+ * Presents a plan for display.
+ */
+export function presentPlan(plan: SubscriptionPlan) {
   return {
     plan,
     isFree: plan.price === 0,
@@ -97,7 +109,11 @@ export function presentPlan(plan: SubscriptionPlan) {
       plan.price === 0
         ? 'Free'
         : formatPlanPrice(plan.price, plan.currency),
-    limits
+    limits: formatLimits(
+      plan.maxStaff,
+      plan.maxMenuItems,
+      plan.maxOrdersPerMonth,
+    ),
   };
 }
 

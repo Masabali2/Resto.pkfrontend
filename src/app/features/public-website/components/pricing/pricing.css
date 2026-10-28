@@ -1,320 +1,313 @@
-:host {
-  display: block;
+.pricing {
+  padding: 56px 20px 80px;
 }
 
-/* ---------- Resto.pk section chrome (matches features/testimonials) ---------- */
-
-.pricing-section {
-  padding: 4rem 1.5rem;
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.section-inner {
-  max-width: var(--container-max-width);
+.pricing-inner {
+  max-width: 1100px;
   margin: 0 auto;
 }
 
-/* ---------- Header ---------- */
-
 .pricing-header {
-  max-width: 46rem;
-  margin: 0 auto 3rem;
   text-align: center;
+  max-width: 700px;
+  margin: 0 auto 36px;
 }
 
-.pricing-eyebrow {
+.pricing-kicker {
   display: inline-block;
-  margin: 0 0 0.75rem;
-  padding: 0.35rem 0.9rem;
-  color: var(--color-primary-hover);
-  background: var(--color-primary-soft);
-  border: 1px solid var(--resto-orange-soft);
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-xs);
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  margin: 0 0 10px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 1.6px;
   text-transform: uppercase;
+  color: #d94918;
+  background: #fff4f0;
+  border: 1px solid #fddcd0;
+  border-radius: 999px;
 }
 
 .pricing-title {
-  margin: 0 0 0.75rem;
-  color: var(--color-text);
-  font-family: var(--font-family-base);
-  font-size: clamp(1.7rem, 3.4vw, 2.4rem);
+  margin: 0 0 10px;
+  font-size: 30px;
   font-weight: 800;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  text-wrap: balance;
+  letter-spacing: -0.8px;
+  line-height: 1.25;
+  color: #1f2430;
 }
 
-.pricing-intro {
-  max-width: 38rem;
-  margin: 0 auto;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-lg);
-  line-height: 1.65;
+.pricing-subtitle {
+  margin: 0;
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: #4b5563;
 }
 
-/* ---------- Card grid ---------- */
-
-.pricing-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.25rem;
-  align-items: stretch;
+.interval-selector {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 40px;
 }
 
-/* Browser-only reveal states (never present in the SSR-prerendered HTML, so
-   cards are always visible when JavaScript does not run). The stagger delay
-   is supplied per card through the --pricing-card-delay custom property. */
-.pricing-grid-pending .pricing-card {
-  visibility: hidden;
+.interval-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
 }
 
-.pricing-grid-revealed .pricing-card {
-  visibility: visible;
-  opacity: 0;
-  transform: translateY(20px);
-  transition:
-    opacity 550ms ease-out var(--pricing-card-delay, 0ms),
-    transform 550ms ease-out var(--pricing-card-delay, 0ms);
+.interval-option input {
+  margin: 0;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #cbd2dd;
+  border-radius: 50%;
+  background: #fff;
+  transition: border-color 180ms ease, background-color 180ms ease;
 }
 
-.pricing-grid-revealed.pricing-grid-in .pricing-card {
-  opacity: 1;
-  transform: translateY(0);
+.interval-option input:checked {
+  border-color: #f05a24;
+  background: #f05a24;
+  box-shadow: 0 0 0 3px #fff4f0;
 }
 
-/* ---------- Card ---------- */
+.interval-option input:focus-visible {
+  outline: 3px solid #fddcd0;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
 
-.pricing-card {
-  position: relative;
+.interval-option span {
+  font-size: 14px;
+  font-weight: 650;
+  color: #374151;
+}
+
+.interval-option input:checked + span {
+  color: #d94918;
+}
+
+.loading-state,
+.empty-state {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  padding: 1.75rem 1.6rem 1.5rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-sm);
-  transition:
-    transform var(--transition-base),
-    border-color var(--transition-base),
-    box-shadow var(--transition-base);
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 20px;
+  text-align: center;
+  color: #6b7280;
 }
 
-.pricing-card:hover {
-  border-color: rgb(255 107 0 / 35%);
-  box-shadow: var(--shadow-card);
-  transform: translateY(-3px);
-}
-
-/* Recommended plan: tasteful brand-accent treatment that stands out without
-   overwhelming the other cards. The "Recommended" badge carries the meaning
-   as text, so colour is never the only signal. */
-.pricing-card-recommended {
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-card);
-}
-
-.pricing-card-recommended:hover {
-  border-color: var(--color-primary-hover);
-}
-
-/* ---------- Badge (and matching spacer for row alignment) ---------- */
-
-.pricing-badge {
-  align-self: flex-start;
-  margin-bottom: 1rem;
-  padding: 0.3rem 0.8rem;
-  color: var(--color-on-primary);
-  background: linear-gradient(100deg, var(--resto-orange), var(--resto-amber));
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-xs);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.pricing-badge-spacer {
-  display: block;
-  margin-bottom: 1rem;
-  /* Same height as the badge so plan names stay aligned across cards. */
-  min-height: calc(var(--font-size-xs) + 0.6rem + 2px);
-}
-
-/* ---------- Plan head ---------- */
-
-.pricing-card-head {
-  margin-bottom: 1.1rem;
-}
-
-.pricing-plan-name {
-  margin: 0 0 0.35rem;
-  color: var(--color-text);
-  font-size: var(--font-size-lg);
-  font-weight: 800;
-  line-height: 1.3;
-}
-
-.pricing-plan-description {
+.loading-state p,
+.empty-state p {
   margin: 0;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  line-height: 1.55;
+  font-size: 15px;
 }
 
-/* ---------- Price ---------- */
+.empty-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2430;
+}
 
-.pricing-price {
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.plan-card {
+  display: flex;
+  flex-direction: column;
+  padding: 26px 22px;
+  border: 1px solid #eaedf3;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 4px 20px rgb(0 0 0 / 3%);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.plan-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 8%);
+  border-color: #fddcd0;
+}
+
+.plan-card:focus-within {
+  outline: 3px solid #fddcd0;
+  outline-offset: 2px;
+  border-radius: 16px;
+}
+
+.plan-card.unavailable {
+  opacity: 0.62;
+  border-style: dashed;
+  border-color: #d8dce4;
+  pointer-events: none;
+}
+
+.plan-card.unavailable:hover {
+  transform: none;
+  box-shadow: 0 4px 20px rgb(0 0 0 / 3%);
+}
+
+.plan-card-header {
   display: flex;
   align-items: baseline;
-  gap: 0.35rem;
-  margin: 0 0 0.6rem;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
-.pricing-amount {
-  color: var(--color-text);
-  font-size: clamp(1.9rem, 3vw, 2.35rem);
+.plan-card-name {
+  margin: 0;
+  font-size: 18px;
   font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
+  letter-spacing: -0.4px;
+  color: #1f2430;
 }
 
-.pricing-period {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
+.plan-badge {
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.8px;
+  padding: 2px 8px;
+  border-radius: 999px;
 }
 
-/* ---------- Provisional-price integrity note ---------- */
+.plan-badge-unavailable {
+  color: #6b7280;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+}
 
-.pricing-provisional {
+.plan-card-description {
+  margin: 0 0 18px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #4b5563;
+}
+
+.plan-price {
   display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  margin: 0 0 1.25rem;
-  padding: 0.45rem 0.7rem;
-  color: var(--color-warning);
-  background: var(--color-warning-soft);
-  border: 1px solid var(--color-warning-border);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-xs);
+  align-items: baseline;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.plan-price-amount {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  color: #1f2430;
+}
+
+.plan-price-period {
+  font-size: 14px;
   font-weight: 600;
-  line-height: 1.45;
+  color: #6b7280;
 }
 
-.provisional-dot {
-  flex-shrink: 0;
-  width: 0.5rem;
-  height: 0.5rem;
-  background: var(--color-warning);
-  border-radius: var(--radius-full);
-}
-
-/* ---------- Feature list ---------- */
-
-.pricing-features {
-  flex-grow: 1;
-  margin: 0 0 1.5rem;
+.plan-limits {
+  margin: 0 0 22px;
   padding: 0;
   list-style: none;
-  display: grid;
-  gap: 0.6rem;
-}
-
-.pricing-feature {
   display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-  line-height: 1.55;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.pricing-check-icon {
-  flex-shrink: 0;
-  width: 1.05rem;
-  height: 1.05rem;
-  margin-top: 0.15rem;
-  color: var(--resto-orange);
+.plan-limits li {
+  font-size: 13.5px;
+  color: #374151;
+  padding-left: 20px;
+  position: relative;
 }
 
-/* ---------- CTA ---------- */
-
-.pricing-card-actions {
-  margin-top: auto;
+.plan-limits li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d94918;
 }
 
-.pricing-cta-link {
-  display: block;
-  text-decoration: none;
+.payment-unavailable {
+  margin-top: 36px;
+  padding: 26px 24px;
+  border: 1px solid #fddcd0;
+  border-radius: 16px;
+  background: #fff4f0;
+  color: #1f2430;
 }
 
-.pricing-cta-link:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-  border-radius: var(--radius-control);
+.payment-unavailable h4 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #d94918;
 }
 
-/* ---------- Disclaimer ---------- */
-
-.pricing-disclaimer {
-  max-width: 46rem;
-  margin: 1.75rem auto 0;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
+.payment-unavailable p {
+  margin: 0 0 18px;
+  font-size: 15px;
   line-height: 1.6;
-  text-align: center;
 }
 
-/* ---------- Responsive ---------- */
-
-@media (max-width: 1023px) {
-  .pricing-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.payment-actions {
+  display: flex;
+  gap: 10px;
 }
-
-@media (max-width: 639px) {
-  .pricing-section {
-    padding: 3.25rem 1rem;
-  }
-
-  .pricing-header {
-    margin-bottom: 2.25rem;
-  }
-
-  .pricing-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  .pricing-card {
-    padding: 1.5rem 1.35rem 1.35rem;
-  }
-}
-
-/* ---------- Reduced motion: content stays visible, no movement ---------- */
 
 @media (prefers-reduced-motion: reduce) {
-  /* Reveal states must never hide or animate content here — including the
-     brief pending window before the observer fires. */
-  .pricing-grid-pending .pricing-card,
-  .pricing-grid-revealed .pricing-card,
-  .pricing-grid-revealed.pricing-grid-in .pricing-card {
-    visibility: visible;
-    opacity: 1;
-    transform: none;
+  .plan-card,
+  .interval-option input {
     transition: none;
   }
 
-  .pricing-card {
-    transition: none;
+  .plan-card:hover {
+    transform: none;
+    box-shadow: 0 4px 20px rgb(0 0 0 / 3%);
+  }
+}
+
+@media (max-width: 900px) {
+  .plan-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
   }
 
-  .pricing-card:hover {
-    transform: none;
+  .plan-card {
+    padding: 22px 18px;
+  }
+
+  .plan-price-amount {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 600px) {
+  .plan-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pricing-title {
+    font-size: 24px;
+  }
+
+  .payment-actions {
+    flex-direction: column;
+  }
+
+  .payment-actions app-button {
+    width: 100%;
   }
 }

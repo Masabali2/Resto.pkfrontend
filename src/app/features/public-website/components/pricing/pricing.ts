@@ -1,129 +1,146 @@
 import {
-  AfterViewInit,
   Component,
-  ElementRef,
+  inject,
   signal,
-  viewChild,
+  type OnInit,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+import { Router } from '@angular/router';
 import { Button } from '../../../../shared/components/button/button';
+import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
+import { SubscriptionService } from '../../../subscription/services/subscription.service';
+import { PlanSelectionService } from '../../../subscription/services/plan-selection.service';
+import {
+  formatLimits,
+  formatPlanPrice,
+} from '../../../subscription/utils/subscription-status.util';
+import {
+  groupPlansByCode,
+  type PlanVariant,
+  type PresentedPlanGroup,
+} from '../../../subscription/models/subscription-plan.model';
 
-/**
- * A single pricing plan rendered as a card in the public-website section.
- *
- * NOTE ON DATA INTEGRITY: no official Resto.pk prices, billing periods, or
- * feature limits exist anywhere in this repository (backend, models, docs, or
- * approved product copy). Every `price` / `period` / `features` value below is
- * an ILLUSTRATIVE PLACEHOLDER used only to demonstrate the layout while
- * commercial pricing is still being defined. Each card surfaces a visible
- * "Provisional" badge and the section footer repeats the disclaimer, so these
- * numbers are never presented as genuine Resto.pk pricing. Replace the typed
- * `plans` array with verified data once pricing is approved.
- */
-export interface PricingPlan {
-  /** Stable key used for `@for` tracking. */
-  readonly id: string;
-  /** Plan display name (rendered as an `<h3>`). */
-  readonly name: string;
-  /** One-line summary of who the plan is for. */
-  readonly description: string;
-  /** Illustrative placeholder price — NOT an official Resto.pk price. */
-  readonly price: string;
-  /** Billing period shown next to the price — illustrative placeholder. */
-  readonly period: string;
-  /** Capability list — illustrative placeholder, not a commercial promise. */
-  readonly features: readonly string[];
-  /** CTA label; every CTA links to the existing /register route. */
-  readonly ctaLabel: string;
-  /** Whether this card is visually highlighted as recommended. */
-  readonly recommended: boolean;
+type ButtonVariant = 'primary' | 'outline';
+
+interface PriceVariant {
+  readonly group: PresentedPlanGroup;
+  readonly interval: 'Monthly' | 'Yearly';
 }
 
 @Component({
   selector: 'app-pricing',
   standalone: true,
-  imports: [RouterLink, Button],
+  imports: [Button, LoadingSpinner],
   templateUrl: './pricing.html',
   styleUrl: './pricing.css',
 })
-export class Pricing implements AfterViewInit {
-  protected readonly plans: readonly PricingPlan[] = [
-    {
-      id: 'starter',
-      name: 'Starter',
-      description: 'For new restaurants launching their first website.',
-      price: 'Rs 0',
-      period: '/month',
-      features: [
-        '1 restaurant website',
-        'Visual website builder',
-        'Mobile responsive design',
-        'Basic menu management',
-        'Email support',
-      ],
-      ctaLabel: 'Get started',
-      recommended: false,
-    },
-    {
-      id: 'professional',
-      name: 'Professional',
-      description: 'For growing restaurants that want a stronger brand.',
-      price: 'Rs 4,999',
-      period: '/month',
-      features: [
-        'Everything in Starter',
-        'Custom branding options',
-        'Instant publishing & previews',
-        'Advanced menu organisation',
-        'Priority support',
-      ],
-      ctaLabel: 'Start with Professional',
-      recommended: true,
-    },
-    {
-      id: 'business',
-      name: 'Business',
-      description: 'For multi-location restaurants and teams.',
-      price: 'Rs 9,999',
-      period: '/month',
-      features: [
-        'Everything in Professional',
-        'Multiple restaurants support',
-        'Staff accounts & roles',
-        'Centralized dashboard',
-        'Dedicated support',
-      ],
-      ctaLabel: 'Choose Business',
-      recommended: false,
-    },
-  ];
+export class Pricing implements OnInit {
+  private readonly subscriptionService = inject(SubscriptionService);
+  private readonly planSelection = inject(PlanSelectionService);
+  private readonly router = inject(Router);
 
- 
-  protected readonly revealState = signal<'idle' | 'pending' | 'revealed'>('idle');
+  readonly plans = signal<readonly PresentedPlanGroup[]>([]);
+  readonly loading = signal(true);
+  readonly error = signal<string | null>(null);
+  readonly interval = signal<'Monthly' | 'Yearly'>('Monthly');
+  /** A paid plan the user chose — shown as "payment setup unavailable". */
+  readonly paidPlan = signal<PriceVariant | null>(null);
 
-  /** Second-phase flag set one frame after `revealed` to trigger the CSS transition. */
-  protected readonly cardsIn = signal(false);
+  /** Selection persisted across the login/register/onboarding redirects. */
+  readonly selected = this.planSelection.current;
 
-  private readonly gridRef = viewChild<ElementRef<HTMLDivElement>>('pricingGrid');
+  /** Template-accessible helpers. */
+  protected readonly formatLimits = formatLimits;
+  protected readonly formatPrice = formatPlanPrice;
 
-  ngAfterViewInit(): void {
-    // SSR guard: browser globals are only touched when a real window exists.
-    if (typeof IntersectionObserver !== 'function') return;
+  async ngOnInit(): Promise<void> {
+    try {
+      this.loading.set(true);
+      this.error.set(null);
+      this.paidPlan.set(null);
 
-    const grid = this.gridRef()?.nativeElement;
-    if (!grid) return;
+      const plans = await firstValueFrom(
+        this.subscriptionService.loadPublicPlans(),
+      );
 
-    this.revealState.set('pending');
-    const observer = new IntersectionObserver(
-      (entries: IntersectionObserverEntry[]) => {
-        if (entries.some(entry => entry.isIntersecting)) {
-          this.revealState.set('revealed');
-          observer.disconnect();
-          requestAnimationFrame(() => this.cardsIn.set(true));
-        }
-      },
-      { threshold: 0.12, rootMargin: '0px 0px -8% 0px' },
+      this.plans.set(groupPlansByCode(plans));
+    } catch {
+      this.error.set(
+        'We could not load the pricing plans right now. Please try again later.',
+      );
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  retry(): void {
+    void this.ngOnInit();
+  }
+
+  isInterval(interval: 'Monthly' | 'Yearly'): boolean {
+    return this.interval() === interval;
+  }
+
+  selectInterval(interval: 'Monthly' | 'Yearly'): void {
+    this.interval.set(interval);
+    this.paidPlan.set(null);
+  }
+
+  variantOf(
+    group: PresentedPlanGroup,
+    interval: 'Monthly' | 'Yearly',
+  ): PlanVariant | null {
+    const variant =
+      interval === 'Monthly' ? group.monthly : group.yearly;
+
+    return variant ?? null;
+  }
+
+  /** The variant of `group` for the currently selected interval. */
+  selectedVariant(group: PresentedPlanGroup): PlanVariant {
+    return (
+      this.variantOf(group, this.interval()) ?? {
+        interval: this.interval(),
+        price: 0,
+        isActive: false,
+      }
     );
-    observer.observe(grid);
+  }
+
+  billingLabel(interval: 'Monthly' | 'Yearly'): string {
+    return interval === 'Monthly' ? 'per month' : 'per year';
+  }
+
+  buttonVariant(group: PresentedPlanGroup): ButtonVariant {
+    return this.selectedVariant(group).price === 0 ? 'primary' : 'outline';
+  }
+
+  async choosePlan(group: PresentedPlanGroup, interval: 'Monthly' | 'Yearly'): Promise<void> {
+    const variant = this.variantOf(group, interval);
+
+    if (!variant || !variant.isActive) {
+      return;
+    }
+
+    this.interval.set(interval);
+    this.planSelection.select(group.code, interval);
+
+    if (variant.price === 0) {
+      // The free trial plan requires no payment. Activation goes through the
+      // existing workspace trial flow, which validates eligibility server-side.
+      void this.router.navigate(['/subscription']);
+      return;
+    }
+
+    // Paid plans cannot be activated yet — Resto.pk does not process payments.
+    this.paidPlan.set({ group, interval });
+  }
+
+  returnToPricing(): void {
+    this.paidPlan.set(null);
+  }
+
+  goToDashboard(): void {
+    void this.router.navigate(['/dashboard']);
   }
 }

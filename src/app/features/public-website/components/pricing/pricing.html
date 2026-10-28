@@ -1,99 +1,113 @@
-<section id="pricing" class="pricing-section" aria-labelledby="pricing-title">
-  <div class="section-inner">
-    <header class="pricing-header">
-      <p class="pricing-eyebrow">Pricing</p>
-      <h2 id="pricing-title" class="pricing-title">Simple, Transparent Pricing</h2>
-      <p class="pricing-intro">
-        Choose the right plan for your restaurant and grow your online presence with Resto.pk.
+<section class="pricing" id="pricing" aria-labelledby="pricing-heading">
+  <div class="pricing-inner">
+    <div class="pricing-header">
+      <h2 id="pricing-heading" class="pricing-kicker">Simple pricing in PKR</h2>
+      <h3 class="pricing-title">Choose the plan that fits your restaurant</h3>
+      <p class="pricing-subtitle">
+        All amounts are in Pakistani rupees (PKR). Billing is monthly or
+        yearly — there are no hidden fees.
       </p>
-    </header>
-
-    <!--
-      Browser-only reveal states mirror the features/testimonials pattern:
-      the SSR HTML never carries these classes, so content is always visible
-      when JS does not run. Stagger delay is passed through a scoped CSS
-      custom property.
-    -->
-    <div
-      #pricingGrid
-      class="pricing-grid"
-      [class.pricing-grid-pending]="revealState() === 'pending'"
-      [class.pricing-grid-revealed]="revealState() === 'revealed'"
-      [class.pricing-grid-in]="cardsIn()"
-    >
-      @for (plan of plans; track plan.id; let index = $index) {
-        <article
-          class="pricing-card"
-          [class.pricing-card-recommended]="plan.recommended"
-          [style.--pricing-card-delay]="(index * 90) + 'ms'"
-        >
-          @if (plan.recommended) {
-            <span class="pricing-badge">Recommended</span>
-          } @else {
-            <span class="pricing-badge-spacer" aria-hidden="true"></span>
-          }
-
-          <header class="pricing-card-head">
-            <h3 class="pricing-plan-name">{{ plan.name }}</h3>
-            <p class="pricing-plan-description">{{ plan.description }}</p>
-          </header>
-
-          <p class="pricing-price">
-            <span class="pricing-amount">{{ plan.price }}</span>
-            <span class="pricing-period">{{ plan.period }}</span>
-          </p>
-
-          <!--
-            Integrity flag: prices are illustrative placeholders because no
-            official Resto.pk pricing has been defined in this repository.
-          -->
-          <p class="pricing-provisional">
-            <span class="provisional-dot" aria-hidden="true"></span>
-            Provisional placeholder price — final pricing to be announced
-          </p>
-
-          <ul class="pricing-features" [attr.aria-label]="plan.name + ' plan features'">
-            @for (feature of plan.features; track feature) {
-              <li class="pricing-feature">
-                <svg
-                  class="pricing-check-icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                  focusable="false"
-                >
-                  <path d="M20 6 9 17l-5-5" />
-                </svg>
-                <span>{{ feature }}</span>
-              </li>
-            }
-          </ul>
-
-          <footer class="pricing-card-actions">
-            <!-- Same anchor-wrapping-app-button pattern as final-cta/navbar. -->
-            <a routerLink="/register" class="pricing-cta-link">
-              <app-button
-                [variant]="plan.recommended ? 'primary' : 'outline'"
-                size="lg"
-                [fullWidth]="true"
-              >{{ plan.ctaLabel }}</app-button>
-            </a>
-          </footer>
-        </article>
-      }
     </div>
 
-    <!--
-      Content-integrity note: no official prices or plan limits exist yet for
-      this product, so the cards above use clearly labelled provisional
-      placeholders rather than commercial commitments.
-    -->
-    <p class="pricing-disclaimer">
-      Plan prices shown are provisional design placeholders. Official Resto.pk pricing will be announced before launch.
-    </p>
+    <!-- Billing interval selector -->
+    <div class="interval-selector" role="group" aria-label="Billing interval">
+      <label class="interval-option">
+        <input
+          type="radio"
+          name="billing-interval"
+          value="Monthly"
+          [checked]="interval() === 'Monthly'"
+          (change)="selectInterval('Monthly')"
+        />
+        <span>Monthly</span>
+      </label>
+      <label class="interval-option">
+        <input
+          type="radio"
+          name="billing-interval"
+          value="Yearly"
+          [checked]="interval() === 'Yearly'"
+          (change)="selectInterval('Yearly')"
+        />
+        <span>Yearly</span>
+      </label>
+    </div>
+
+    @if (loading()) {
+      <div class="loading-state">
+        <app-loading-spinner />
+        <p>Loading plans…</p>
+      </div>
+    } @else if (error()) {
+      <div class="empty-state">
+        <p class="empty-title">Unable to load pricing</p>
+        <p>{{ error() }}</p>
+        <app-button variant="primary" (click)="retry()">Try again</app-button>
+      </div>
+    } @else if (plans().length === 0) {
+      <div class="empty-state">
+        <p class="empty-title">No plans available right now</p>
+        <p>Please check back later or contact us to get started.</p>
+      </div>
+    } @else {
+      <div class="plan-grid">
+        @for (group of plans(); track group.code) {
+          <article class="plan-card" [class.unavailable]="!selectedVariant(group).isActive">
+            <div class="plan-card-body">
+              <header class="plan-card-header">
+                <h4 class="plan-card-name">{{ group.name }}</h4>
+                @if (!selectedVariant(group).isActive) {
+                  <span class="plan-badge plan-badge-unavailable">Unavailable</span>
+                }
+              </header>
+              <p class="plan-card-description">{{ group.description }}</p>
+
+              <div class="plan-price">
+                <span class="plan-price-amount">
+                  {{ formatPrice(selectedVariant(group).price, 'PKR') }}
+                </span>
+                <span class="plan-price-period">{{ billingLabel(interval()) }}</span>
+              </div>
+
+              <ul class="plan-limits">
+                @for (limit of formatLimits(group.maxStaff, group.maxMenuItems, group.maxOrdersPerMonth); track limit) {
+                  <li>{{ limit }}</li>
+                }
+              </ul>
+
+              <app-button
+                [variant]="buttonVariant(group)"
+                [disabled]="!selectedVariant(group).isActive || paidPlan() !== null"
+                (click)="choosePlan(group, interval())"
+              >
+                {{ selectedVariant(group).price === 0 ? 'Start free trial' : 'Choose plan' }}
+              </app-button>
+            </div>
+          </article>
+        }
+      </div>
+
+      <!-- Paid plan chosen state: payment setup is not available yet. -->
+      @if (paidPlan()) {
+        <div class="payment-unavailable" role="status" aria-live="polite">
+          <h4>Payment setup is not available yet</h4>
+          <p>
+            Resto.pk does not process payments yet, so the
+            <strong>{{ paidPlan()!.group.name }}</strong> plan (
+            {{ formatPrice(selectedVariant(paidPlan()!.group).price, 'PKR') }}
+            {{ billingLabel(paidPlan()!.interval) }}
+            ) cannot be activated right now.
+          </p>
+          <div class="payment-actions">
+            <app-button variant="outline" (click)="returnToPricing()">
+              Return to pricing
+            </app-button>
+            <app-button variant="primary" (click)="goToDashboard()">
+              Go to dashboard
+            </app-button>
+          </div>
+        </div>
+      }
+    }
   </div>
 </section>
