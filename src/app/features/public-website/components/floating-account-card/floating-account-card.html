@@ -1,0 +1,42 @@
+@if (isVisible()) {
+  <div
+    class="floating-account-card"
+    role="region"
+    aria-labelledby="account-card-heading"
+    aria-describedby="account-card-description"
+  >
+    <div class="card-header">
+      <span id="account-card-heading">Welcome back!</span>
+      <button
+        class="dismiss-button"
+        type="button"
+        (click)="dismiss()"
+        aria-label="Dismiss welcome notification"
+      >
+        <span class="visually-hidden">Dismiss</span>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="card-body">
+      <div class="card-message">
+        Continue as <strong>{{ userName() }}</strong>
+      </div>
+      <app-button
+        variant="primary"
+        size="sm"
+        [fullWidth]="false"
+        (click)="continueAs()"
+        class="continue-button"
+      >
+        Continue as {{ userName() }}
+      </app-button>
+    </div>
+
+    <p class="card-hint" id="account-card-description">
+      Your session is active. Continue browsing Resto.pk.
+    </p>
+  </div>
+}

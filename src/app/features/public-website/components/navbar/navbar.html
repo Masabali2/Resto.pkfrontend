@@ -12,10 +12,116 @@
     </nav>
 
     <div class="navbar-actions">
-      <a class="navbar-auth-link" routerLink="/login">Sign In</a>
-      <a class="navbar-cta" routerLink="/register">
-        <app-button variant="primary" size="sm" [fullWidth]="false">Get Started</app-button>
-      </a>
+      @if (isAuthenticated() && isInitialized()) {
+        <div
+          class="profile-control"
+          role="group"
+          aria-label="Account"
+        >
+          <button
+            class="profile-trigger"
+            type="button"
+            [attr.aria-expanded]="profileMenuOpen()"
+            [attr.aria-haspopup]="true"
+            (click)="toggleProfileMenu()"
+          >
+            <span class="profile-avatar" aria-hidden="true">
+              @if (avatarUrl()) {
+                <img [src]="avatarUrl()" alt="" />
+              } @else {
+                {{ initials() }}
+              }
+            </span>
+            <span class="profile-name">{{ userName() }}</span>
+            <svg
+              class="profile-chevron"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M7 11l4 4 4-4"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+
+          @if (profileMenuOpen()) {
+            <div class="profile-menu" role="menu">
+              <div class="profile-menu-header">
+                <div class="profile-menu-avatar" aria-hidden="true">
+                  @if (avatarUrl()) {
+                    <img [src]="avatarUrl()" alt="" />
+                  } @else {
+                    {{ initials() }}
+                  }
+                </div>
+                <div class="profile-menu-info">
+                  <div class="profile-menu-name">{{ userName() }}</div>
+                  @if (userEmail()) {
+                    <div class="profile-menu-email">{{ userEmail() }}</div>
+                  }
+                </div>
+              </div>
+              <hr class="profile-menu-divider" />
+              <button
+                class="profile-menu-item"
+                type="button"
+                role="menuitem"
+                (click)="goToDashboard()"
+              >
+                <span class="profile-menu-item-label">Go to Dashboard</span>
+                <svg
+                  class="profile-menu-item-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M9 5l7 7-7 7"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+              <button
+                class="profile-menu-item profile-menu-item-danger"
+                type="button"
+                role="menuitem"
+                (click)="signOut()"
+                [disabled]="signingOut()"
+                [attr.aria-busy]="signingOut()"
+              >
+                <span class="profile-menu-item-label">Logout</span>
+                <svg
+                  class="profile-menu-item-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7l10 10M5 7l10 10"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+          }
+        </div>
+      } @else {
+        <a class="navbar-auth-link" routerLink="/login">Sign In</a>
+        <a class="navbar-cta" routerLink="/register">
+          <app-button variant="primary" size="sm" [fullWidth]="false">Get Started</app-button>
+        </a>
+      }
     </div>
 
     <button
@@ -36,10 +142,43 @@
         <a class="mobile-link" [href]="'#' + link.anchor" (click)="closeMobileMenu()">{{ link.label }}</a>
       }
       <div class="mobile-actions">
-        <a class="mobile-auth-link" routerLink="/login" (click)="closeMobileMenu()">Sign In</a>
-        <a routerLink="/register" (click)="closeMobileMenu()">
-          <app-button variant="primary" size="md" [fullWidth]="true">Get Started</app-button>
-        </a>
+        @if (isAuthenticated() && isInitialized()) {
+          <div class="mobile-profile-control">
+            <div class="profile-avatar-mobile" aria-hidden="true">
+              @if (avatarUrl()) {
+                <img [src]="avatarUrl()" alt="" />
+              } @else {
+                {{ initials() }}
+              }
+            </div>
+            <div class="mobile-profile-info">
+              <div class="mobile-profile-name">{{ userName() }}</div>
+              @if (userEmail()) {
+                <div class="mobile-profile-email">{{ userEmail() }}</div>
+              }
+            </div>
+            <button
+              class="mobile-dashboard-button"
+              type="button"
+              (click)="goToDashboard()"
+            >
+              Go to Dashboard
+            </button>
+            <button
+              class="mobile-logout-button"
+              type="button"
+              (click)="signOut()"
+              [disabled]="signingOut()"
+            >
+              {{ signingOut() ? 'Signing out...' : 'Logout' }}
+            </button>
+          </div>
+        } @else {
+          <a class="mobile-auth-link" routerLink="/login" (click)="closeMobileMenu()">Sign In</a>
+          <a routerLink="/register" (click)="closeMobileMenu()">
+            <app-button variant="primary" size="md" [fullWidth]="true">Get Started</app-button>
+          </a>
+        }
       </div>
     </nav>
   }
