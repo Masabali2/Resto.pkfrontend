@@ -11,6 +11,12 @@ import { Injectable, signal } from '@angular/core';
 export interface PlanSelection {
   readonly code: string;
   readonly interval: 'Monthly' | 'Yearly';
+  /**
+   * Currency of the price the visitor saw. Optional for selections saved
+   * before currency selection existed; the backend still validates the plan
+   * and resolves its price server-side.
+   */
+  readonly currency?: string;
 }
 
 const SELECTION_STORAGE_KEY = 'resto.pk.planSelection';
@@ -38,7 +44,11 @@ export class PlanSelectionService {
           typeof parsed.code === 'string' &&
           (parsed.interval === 'Monthly' || parsed.interval === 'Yearly')
         ) {
-          this.selection.set(parsed);
+          this.selection.set(
+            typeof parsed.currency === 'string'
+              ? { ...parsed, currency: parsed.currency }
+              : { code: parsed.code, interval: parsed.interval },
+          );
         }
       }
     } catch {
@@ -47,8 +57,14 @@ export class PlanSelectionService {
   }
 
   /** Persist the selected plan and billing interval. */
-  select(code: string, interval: 'Monthly' | 'Yearly'): void {
-    const next: PlanSelection = { code, interval };
+  select(
+    code: string,
+    interval: 'Monthly' | 'Yearly',
+    currency?: string,
+  ): void {
+    const next: PlanSelection = currency
+      ? { code, interval, currency }
+      : { code, interval };
 
     this.selection.set(next);
 

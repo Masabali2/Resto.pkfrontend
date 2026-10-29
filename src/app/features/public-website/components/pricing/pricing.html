@@ -1,112 +1,299 @@
-<section class="pricing" id="pricing" aria-labelledby="pricing-heading">
+<section id="pricing" class="pricing-section" aria-labelledby="pricing-heading">
   <div class="pricing-inner">
-    <div class="pricing-header">
-      <h2 id="pricing-heading" class="pricing-kicker">Simple pricing in PKR</h2>
-      <h3 class="pricing-title">Choose the plan that fits your restaurant</h3>
-      <p class="pricing-subtitle">
-        All amounts are in Pakistani rupees (PKR). Billing is monthly or
-        yearly — there are no hidden fees.
+    <header class="pricing-hero">
+      <p class="pricing-badge">
+        <svg lucideSparkles [size]="15" [strokeWidth]="2" aria-hidden="true"></svg>
+        Subscription Plans for Pakistani Restaurants
       </p>
-    </div>
 
-    <!-- Billing interval selector -->
-    <div class="interval-selector" role="group" aria-label="Billing interval">
-      <label class="interval-option">
-        <input
-          type="radio"
-          name="billing-interval"
-          value="Monthly"
-          [checked]="interval() === 'Monthly'"
-          (change)="selectInterval('Monthly')"
-        />
-        <span>Monthly</span>
-      </label>
-      <label class="interval-option">
-        <input
-          type="radio"
-          name="billing-interval"
-          value="Yearly"
-          [checked]="interval() === 'Yearly'"
-          (change)="selectInterval('Yearly')"
-        />
-        <span>Yearly</span>
-      </label>
+      <h2 id="pricing-heading" class="pricing-title">
+        Scale Your Restaurant's<br />
+        <span class="title-gradient">Online Orders &amp; Presence</span>
+      </h2>
+
+      <p class="pricing-description">
+        Launch your restaurant's online presence, manage your digital menu, and
+        grow with Resto.pk.
+      </p>
+    </header>
+
+    <div class="pricing-controls">
+      <div class="control-group">
+        <span class="control-label" id="billing-period-label">Billing period</span>
+
+        <div
+          class="billing-switch"
+          role="group"
+          aria-labelledby="billing-period-label"
+        >
+          <button
+            type="button"
+            class="billing-option"
+            [class.is-active]="interval() === 'Monthly'"
+            [attr.aria-pressed]="interval() === 'Monthly'"
+            [disabled]="controlsDisabled()"
+            (click)="selectInterval('Monthly')"
+          >
+            @if (interval() === 'Monthly') {
+              <svg lucideCheck [size]="14" [strokeWidth]="2.5" aria-hidden="true"></svg>
+            }
+            <span>Monthly Billing</span>
+          </button>
+
+          <button
+            type="button"
+            class="billing-option"
+            [class.is-active]="interval() === 'Yearly'"
+            [attr.aria-pressed]="interval() === 'Yearly'"
+            [disabled]="controlsDisabled()"
+            (click)="selectInterval('Yearly')"
+          >
+            @if (interval() === 'Yearly') {
+              <svg lucideCheck [size]="14" [strokeWidth]="2.5" aria-hidden="true"></svg>
+            }
+            <span>Annual Billing</span>
+          </button>
+        </div>
+
+        <div class="billing-savings" aria-live="polite">
+          @if (interval() === 'Yearly' && annualSavings(); as savings) {
+            <span class="savings-badge">
+              <svg lucideSparkles [size]="12" [strokeWidth]="2" aria-hidden="true"></svg>
+              {{ savings }}
+            </span>
+          }
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label" for="pricing-currency">Currency</label>
+
+        <div class="currency-field">
+          <svg lucideGlobe [size]="16" [strokeWidth]="2" aria-hidden="true"></svg>
+          <select
+            id="pricing-currency"
+            class="currency-select"
+            [value]="currency()"
+            [disabled]="controlsDisabled()"
+            (change)="selectCurrency($event)"
+          >
+            @for (code of currencies(); track code) {
+              <option [value]="code">{{ code }}</option>
+            }
+          </select>
+          <svg lucideChevronDown [size]="14" [strokeWidth]="2" aria-hidden="true"></svg>
+        </div>
+
+        @if (currencies().length === 1) {
+          <p class="control-label">Only {{ currency() }} prices are published.</p>
+        }
+      </div>
     </div>
 
     @if (loading()) {
-      <div class="loading-state">
-        <app-loading-spinner />
-        <p>Loading plans…</p>
+      <div
+        class="plan-grid"
+        role="status"
+        aria-busy="true"
+        aria-label="Loading subscription plans…"
+      >
+        @for (row of skeletonRows; track row) {
+          <div class="plan-card" aria-hidden="true">
+            <div class="skeleton skeleton-icon"></div>
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+            <div class="skeleton skeleton-price"></div>
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+            <div class="skeleton skeleton-cta"></div>
+          </div>
+        }
       </div>
     } @else if (error()) {
-      <div class="empty-state">
-        <p class="empty-title">Unable to load pricing</p>
+      <div class="state-panel" role="alert">
+        <span class="state-icon" aria-hidden="true">
+          <svg lucideTriangleAlert [size]="24" [strokeWidth]="1.9"></svg>
+        </span>
+        <h3>We couldn't load the pricing plans</h3>
         <p>{{ error() }}</p>
-        <app-button variant="primary" (click)="retry()">Try again</app-button>
+        <div class="state-actions">
+          <button type="button" class="btn btn-primary" (click)="retry()">
+            <svg lucideRefreshCw [size]="16" [strokeWidth]="2.2" aria-hidden="true"></svg>
+            Try again
+          </button>
+        </div>
       </div>
-    } @else if (plans().length === 0) {
-      <div class="empty-state">
-        <p class="empty-title">No plans available right now</p>
-        <p>Please check back later or contact us to get started.</p>
+    } @else if (catalogueIssue()) {
+      <div class="state-panel" role="alert">
+        <span class="state-icon" aria-hidden="true">
+          <svg lucideTriangleAlert [size]="24" [strokeWidth]="1.9"></svg>
+        </span>
+        <h3>Pricing is temporarily unavailable</h3>
+        <p>{{ catalogueIssue() }}</p>
+        <p class="state-hint">
+          No placeholder plans or prices are shown. Please try again, or contact
+          Resto.pk support if this continues.
+        </p>
+        <div class="state-actions">
+          <button type="button" class="btn btn-primary" (click)="retry()">
+            <svg lucideRefreshCw [size]="16" [strokeWidth]="2.2" aria-hidden="true"></svg>
+            Reload plans
+          </button>
+        </div>
       </div>
     } @else {
       <div class="plan-grid">
-        @for (group of plans(); track group.code) {
-          <article class="plan-card" [class.unavailable]="!selectedVariant(group).isActive">
-            <div class="plan-card-body">
-              <header class="plan-card-header">
-                <h4 class="plan-card-name">{{ group.name }}</h4>
-                @if (!selectedVariant(group).isActive) {
-                  <span class="plan-badge plan-badge-unavailable">Unavailable</span>
-                }
-              </header>
-              <p class="plan-card-description">{{ group.description }}</p>
+        @for (group of displayPlans(); track group.code; let i = $index) {
+          <article
+            class="plan-card"
+            [class.is-recommended]="isRecommended(group)"
+            [style.animation-delay]="i * 80 + 320 + 'ms'"
+            [attr.aria-labelledby]="'plan-' + group.code + '-name'"
+          >
+            @if (isRecommended(group)) {
+              <span class="plan-badge">
+                <svg lucideStar [size]="12" [strokeWidth]="2.5" aria-hidden="true"></svg>
+                Most Popular
+              </span>
+            }
 
+            <div class="plan-icon" aria-hidden="true">
+              @switch (group.code.toLowerCase()) {
+                @case ('starter') {
+                  <svg lucideStore [size]="24" [strokeWidth]="1.9"></svg>
+                }
+                @case ('professional') {
+                  <svg lucideZap [size]="24" [strokeWidth]="1.9"></svg>
+                }
+                @case ('business') {
+                  <svg lucideBuilding2 [size]="24" [strokeWidth]="1.9"></svg>
+                }
+                @default {
+                  <svg lucideSparkles [size]="24" [strokeWidth]="1.9"></svg>
+                }
+              }
+            </div>
+
+            <h3 class="plan-name" [id]="'plan-' + group.code + '-name'">
+              {{ group.name }}
+            </h3>
+
+            @if (group.description) {
+              <p class="plan-description">{{ group.description }}</p>
+            }
+
+            @if (selectedVariant(group); as variant) {
               <div class="plan-price">
-                <span class="plan-price-amount">
-                  {{ formatPrice(selectedVariant(group).price, 'PKR') }}
+                <span class="price-amount">
+                  {{ formatPrice(variant.price, variant.currency) }}
                 </span>
-                <span class="plan-price-period">{{ billingLabel(interval()) }}</span>
+                <span class="price-period">
+                  {{ interval() === 'Monthly' ? '/ month' : '/ year' }}
+                </span>
               </div>
 
-              <ul class="plan-limits">
-                @for (limit of formatLimits(group.maxStaff, group.maxMenuItems, group.maxOrdersPerMonth); track limit) {
-                  <li>{{ limit }}</li>
+              <div class="price-meta">
+                @if (interval() === 'Yearly') {
+                  <span class="price-equivalent">
+                    ≈ {{ formatMonthlyEquivalent(group) }} / month equivalent
+                  </span>
+                  <span class="price-billing">Billed annually</span>
+                  @if (savingsOf(group); as savings) {
+                    <span class="savings-badge">Save {{ savings }}%</span>
+                  }
+                } @else {
+                  <span class="price-billing">Billed monthly</span>
                 }
-              </ul>
+              </div>
+            } @else {
+              <div class="plan-price">
+                <span class="price-amount price-amount-unavailable">Not available</span>
+              </div>
+              <div class="price-meta">
+                <span class="price-billing">
+                  {{ interval() === 'Monthly'
+                    ? 'No monthly price is published for this plan.'
+                    : 'No annual price is published for this plan.' }}
+                </span>
+              </div>
+            }
 
-              <app-button
-                [variant]="buttonVariant(group)"
-                [disabled]="!selectedVariant(group).isActive || paidPlan() !== null"
-                (click)="choosePlan(group, interval())"
-              >
-                {{ selectedVariant(group).price === 0 ? 'Start free trial' : 'Choose plan' }}
-              </app-button>
-            </div>
+            <ul class="plan-features" aria-label="What's included">
+              @for (limit of limitsOf(group); track limit) {
+                <li>
+                  <svg
+                    class="feature-check"
+                    lucideCheck
+                    [size]="16"
+                    [strokeWidth]="2.5"
+                    aria-hidden="true"
+                  ></svg>
+                  <span>{{ limit }}</span>
+                </li>
+              }
+            </ul>
+
+            <button
+              type="button"
+              class="plan-cta"
+              [class.plan-cta-recommended]="isRecommended(group)"
+              [class.plan-cta-selected]="isSelected(group)"
+              [disabled]="!canChoose(group)"
+              [attr.aria-busy]="isSelecting(group) ? 'true' : null"
+              (click)="choosePlan(group)"
+            >
+              <span>{{ ctaLabel(group) }}</span>
+              @if (isSelecting(group)) {
+                <span class="cta-spinner" aria-hidden="true"></span>
+              } @else if (isSelected(group)) {
+                <svg lucideCheck [size]="16" [strokeWidth]="2.5" aria-hidden="true"></svg>
+              } @else {
+                <svg lucideArrowRight [size]="16" [strokeWidth]="2.2" aria-hidden="true"></svg>
+              }
+            </button>
           </article>
         }
       </div>
 
-      <!-- Paid plan chosen state: payment setup is not available yet. -->
-      @if (paidPlan()) {
-        <div class="payment-unavailable" role="status" aria-live="polite">
-          <h4>Payment setup is not available yet</h4>
-          <p>
-            Resto.pk does not process payments yet, so the
-            <strong>{{ paidPlan()!.group.name }}</strong> plan (
-            {{ formatPrice(selectedVariant(paidPlan()!.group).price, 'PKR') }}
-            {{ billingLabel(paidPlan()!.interval) }}
-            ) cannot be activated right now.
-          </p>
-          <div class="payment-actions">
-            <app-button variant="outline" (click)="returnToPricing()">
-              Return to pricing
-            </app-button>
-            <app-button variant="primary" (click)="goToDashboard()">
+      @if (paidPlan(); as selection) {
+        <div class="payment-notice" role="status" aria-live="polite">
+          <div class="notice-body">
+            <h3>Payment setup is not available yet</h3>
+            <p>
+              Your <strong>{{ selection.group.name }}</strong> plan
+              ({{ formatPrice(selection.variant.price, selection.variant.currency) }}
+              {{ billingLabel(selection.interval) }}) has been saved. Resto.pk
+              does not process payments yet, so this plan cannot be activated
+              right now.
+            </p>
+            <p class="notice-hint">
+              Your choice is kept for this browser session. No payment was
+              taken.
+            </p>
+          </div>
+
+          <div class="notice-actions">
+            <button type="button" class="btn btn-ghost" (click)="returnToPricing()">
+              Back to plans
+            </button>
+            <button type="button" class="btn btn-primary" (click)="goToDashboard()">
               Go to dashboard
-            </app-button>
+              <svg lucideArrowRight [size]="16" [strokeWidth]="2.2" aria-hidden="true"></svg>
+            </button>
           </div>
         </div>
+      }
+
+      @if (!paidPlan() && freeTrial(); as trial) {
+        <p class="trial-note">
+          <svg lucideSparkles [size]="15" [strokeWidth]="2" aria-hidden="true"></svg>
+          <span>{{ trial.description ?? 'Prefer to try Resto.pk first?' }}</span>
+          <button type="button" class="trial-link" (click)="startFreeTrial()">
+            Start free trial
+          </button>
+        </p>
       }
     }
   </div>
