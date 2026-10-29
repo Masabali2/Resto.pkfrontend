@@ -247,43 +247,32 @@ export class EditorSettingsPanel {
     return { kind: 'restaurant-logo', restaurantId };
   }
 
-protected onHeroImageUploaded(results: AssetUploadResult[]): void {
-  const result = results[0];
-  if (!result) return;
-
+protected onHeroImageUploaded(result: AssetUploadResult): void {
   this.updateHeroSetting('imageUrl', result.assetId);
 }
 
-protected onAboutImageUploaded(results: AssetUploadResult[]): void {
-  const result = results[0];
-  if (!result) return;
-
+protected onAboutImageUploaded(result: AssetUploadResult): void {
   this.updateAboutSetting('imageUrl', result.assetId);
 }
 
-protected onGalleryImageUploaded(results: AssetUploadResult[]): void {
+protected onGalleryImageUploaded(result: AssetUploadResult): void {
   const section = this.gallerySection();
-  if (!section || results.length === 0) return;
+  if (!section) return;
 
   const current = this.galleryAssetIds();
-  const uploadedIds = results.map(result => result.assetId);
-  const next = [...current, ...uploadedIds.filter(id => !current.includes(id))];
 
-  if (next.length === current.length) return;
+  if (current.includes(result.assetId)) return;
 
   this.sectionConfigChange.emit({
     sectionType: 'gallery',
     settings: {
       ...section.settings,
-      galleryImageIds: next
+      galleryImageIds: [...current, result.assetId]
     }
   });
 }
 
-protected onLogoImageUploaded(results: AssetUploadResult[]): void {
-  const result = results[0];
-  if (!result) return;
-
+protected onLogoImageUploaded(result: AssetUploadResult): void {
   this.logoChange.emit(result.assetId);
 }
 
