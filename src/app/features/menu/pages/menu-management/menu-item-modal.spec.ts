@@ -5,8 +5,8 @@ import {
 } from '@angular/common/http/testing';
 import { MenuItemModal } from './menu-item-modal';
 import { MenuService } from '../../services/menu.service';
-import type { MenuItemDto } from '../models/menu-item.model';
-import type { MenuCategoryDto } from '../models/menu-category.model';
+import type { MenuItemDto } from '../../models/menu-item.model';
+import type { MenuCategoryDto } from '../../models/menu-category.model';
 import type { ApiResponse } from '../../../../core/models/api-response.model';
 
 const API_ROOT = 'https://localhost:7182/api/v1';
@@ -89,7 +89,8 @@ describe('MenuItemModal', () => {
       description: null,
       currency: 'USD',
       imageFileId: null,
-      displayOrder: null
+      displayOrder: null,
+      isAvailable: true
     });
   });
 

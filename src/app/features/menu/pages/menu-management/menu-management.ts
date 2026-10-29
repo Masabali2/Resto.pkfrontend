@@ -109,6 +109,9 @@ export class MenuManagement {
   protected readonly canViewCategory = computed(() =>
     this.authorization.hasPermission('MenuCategory.View')
   );
+  protected readonly canCreateCategory = computed(() =>
+    this.authorization.hasPermission('MenuCategory.Create')
+  );
 
   protected readonly isArchived = computed(() => this.menu()?.status === 'Archived');
   protected readonly isReadOnly = computed(() => this.isArchived());
@@ -345,6 +348,13 @@ export class MenuManagement {
     this.modalOpen.set(true);
   }
 
+  protected createCategory(): void {
+    if (!this.canCreateCategory() || this.isReadOnly()) return;
+    const menuId = this.route.snapshot.paramMap.get('menuId');
+    if (!menuId) return;
+    void this.router.navigate(['/menus', menuId, 'categories', 'new']);
+  }
+
   protected openEditModal(item: MenuItemDto): void {
     if (!this.canManageItems() || this.isReadOnly()) return;
     this.modalMode.set('edit');
@@ -423,11 +433,7 @@ export class MenuManagement {
     if (!menuId || tenantId === null) return;
     const requestId = ++this.requestSequence;
     this.menuService.deleteItem(target.id).subscribe({
-      next: response => {
-        if (!response.success) {
-          this.errorMessage.set(response.message ?? 'Unable to delete the item. Please try again.');
-          return;
-        }
+      next: () => {
         this.items.update(list => list.filter(i => i.id !== target.id));
         if (this.items().length === 0) {
           this.pageState.set('empty');

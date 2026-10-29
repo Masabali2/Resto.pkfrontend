@@ -67,10 +67,16 @@ export class MediaLibrary {
   }
 
   private doDelete(asset: BrandingAsset): void {
+    const restaurantId = this.restaurant();
+    if (!restaurantId) {
+      this.notification.error('No restaurant is selected.');
+      return;
+    }
+
     this.deleting.set(asset.id);
 
     this.brandingService
-      .deleteAsset(asset.id)
+      .deleteAsset(restaurantId, asset.id)
       .pipe(finalize(() => this.deleting.set(null)))
       .subscribe({
         next: () => {
@@ -79,6 +85,11 @@ export class MediaLibrary {
           this.notification.success(`${asset.fileName} deleted.`);
         },
         error: err => {
+          if (err instanceof AssetReferencedError) {
+            this.conflictAsset.set(asset);
+            this.conflictOpen.set(true);
+            return;
+          }
           this.notification.error(err instanceof Error ? err.message : 'Delete failed.');
         }
       });

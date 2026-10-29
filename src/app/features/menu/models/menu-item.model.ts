@@ -47,6 +47,7 @@ export interface CreateMenuItemRequest {
   currency: string | null;
   imageFileId: string | null;
   displayOrder: number | null;
+  isAvailable: boolean;
 }
 
 /**
@@ -63,6 +64,7 @@ export interface UpdateMenuItemRequest {
   imageFileId: string | null;
   clearImage: boolean;
   displayOrder: number | null;
+  isAvailable?: boolean;
 }
 
 /** Body of PATCH /api/v1/menu-items/{itemId}/availability. */

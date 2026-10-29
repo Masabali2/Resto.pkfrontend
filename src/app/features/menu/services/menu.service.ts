@@ -103,9 +103,9 @@ export class MenuService {
     );
   }
 
-  /** Row 6 — DELETE api/v1/menus/{menuId} (terminal archive). */
-  archiveMenu(menuId: string): Observable<ApiResponse<unknown>> {
-    return this.http.delete<ApiResponse<unknown>>(`${this.menusUrl}/${menuId}`);
+  /** Row 6 — DELETE api/v1/menus/{menuId} (terminal archive, 204 NoContent). */
+  archiveMenu(menuId: string): Observable<void> {
+    return this.http.delete<void>(`${this.menusUrl}/${menuId}`);
   }
 
   /** Row 7 — GET api/v1/menus/{menuId}/categories (not paged). */
@@ -148,9 +148,9 @@ export class MenuService {
     );
   }
 
-  /** Row 11 — DELETE api/v1/menu-categories/{categoryId} (409 if items exist). */
-  deleteCategory(categoryId: string): Observable<ApiResponse<unknown>> {
-    return this.http.delete<ApiResponse<unknown>>(
+  /** Row 11 — DELETE api/v1/menu-categories/{categoryId} (409 if items exist, 204 NoContent). */
+  deleteCategory(categoryId: string): Observable<void> {
+    return this.http.delete<void>(
       `${this.categoriesUrl}/${categoryId}`
     );
   }
@@ -283,8 +283,8 @@ export class MenuService {
     );
   }
 
-  /** Row 20 — DELETE api/v1/menu-items/{itemId} (soft delete). */
-  deleteItem(itemId: string): Observable<ApiResponse<unknown>> {
-    return this.http.delete<ApiResponse<unknown>>(`${this.itemsUrl}/${itemId}`);
+  /** Row 20 — DELETE api/v1/menu-items/{itemId} (soft delete, 204 NoContent). */
+  deleteItem(itemId: string): Observable<void> {
+    return this.http.delete<void>(`${this.itemsUrl}/${itemId}`);
   }
 }

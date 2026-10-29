@@ -101,6 +101,25 @@ export class AssetManagement {
     return 'asset';
   }
 
+  protected assetBadgeClass(type: BrandingAssetType): string {
+    return type === 'DarkLogo' ? 'asset-badge asset-badge-dark' : 'asset-badge asset-badge-default';
+  }
+
+  protected isDarkSlot(type: BrandingAssetType): boolean {
+    return type === 'DarkLogo';
+  }
+
+  protected slotPlaceholderInitials(type: BrandingAssetType): string {
+    const initials: Record<BrandingAssetType, string> = {
+      Logo: 'ML',
+      DarkLogo: 'DL',
+      Favicon: 'FA',
+      OGBanner: 'OG',
+      HeroBanner: 'HB'
+    };
+    return initials[type] ?? type.charAt(0);
+  }
+
   protected isUploading(type: BrandingAssetType): boolean {
     return this.uploading() === type;
   }
@@ -156,21 +175,21 @@ export class AssetManagement {
     this.uploading.set(type);
     this.notification.info(`Uploading ${file.name} as ${type}...`);
 
-    this.brandingService
+          this.brandingService
       .uploadAsset(file, restaurantId, type)
       .pipe(finalize(() => { this.uploading.set(null); input.value = ''; this.pendingAssetType.set(null); }))
       .subscribe({
         next: result => {
           const asset: BrandingAsset = {
-            id: result.assetId,
+            id: result.id,
             assetType: type,
             fileName: result.fileName,
             contentType: result.contentType,
             fileSize: result.fileSize,
-            storageKey: result.assetId,
+            storageKey: result.storageKey,
             previewUrl: result.previewUrl,
-            created: new Date().toISOString().split('T')[0],
-            isReferenced: false
+            created: result.created,
+            isReferenced: result.isReferenced ?? false
           };
 
           this.assetsSignal.update(list => {
@@ -211,10 +230,16 @@ export class AssetManagement {
     const asset = this.assetByType()[type];
     if (!asset) return;
 
+    const restaurantId = this.restaurant();
+    if (!restaurantId) {
+      this.notification.error('No restaurant is selected.');
+      return;
+    }
+
     this.deleting.set(type);
 
     this.brandingService
-      .deleteAsset(asset.id)
+      .deleteAsset(restaurantId, asset.id)
       .pipe(finalize(() => this.deleting.set(null)))
       .subscribe({
         next: () => {
@@ -223,6 +248,11 @@ export class AssetManagement {
           this.notification.success(`${type} asset deleted.`);
         },
         error: err => {
+          if (err instanceof AssetReferencedError) {
+            this.conflictAsset.set(asset);
+            this.conflictOpen.set(true);
+            return;
+          }
           this.notification.error(err instanceof Error ? err.message : 'Delete failed.');
         }
       });

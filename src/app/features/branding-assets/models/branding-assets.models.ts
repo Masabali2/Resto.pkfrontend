@@ -75,7 +75,7 @@ export interface BrandingConfiguration {
 
 export interface StorageInfo {
   usedBytes: number;
-  quotaBytes: number;
+  quotaBytes: number | null;
 }
 
 /** Default branding configuration matching the reference design. */

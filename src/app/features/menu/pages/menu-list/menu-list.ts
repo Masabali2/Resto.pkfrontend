@@ -391,14 +391,7 @@ export class MenuList {
     this.archiveTarget.set(null);
 
     this.menuService.archiveMenu(menu.id).subscribe({
-      next: response => {
-        if (!response.success) {
-          this.errorMessage.set(
-            response.message ?? 'Unable to archive the menu. Please try again.'
-          );
-          return;
-        }
-
+      next: () => {
         this.menus.update(items => items.filter(m => m.id !== menu.id));
         this.notificationService.success(`"${menu.name}" has been archived.`);
       },

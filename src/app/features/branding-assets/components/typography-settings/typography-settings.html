@@ -14,9 +14,10 @@
         <div class="mb-4">
           <label class="form-label text-xs font-bold text-dark d-block mb-2">Main Heading Font</label>
           <select
+            #headingFontSelect
             class="form-select form-select-sm rounded-xl bg-surface-soft border border-subtle text-xs font-semibold"
             [value]="headingFont()"
-            (change)="onHeadingFontChange($event.target.value)"
+            (change)="onHeadingFontChange(headingFontSelect.value)"
           >
             @for (font of headingFonts; track font.value) {
               <option [value]="font.value">{{ font.label }}</option>
@@ -27,9 +28,10 @@
         <div class="mb-4">
           <label class="form-label text-xs font-bold text-dark d-block mb-2">Body Text Font</label>
           <select
+            #bodyFontSelect
             class="form-select form-select-sm rounded-xl bg-surface-soft border border-subtle text-xs font-semibold"
             [value]="bodyFont()"
-            (change)="onBodyFontChange($event.target.value)"
+            (change)="onBodyFontChange(bodyFontSelect.value)"
           >
             @for (font of bodyFonts; track font.value) {
               <option [value]="font.value">{{ font.label }}</option>
@@ -43,11 +45,12 @@
             <span class="text-orange">{{ fontScale() }}%</span>
           </div>
           <input
+            #fontScaleSelect
             type="range"
             min="90"
             max="115"
             [value]="fontScale()"
-            (input)="onFontScaleChange($event.target.value)"
+            (input)="onFontScaleChange(fontScaleSelect.value)"
             class="form-range w-100 accent-orange"
           />
         </div>

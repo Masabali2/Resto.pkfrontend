@@ -14,14 +14,14 @@
     </p>
   </div>
   <div class="menu-management__actions">
-    @if (canViewCategory() && !isReadOnly()) {
-      <button type="button" class="btn btn--outline btn--sm" (click)="openCreateModal()" [disabled]="isReadOnly()">
+    @if (canCreateCategory() && !isReadOnly()) {
+      <app-button type="button" class="btn btn--outline btn--sm" (click)="createCategory()">
         <i class="bi bi-folder-plus" aria-hidden="true"></i> New category
-      </button>
+      </app-button>
     }
-    <button type="button" class="btn btn--primary" (click)="openCreateModal()" [disabled]="isReadOnly()">
+    <app-button   (click)="openCreateModal()" [disabled]="!canCreateItem() || isReadOnly()">
       <i class="bi bi-plus-lg" aria-hidden="true"></i> Add item
-    </button>
+    </app-button>
   </div>
 </header>
 
@@ -54,7 +54,7 @@
   @if (pageState() === 'error') {
     <div class="menu-management__empty menu-management__error" role="alert">
       <p>{{ errorMessage() }}</p>
-      <button type="button" class="btn btn--outline" (click)="retry()">Retry</button>
+      <app-button type="button" class="btn btn--outline" (click)="retry()">Retry</app-button>
     </div>
   }
 
@@ -81,11 +81,11 @@
       <p>
         @if (filter().search || filter().categoryId || filter().isAvailable !== null) {
           No items match your current filters.
-          <button type="button" class="btn btn--outline btn--sm" (click)="clearFilters()">Clear filters</button>
+          <app-button type="button" class="btn btn--outline btn--sm" (click)="clearFilters()">Clear filters</app-button>
         } @else {
           No menu items yet.
           @if (canCreateItem() && !isReadOnly()) {
-            <button type="button" class="btn btn--primary btn--sm" (click)="openCreateModal()">Add first item</button>
+            <app-button type="button" class="btn btn--primary btn--sm" (click)="openCreateModal()">Add first item</app-button>
           }
         }
       </p>

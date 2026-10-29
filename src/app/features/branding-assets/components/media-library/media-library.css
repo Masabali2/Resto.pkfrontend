@@ -88,16 +88,45 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-.text-[10px] { font-size: 0.625rem; }
-.text-xs { font-size: 0.6875rem; }
-.text-muted { color: #64748b !important; }
-.text-dark { color: var(--resto-dark) !important; }
-.text-orange { color: var(--resto-orange) !important; }
-.text-red { color: var(--resto-danger) !important; }
-.font-bold { font-weight: 700 !important; }
-.font-medium { font-weight: 500 !important; }
-.text-end { text-align: right; }
-.text-center { text-align: center; }
+.text-\[10px\] {
+  font-size: 0.625rem;
+}
+
+.text-xs {
+  font-size: 0.6875rem;
+}
+
+.text-muted {
+  color: #64748b !important;
+}
+
+.text-dark {
+  color: var(--resto-dark) !important;
+}
+
+.text-orange {
+  color: var(--resto-orange) !important;
+}
+
+.text-red {
+  color: var(--resto-danger) !important;
+}
+
+.font-bold {
+  font-weight: 700 !important;
+}
+
+.font-medium {
+  font-weight: 500 !important;
+}
+
+.text-end {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
 
 .d-flex { display: flex; }
 .align-items-center { align-items: center; }

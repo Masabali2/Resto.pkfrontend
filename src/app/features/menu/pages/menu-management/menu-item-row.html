@@ -1,38 +1,48 @@
+
 <article class="item-row">
   <div class="item-row__photo">
-    @if (item().imageUrl) {
-      <img
-        class="item-row__image"
-        [src]="item().imageUrl"
-        [alt]="item().name"
-        loading="lazy"
-      />
-    } @else {
-      <div class="item-row__placeholder">
-        <i class="bi bi-image" aria-hidden="true"></i>
-      </div>
-    }
+    <div class="item-row__placeholder">
+      <i class="bi bi-image" aria-hidden="true"></i>
+    </div>
+
     @if (!item().isAvailable) {
-      <span class="item-row__status-badge item-row__status-badge--out">Out of stock</span>
+      <span class="item-row__status-badge item-row__status-badge--out">
+        Out of stock
+      </span>
     } @else if (!item().isActive) {
-      <span class="item-row__status-badge item-row__status-badge--hidden">Hidden</span>
+      <span class="item-row__status-badge item-row__status-badge--hidden">
+        Hidden
+      </span>
     } @else {
-      <span class="item-row__status-badge item-row__status-badge--live">Available</span>
+      <span class="item-row__status-badge item-row__status-badge--live">
+        Available
+      </span>
     }
   </div>
 
   <div class="item-row__body">
     <div class="item-row__header">
-      <span class="item-row__category">{{ item().categoryName ?? 'Uncategorized' }}</span>
+      <span class="item-row__category">Menu item</span>
     </div>
-    <h3 class="item-row__name" [title]="item().name">{{ item().name }}</h3>
+
+    <h3 class="item-row__name" [title]="item().name">
+      {{ item().name }}
+    </h3>
+
     @if (item().description) {
-      <p class="item-row__description" [title]="item().description">{{ item().description }}</p>
+      <p class="item-row__description" [title]="item().description">
+        {{ item().description }}
+      </p>
     }
+
     <div class="item-row__footer">
       <div class="item-row__price">
-        <span class="item-row__amount">{{ formatMoney(item().price) }}</span>
-        <span class="item-row__currency">{{ item().currency }}</span>
+        <span class="item-row__amount">
+          {{ formatMoney(item().price) }}
+        </span>
+        <span class="item-row__currency">
+          {{ item().currency }}
+        </span>
       </div>
 
       <div class="item-row__availability">
@@ -48,7 +58,11 @@
         >
           <span class="toggle__thumb"></span>
         </button>
-        <span class="item-row__availability-label">{{ item().isAvailable ? 'Available' : 'Out of stock' }}</span>
+
+        <span class="item-row__availability-label">
+          {{ item().isAvailable ? 'Available' : 'Out of stock' }}
+        </span>
+
         @if (pending()) {
           <span class="item-row__saving">Saving&hellip;</span>
         }
@@ -60,15 +74,18 @@
           class="icon-btn"
           [disabled]="!canManage() || readOnly()"
           title="Edit item"
+          aria-label="Edit item"
           (click)="onEdit()"
         >
           <i class="bi bi-pencil-square" aria-hidden="true"></i>
         </button>
+
         <button
           type="button"
           class="icon-btn icon-btn--danger"
           [disabled]="!canDelete() || readOnly()"
           title="Delete item"
+          aria-label="Delete item"
           (click)="onDelete()"
         >
           <i class="bi bi-trash3" aria-hidden="true"></i>

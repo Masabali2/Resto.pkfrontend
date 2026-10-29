@@ -11,8 +11,9 @@
  */
 
 const PRICE_PATTERN = /^\d+(\.\d{1,2})?$/;
-// decimal(18,2): 16 integer digits + 2 fraction digits.
-const MAX_INTEGER_DIGITS = 16;
+// Domain maximum amount (Money.New) is 1,000,000,000 PKR.
+const MAX_AMOUNT = 1_000_000_000;
+const MAX_INTEGER_DIGITS = 10;
 
 export function parsePrice(value: string): number | null {
   const trimmed = value.trim();
@@ -21,13 +22,19 @@ export function parsePrice(value: string): number | null {
     return null;
   }
 
-  const [integerPart, fractionPart = ''] = trimmed.split('.');
+  const [integerPart] = trimmed.split('.');
 
   if (integerPart.length > MAX_INTEGER_DIGITS) {
     return null;
   }
 
-  return Number(trimmed);
+  const amount = Number(trimmed);
+
+  if (amount > MAX_AMOUNT) {
+    return null;
+  }
+
+  return amount;
 }
 
 export function formatPrice(value: number): string {
@@ -48,7 +55,11 @@ export function isValidPrice(value: string): boolean {
 
   const [integerPart] = trimmed.split('.');
 
-  return integerPart.length <= MAX_INTEGER_DIGITS;
+  if (integerPart.length > MAX_INTEGER_DIGITS) {
+    return false;
+  }
+
+  return Number(trimmed) <= MAX_AMOUNT;
 }
 
 export const DEFAULT_CURRENCY = 'PKR';

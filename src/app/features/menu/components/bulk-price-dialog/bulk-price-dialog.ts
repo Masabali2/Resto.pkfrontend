@@ -1,3 +1,4 @@
+
 import {
   ChangeDetectionStrategy,
   Component,
@@ -10,7 +11,6 @@ import {
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { LucideX, LucidePercent } from '@lucide/angular';
 import { MenuService } from '../../services/menu.service';
 import { HttpErrorHandlerService } from '../../../../core/services/http-error-handler.service';
 import type { MenuItemDto } from '../../models/menu-item.model';
@@ -23,16 +23,10 @@ import {
   computeAdjustedPrice
 } from '../../models/bulk-price-adjustment.model';
 
-/**
- * Screen-4 "Bulk Price Adjustment" dialog. Applies a percentage or fixed
- * delta to every item of the active category by fanning out individual
- * PUT /api/v1/menu-items/{itemId} calls (no bulk endpoint exists on the
- * backend) and reporting per-item success/failure.
- */
 @Component({
   selector: 'app-bulk-price-dialog',
   standalone: true,
-  imports: [FormsModule, LucideX, LucidePercent],
+  imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './bulk-price-dialog.html',
   styleUrl: './bulk-price-dialog.css'

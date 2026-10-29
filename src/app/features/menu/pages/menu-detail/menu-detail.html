@@ -82,7 +82,7 @@
             <button type="button" class="rail__add" (click)="startAddCategory()"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add new category</button>
           } @else {
             <form class="rail__form" (submit)="$event.preventDefault(); submitAddCategory()">
-              <input type="text" class="rail__input" placeholder="e.g. Sizzling Skillets" maxlength="150" [value]="newCategoryName()" (input)="onNewCategoryNameChange($any($event.target).value)" aria-label="New category name" />
+              <input type="text" class="rail__input" placeholder="e.g. Sizzling Skillets" maxlength="100" [value]="newCategoryName()" (input)="onNewCategoryNameChange($any($event.target).value)" aria-label="New category name" />
               <div class="rail__form-actions">
                 <button type="button" class="btn btn--ghost" (click)="cancelAddCategory()">Cancel</button>
                 <button type="submit" class="btn btn--primary" [disabled]="newCategoryName().trim().length === 0 || addingCategory()">{{ addingCategory() ? 'Saving…' : 'Save' }}</button>
@@ -129,7 +129,7 @@
               <li class="item" [class.item--off]="!item.isAvailable">
                 <div class="item__main">
                   <span class="item__photo" aria-hidden="true">
-                    @if (item.imageFileId) { <img [src]="'/api/v1/files/' + item.imageFileId" [alt]="item.name" loading="lazy" /> }
+                    @if (item.imageFileId) { <img [src]="imageFileUrl(item.imageFileId)" [alt]="item.name" loading="lazy" /> }
                     @else { <i class="bi bi-image item__photo-placeholder" aria-hidden="true"></i> }
                   </span>
                   <div class="item__body">

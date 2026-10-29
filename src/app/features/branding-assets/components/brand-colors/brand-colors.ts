@@ -60,7 +60,7 @@ export class BrandColors {
     { key: 'primary', label: 'Primary Accent Color', value: this.primary() },
     { key: 'secondary', label: 'Dark Secondary Color', value: this.secondary() },
     { key: 'tint', label: 'Light Surface Tint', value: this.tint() }
-  ]);
+  ] as const);
 
   constructor() {
     effect(() => {

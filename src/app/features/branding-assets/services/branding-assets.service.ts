@@ -3,17 +3,11 @@ import { inject, Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { ImageUploadService } from '../../websites/services/image-upload.service';
 import { WebsiteService } from '../../websites/services/website.service';
 import type { ApiResponse } from '../../../core/models/api-response.model';
 import type {
-  AssetUploadResult,
-  UploadDestination
-} from '../../websites/models/image-upload.model';
-import type {
   BrandingAsset,
   BrandingAssetType,
-  BrandingConfiguration,
   StorageInfo,
   WebsiteBrandingSettings
 } from '../models/branding-assets.models';
@@ -21,25 +15,39 @@ import type {
 /**
  * API transport for the Branding & Assets feature.
  *
- * Verified existing contracts (implemented in this repository):
- *   POST v1/assets/upload              -> ImageUploadService (multipart)
- *   PUT   v1/websites/{id}/draft       -> WebsiteService.saveDraft
+ * All calls target the restaurant-asset architecture
+ * (RestaurantAssetsController): upload, list, replace and delete are scoped
+ * to the active tenant's restaurant and use the restaurant asset ID
+ * consistently across endpoints. The website draft endpoint persists the
+ * branding configuration document.
  *
- * Contracts assumed from the reference design (backend repository is not
- * part of this workspace; validate against the actual backend):
- *   GET  restaurants/{restaurantId}/assets
- *   DELETE v1/assets/{id}              (returns 409 ASSET_STILL_REFERENCED when referenced)
- *   GET  restaurants/{restaurantId}/storage
+ * Verified contracts (backend repository RestaurantSaaS, branch newfeaturebranch):
+ *   POST restaurants/{restaurantId}/assets/{assetType}  upload/replace
+ *   GET  restaurants/{restaurantId}/assets               list
+ *   DELETE restaurants/{restaurantId}/assets/{assetId}   delete (409 ASSET_STILL_REFERENCED)
+ *   GET  restaurants/{restaurantId}/storage              storage usage ({usedBytes, quotaBytes|null})
+ *   GET/PUT  v1/websites/{id}/draft                      website configuration
  */
-
 const API_URL = environment.apiUrl;
+const API_ORIGIN = new URL(API_URL).origin;
+
+type RestaurantAssetDto = {
+  id: string;
+  assetType: string;
+  fileName: string;
+  contentType: string;
+  fileSize: number;
+  fileId: string;
+  createdAt: string;
+  updatedAt: string;
+  url: string;
+};
 
 @Injectable({
   providedIn: 'root'
 })
 export class BrandingAssetsService {
   private readonly http = inject(HttpClient);
-  private readonly uploadService = inject(ImageUploadService);
   private readonly websiteService = inject(WebsiteService);
 
   private readonly assetsUrl = (restaurantId: string) =>
@@ -48,25 +56,61 @@ export class BrandingAssetsService {
   private readonly storageUrl = (restaurantId: string) =>
     `${API_URL}/restaurants/${restaurantId}/storage`;
 
-  private readonly deleteUrl = (assetId: string) => `${API_URL}/v1/assets/${assetId}`;
+  /**
+   * Resolves a backend delivery URL to an absolute, cross-origin usable URL.
+   * Backend presigned/storage URLs are relative (/api/v1/files/{key}); the
+   * Angular dev server runs on a different port, so the API origin must be
+   * prefixed for images to load.
+   */
+  private assetUrl(relativeOrAbsolute: string | null): string | null {
+    if (!relativeOrAbsolute) return null;
+    if (/^https?:\/\//i.test(relativeOrAbsolute)) return relativeOrAbsolute;
+    return API_ORIGIN + relativeOrAbsolute;
+  }
 
   /**
-   * Uploads a single image asset for the active tenant.
-   * The destination kind is `restaurant-logo` so the backend resolves the
-   * tenant/restaurant association server-side (never sent by the client).
-   * `assetType` binds the file to a branding enum (Logo, DarkLogo, ...).
+   * Uploads a single image asset for the active tenant's restaurant.
+   * The asset type is bound server-side via the route (never trusted from the
+   * client beyond the allowed enum). Replaces any existing active asset of the
+   * same type; the previous file is only removed after the replacement
+   * succeeds.
    */
   uploadAsset(
     file: File,
     restaurantId: string,
     assetType: BrandingAssetType
-  ): Observable<AssetUploadResult> {
-    const destination: UploadDestination = {
-      kind: 'restaurant-logo',
-      restaurantId
-    };
+  ): Observable<BrandingAsset> {
+    const formData = new FormData();
+    formData.append('file', file);
 
-    return this.uploadService.upload({ file, destination, assetType });
+    return this.http
+      .post<ApiResponse<{ id: string; assetType: string; fileName: string; contentType: string; fileSize: number; createdAt: string; updatedAt: string; url: string; fileId: string }>>(
+        `${this.assetsUrl(restaurantId)}/${assetType}`,
+        formData
+      )
+      .pipe(
+        map(response => {
+          if (!response.success || !response.data) {
+            throw new Error(response.message ?? 'The asset could not be uploaded.');
+          }
+          const dto = response.data;
+          return {
+            id: dto.id,
+            assetType: dto.assetType as BrandingAssetType,
+            fileName: dto.fileName,
+            contentType: dto.contentType,
+            fileSize: dto.fileSize,
+            storageKey: dto.fileId,
+            previewUrl: this.assetUrl(dto.url),
+            created: dto.createdAt,
+            isReferenced: false
+          } as BrandingAsset;
+        }),
+        catchError(error => {
+          const backendMessage = this.extractBackendMessage(error);
+          throw new Error(backendMessage ?? 'The asset could not be uploaded.');
+        })
+      );
   }
 
   /**
@@ -74,13 +118,23 @@ export class BrandingAssetsService {
    */
   loadAssets(restaurantId: string): Observable<BrandingAsset[]> {
     return this.http
-      .get<ApiResponse<BrandingAsset[]>>(this.assetsUrl(restaurantId))
+      .get<ApiResponse<RestaurantAssetDto[]>>(this.assetsUrl(restaurantId))
       .pipe(
         map(response => {
           if (!response.success || !response.data) {
             throw new Error(response.message ?? 'The branding assets could not be loaded.');
           }
-          return response.data;
+          return response.data.map(dto => ({
+            id: dto.id,
+            assetType: dto.assetType as BrandingAssetType,
+            fileName: dto.fileName,
+            contentType: dto.contentType,
+            fileSize: dto.fileSize,
+            storageKey: dto.fileId,
+            previewUrl: this.assetUrl(dto.url),
+            created: dto.createdAt,
+            isReferenced: false
+          }));
         }),
         catchError(error => {
           const backendMessage = this.extractBackendMessage(error);
@@ -90,12 +144,14 @@ export class BrandingAssetsService {
   }
 
   /**
-   * Deletes an asset. Throws when the backend reports a 409 conflict
-   * (asset still referenced by menu items or public banners).
+   * Deletes an asset. Throws AssetReferencedError when the backend reports a
+   * 409 conflict (asset still referenced by a website configuration).
    */
-  deleteAsset(assetId: string): Observable<void> {
+  deleteAsset(restaurantId: string, assetId: string): Observable<void> {
     return this.http
-      .delete<ApiResponse<unknown>>(this.deleteUrl(assetId))
+      .delete<ApiResponse<unknown>>(
+        `${this.assetsUrl(restaurantId)}/${assetId}`
+      )
       .pipe(
         map(() => undefined),
         catchError(error => {
@@ -113,8 +169,8 @@ export class BrandingAssetsService {
 
   /**
    * Reads storage usage and quota for a restaurant.
-   * Falls back to a not-available result when the backend does not expose
-   * storage metadata, so the UI can still render usage computed from assets.
+   * Quota is null when no authoritative storage quota policy is configured;
+   * the UI must not fabricate a limit.
    */
   getStorageInfo(restaurantId: string): Observable<StorageInfo | null> {
     return this.http
@@ -131,18 +187,37 @@ export class BrandingAssetsService {
   }
 
   /**
-   * Persists branding theme, typography and hero layout through the existing
-   * website draft endpoint. Asset files are uploaded immediately via
-   * uploadAsset(); only the configuration document is saved here.
+   * Persists branding theme, typography, hero layout and asset references
+   * through the existing website draft endpoint, mapped to the backend
+   * WebsiteConfigSchema structure (theme.colors, theme.font, settings.*).
+   * Asset files are uploaded immediately via uploadAsset(); only the
+   * configuration document is saved here.
    */
   saveConfiguration(
     websiteId: string,
     settings: WebsiteBrandingSettings
   ): Observable<unknown> {
-    const configurationJson = JSON.stringify(settings);
-    return this.websiteService.saveDraft(websiteId, {
-      configurationJson
+    const configurationJson = JSON.stringify({
+      schemaVersion: 1,
+      theme: {
+        colors: {
+          primary: settings.theme?.primary ?? '',
+          secondary: settings.theme?.secondary ?? '',
+          tint: settings.theme?.tint ?? ''
+        },
+        font: settings.typography?.headingFont ?? ''
+      },
+      settings: {
+        typography: {
+          headingFont: settings.typography?.headingFont ?? '',
+          bodyFont: settings.typography?.bodyFont ?? '',
+          fontScale: settings.typography?.fontScale ?? 100
+        },
+        heroLayout: settings.heroLayout ?? '',
+        assets: settings.assets ?? {}
+      }
     });
+    return this.websiteService.saveDraft(websiteId, { configurationJson });
   }
 
   private extractBackendMessage(error: unknown): string | undefined {
@@ -159,7 +234,7 @@ export class BrandingAssetsService {
 
 /**
  * Thrown when a DELETE request fails with 409 because the asset is still
- * referenced by active menu items or public banners.
+ * referenced by an active website configuration.
  */
 export class AssetReferencedError extends Error {
   constructor(message: string) {

@@ -7,7 +7,7 @@
       </p>
     </div>
     <span class="library-endpoint text-xs text-muted">
-      <code class="brand-code">GET /api/restaurants/{restaurantId}/assets</code>
+      <code class="brand-code">GET /api/restaurants/{{ '{' }}restaurantId{{ '}' }}/assets</code>
     </span>
   </div>
 
@@ -15,7 +15,7 @@
     <div class="table-responsive">
       <table class="library-table table table-borderless mb-0 align-middle">
         <thead>
-          <tr class="text-[10px] font-bold text-uppercase text-muted border-bottom border-subtle">
+          <tr class="text-10px font-bold text-uppercase text-muted border-bottom border-subtle">
             <th class="library-cell px-4 py-3">File & Asset Name</th>
             <th class="library-cell px-4 py-3">Asset Type</th>
             <th class="library-cell px-4 py-3">Storage Key</th>
@@ -44,7 +44,7 @@
                   <span [class]="typeBadgeClass(asset.assetType)">{{ asset.assetType }}</span>
                 </td>
                 <td class="library-cell px-4 py-3">
-                  <div class="font-mono text-[10px] text-muted">{{ asset.storageKey }}</div>
+                  <div class="font-mono text-10px text-muted">{{ asset.storageKey }}</div>
                 </td>
                 <td class="library-cell px-4 py-3 text-muted">{{ sizeText(asset.fileSize) }}</td>
                 <td class="library-cell px-4 py-3 text-muted">{{ asset.created }}</td>

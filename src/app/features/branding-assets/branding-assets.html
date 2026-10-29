@@ -3,7 +3,7 @@
     [restaurant]="restaurant()"
     [storage]="storage()"
     [storageLoading]="loading()"
-    [dirty]="dirty()"
+    [dirty]="form.dirty"
     [saving]="saving()"
     (previewClicked)="openPreview()"
     (saveClicked)="saveAll()"
@@ -11,7 +11,7 @@
 
   <app-branding-tabs
     [activeTab]="activeTab()"
-    (tabSelected)="switchTab($event)"
+    (tabSelected)="switchTab($any($event))"
   />
 
   <main class="branding-main flex-grow-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
@@ -21,7 +21,7 @@
         [assets]="assets()"
         [restaurant]="restaurant()?.id ?? null"
         [loading]="loading()"
-        (assetsChange)="onAssetsChange($event)"
+        (assetsChange)="onAssetsChange($any($event))"
       />
     </section>
 
@@ -29,7 +29,7 @@
     <section [hidden]="activeTab() !== 'colors'" class="branding-section space-y-6">
       <app-brand-colors
         [theme]="theme()"
-        (themeChange)="onThemeChange($event)"
+        (themeChange)="onThemeChange($any($event))"
       />
     </section>
 
@@ -38,7 +38,7 @@
       <app-typography-settings
         [typography]="typography()"
         [theme]="theme()"
-        (typographyChange)="onTypographyChange($event)"
+        (typographyChange)="onTypographyChange($any($event))"
       />
     </section>
 
@@ -46,7 +46,7 @@
     <section [hidden]="activeTab() !== 'hero'" class="branding-section space-y-6">
       <app-hero-layout-settings
         [heroLayout]="heroLayout()"
-        (heroLayoutChange)="onHeroLayoutChange($event)"
+        (heroLayoutChange)="onHeroLayoutChange($any($event))"
       />
     </section>
 
@@ -56,7 +56,7 @@
         [assets]="assets()"
         [restaurant]="restaurant()?.id ?? null"
         [loading]="loading()"
-        (assetsChange)="onAssetsChange($event)"
+        (assetsChange)="onAssetsChange($any($event))"
       />
     </section>
   </main>
