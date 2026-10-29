@@ -23,7 +23,9 @@ import type {
   CreateMenuItemRequest,
   UpdateMenuItemRequest,
   UpdateMenuItemAvailabilityRequest,
-  UpdateMenuItemStatusRequest
+  UpdateMenuItemStatusRequest,
+  MenuItemSummaryDto,
+  MenuItemListQuery
 } from '../models/menu-item.model';
 
 /**
@@ -189,6 +191,46 @@ export class MenuService {
     return this.http.get<ApiResponse<PagedResult<MenuItemDto>>>(
       `${this.menusUrl}/${menuId}/items`,
       { params }
+    );
+  }
+
+  /** Row 14b — GET api/v1/menus/{menuId}/items with search, category, availability and sorting. */
+  getMenuItemsQuery(
+    menuId: string,
+    query: MenuItemListQuery
+  ): Observable<ApiResponse<PagedResult<MenuItemDto>>> {
+    let params = new HttpParams()
+      .set('page', query.page ?? 1)
+      .set('pageSize', query.pageSize ?? 20);
+
+    if (query.search) {
+      params = params.set('search', query.search);
+    }
+    if (query.categoryId) {
+      params = params.set('categoryId', query.categoryId);
+    }
+    if (query.isAvailable !== null && query.isAvailable !== undefined) {
+      params = params.set('isAvailable', query.isAvailable);
+    }
+    if (query.sortBy) {
+      params = params.set('sortBy', query.sortBy);
+    }
+    if (query.sortDirection) {
+      params = params.set('sortDirection', query.sortDirection);
+    }
+
+    return this.http.get<ApiResponse<PagedResult<MenuItemDto>>>(
+      `${this.menusUrl}/${menuId}/items`,
+      { params }
+    );
+  }
+
+  /** Row 14c — GET api/v1/menus/{menuId}/items/summary (dashboard stat cards). */
+  getMenuSummary(
+    menuId: string
+  ): Observable<ApiResponse<MenuItemSummaryDto>> {
+    return this.http.get<ApiResponse<MenuItemSummaryDto>>(
+      `${this.menusUrl}/${menuId}/items/summary`
     );
   }
 

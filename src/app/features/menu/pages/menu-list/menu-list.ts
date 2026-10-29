@@ -72,6 +72,10 @@ export class MenuList {
   protected readonly canViewMenu = computed(() =>
     this.authorization.hasPermission('Menu.View')
   );
+  protected readonly canManageMenu = computed(() =>
+    this.authorization.hasPermission('Menu.View') &&
+    this.authorization.hasPermission('MenuItem.View')
+  );
 
   private loadedTenantId: string | null = null;
   private requestSequence = 0;
@@ -320,6 +324,17 @@ export class MenuList {
     }
 
     void this.router.navigate(['/menus', menu.id], {
+      queryParams: { restaurantId: this.selectedRestaurantId() },
+      queryParamsHandling: 'merge'
+    });
+  }
+
+  protected manageMenu(menu: MenuDto): void {
+    if (!this.canManageMenu()) {
+      return;
+    }
+
+    void this.router.navigate(['/menus', menu.id, 'manage'], {
       queryParams: { restaurantId: this.selectedRestaurantId() },
       queryParamsHandling: 'merge'
     });

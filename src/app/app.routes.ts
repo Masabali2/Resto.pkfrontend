@@ -160,6 +160,16 @@ export const routes: Routes = [
         ]
       },
       {
+        path: 'branding-assets',
+        title: 'Branding & Assets — Resto.pk',
+        canActivate: [permissionGuard],
+        data: { permission: 'Website.Update' },
+        loadComponent: () =>
+          import('./features/branding-assets/branding-assets').then(
+            m => m.BrandingAssets
+          )
+      },
+      {
         path: 'menus',
         children: [
           {
@@ -248,10 +258,30 @@ export const routes: Routes = [
               import('./features/menu/pages/menu-item-form/menu-item-form').then(
                 m => m.MenuItemForm
               )
-          }
-        ]
-      }
-    ]
+          },
+          {
+            path: ':menuId/manage',
+            title: 'Manage Menu — Resto.pk',
+            canActivate: [permissionGuard],
+            data: { permissions: ['Menu.View', 'MenuItem.View'], mode: 'all' },
+            loadComponent: () =>
+              import('./features/menu/pages/menu-management/menu-management').then(
+                m => m.MenuManagement
+              )
+          },
+          {
+            path: ':menuId',
+            title: 'Menu — Resto.pk',
+            canActivate: [permissionGuard],
+            data: { permission: 'Menu.View' },
+            loadComponent: () =>
+              import('./features/menu/pages/menu-detail/menu-detail').then(
+                m => m.MenuDetail
+              )
+          },
+        ],
+      },
+    ],
   },
   {
     path: '**',

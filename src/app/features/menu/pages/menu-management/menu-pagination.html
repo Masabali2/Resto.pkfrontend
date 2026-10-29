@@ -1,0 +1,42 @@
+@if (totalPages() > 1) {
+  <div class="pagination">
+    <span class="pagination__label">
+      Page {{ page() }} of {{ totalPages() }} &middot; {{ totalCount() }} items
+    </span>
+
+    <button
+      type="button"
+      class="btn btn--outline btn--sm"
+      [disabled]="page() <= 1 || loading()"
+      (click)="goTo(page() - 1)"
+    >
+      Previous
+    </button>
+
+    @for (p of pages(); track p) {
+      @if (p === '...') {
+        <span class="pagination__ellipsis">&hellip;</span>
+      } @else {
+        <button
+          type="button"
+          class="btn btn--sm"
+          [class.btn--primary]="p === page()"
+          [class.btn--outline]="p !== page()"
+          [disabled]="loading()"
+          (click)="goTo(p)"
+        >
+          {{ p }}
+        </button>
+      }
+    }
+
+    <button
+      type="button"
+      class="btn btn--outline btn--sm"
+      [disabled]="page() * pageSize() >= totalCount() || loading()"
+      (click)="goTo(page() + 1)"
+    >
+      Next
+    </button>
+  </div>
+}

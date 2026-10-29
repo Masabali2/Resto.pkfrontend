@@ -40,6 +40,8 @@ export interface AssetUploadResult {
 export interface UploadImageRequest {
   file: File;
   destination: UploadDestination;
+  /** Optional asset type bound to the upload (branding assets only). */
+  assetType?: string;
 }
 
 export interface ImageUploadOptions {

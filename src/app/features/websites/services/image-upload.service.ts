@@ -31,6 +31,9 @@ export class ImageUploadService {
     const formData = new FormData();
     formData.append('file', request.file, request.file.name);
     formData.append('destination', JSON.stringify(request.destination));
+    if (request.assetType) {
+      formData.append('assetType', request.assetType);
+    }
 
     return this.http.post<ApiResponse<AssetUploadResult>>(this.uploadUrl, formData).pipe(
       map(response => {

@@ -1,0 +1,14 @@
+<div class="summary-cards">
+  @for (card of cards(); track card.label) {
+    <div class="summary-card" [style.--card-accent]="card.color">
+      <div class="summary-card__body">
+        <div class="summary-card__label">{{ card.label }}</div>
+        <div class="summary-card__value">{{ card.value }}</div>
+        <div class="summary-card__subtitle">{{ card.subtitle }}</div>
+      </div>
+      <div class="summary-card__icon">
+        <i class="bi" [class]="card.icon" aria-hidden="true"></i>
+      </div>
+    </div>
+  }
+</div>

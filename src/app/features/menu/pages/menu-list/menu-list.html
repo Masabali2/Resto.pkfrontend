@@ -104,6 +104,7 @@
               <td>{{ menu.updatedAt | date:'medium' : 'Asia/Karachi' }}</td>
               <td class="menu-list__table-actions">
                 <app-button variant="outline" size="sm" [disabled]="!canViewMenu()" (click)="viewMenu(menu)">View</app-button>
+                <app-button variant="outline" size="sm" [disabled]="!canManageMenu()" (click)="manageMenu(menu)">Manage</app-button>
                 <app-button variant="outline" size="sm" [disabled]="!canUpdateMenu()" (click)="editMenu(menu)">Edit</app-button>
                 <app-button variant="outline" size="sm" [disabled]="!canUpdateMenu() || menu.status === 'Archived'" (click)="setMenuActive(menu, !menu.isActive)">{{ menu.isActive ? 'Deactivate' : 'Activate' }}</app-button>
                 <app-button variant="danger" size="sm" [disabled]="!canDeleteMenu() || menu.status === 'Archived'" (click)="openArchiveDialog(menu)">Archive</app-button>

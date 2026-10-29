@@ -5,7 +5,9 @@ import {
 } from '@angular/common/http/testing';
 import { MenuService } from './menu.service';
 import type { ApiResponse } from '../../../core/models/api-response.model';
+import type { PagedResult } from '../../../core/models/paged-result.model';
 import type { MenuDto } from '../models/menu.model';
+import type { MenuItemDto, MenuItemSummaryDto } from '../models/menu-item.model';
 
 const API_ROOT = 'https://localhost:7182/api/v1';
 
@@ -289,5 +291,49 @@ describe('MenuService', () => {
     service.deleteItem('item-1').subscribe();
 
     expectRequest(httpMock, 'DELETE', `${API_ROOT}/menu-items/item-1`);
+  });
+
+  it('getMenuItemsQuery serializes search, category, availability and sorting params', () => {
+    service
+      .getMenuItemsQuery('menu-1', {
+        page: 2,
+        pageSize: 10,
+        search: 'burger',
+        categoryId: 'cat-1',
+        isAvailable: true,
+        sortBy: 'price',
+        sortDirection: 'desc'
+      })
+      .subscribe();
+
+    const req = expectRequest(
+      httpMock,
+      'GET',
+      `${API_ROOT}/menus/menu-1/items?page=2&pageSize=10&search=burger&categoryId=cat-1&isAvailable=true&sortBy=price&sortDirection=desc`
+    );
+
+    req.flush({
+      success: true,
+      data: { items: [], totalCount: 0, page: 2, pageSize: 10, totalPages: 0 },
+      message: null,
+      errorCode: null,
+      errors: null,
+      traceId: null
+    } as unknown as ApiResponse<PagedResult<MenuItemDto>>);
+  });
+
+  it('getMenuSummary requests the summary endpoint', () => {
+    service.getMenuSummary('menu-1').subscribe();
+
+    const req = expectRequest(httpMock, 'GET', `${API_ROOT}/menus/menu-1/items/summary`);
+
+    req.flush({
+      success: true,
+      data: { totalItems: 100, availableItems: 60, unavailableItems: 40, categoryCount: 10 },
+      message: null,
+      errorCode: null,
+      errors: null,
+      traceId: null
+    } as unknown as ApiResponse<MenuItemSummaryDto>);
   });
 });

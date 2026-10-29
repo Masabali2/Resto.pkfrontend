@@ -1,0 +1,142 @@
+<header class="menu-management__header">
+  <div class="menu-management__heading">
+    <div class="menu-management__title-row">
+      <h1 class="menu-management__title">Menu Management</h1>
+      @if (menu(); as m) {
+        <span class="menu-management__item-count">
+          {{ summary()?.totalItems ?? totalCount() }} items
+        </span>
+      }
+    </div>
+    <p class="menu-management__subtitle">
+      Organize items, set pricing, and manage availability across all ordering channels.
+      @if (menu(); as m) { <strong>{{ m.name }}</strong> }
+    </p>
+  </div>
+  <div class="menu-management__actions">
+    @if (canViewCategory() && !isReadOnly()) {
+      <button type="button" class="btn btn--outline btn--sm" (click)="openCreateModal()" [disabled]="isReadOnly()">
+        <i class="bi bi-folder-plus" aria-hidden="true"></i> New category
+      </button>
+    }
+    <button type="button" class="btn btn--primary" (click)="openCreateModal()" [disabled]="isReadOnly()">
+      <i class="bi bi-plus-lg" aria-hidden="true"></i> Add item
+    </button>
+  </div>
+</header>
+
+<app-menu-management-summary [summary]="summary()" [totalCount]="totalCount()" />
+
+<app-menu-management-toolbar
+  [categories]="categories()"
+  [selectedCategory]="filteredCategory()"
+  [search]="filter().search ?? ''"
+  [availability]="availabilityLabelKey()"
+  [activeFilterCount]="activeFilterCount()"
+  [totalItems]="totalCount() ?? 0"
+  [canCreate]="canCreateItem() && !isReadOnly()"
+  [readOnly]="isReadOnly()"
+  (searchChange)="onSearchChange($event)"
+  (categoryChange)="onCategoryChange($event)"
+  (availabilityChange)="onAvailabilityChangeFromKey($event)"
+  (clearFilters)="clearFilters()"
+  (create)="openCreateModal()"
+/>
+
+<section class="menu-management__states">
+  @if (pageState() === 'loading' || itemsLoading() || summaryLoading() || categoriesLoading()) {
+    <div class="menu-management__loading">
+      <app-loading-spinner />
+      <span class="menu-management__loading-label">Loading&hellip;</span>
+    </div>
+  }
+
+  @if (pageState() === 'error') {
+    <div class="menu-management__empty menu-management__error" role="alert">
+      <p>{{ errorMessage() }}</p>
+      <button type="button" class="btn btn--outline" (click)="retry()">Retry</button>
+    </div>
+  }
+
+  @if (pageState() === 'not-found') {
+    <div class="menu-management__empty menu-management__not-found" role="alert">
+      <p>Menu not found.</p>
+    </div>
+  }
+
+  @if (pageState() === 'forbidden') {
+    <div class="menu-management__empty menu-management__forbidden" role="alert">
+      <p>You do not have permission to view this menu.</p>
+    </div>
+  }
+
+  @if (pageState() === 'no-workspace') {
+    <div class="menu-management__empty menu-management__no-workspace" role="alert">
+      <p>No active workspace.</p>
+    </div>
+  }
+
+  @if (pageState() === 'empty' && !itemsLoading()) {
+    <div class="menu-management__empty menu-management__empty-state">
+      <p>
+        @if (filter().search || filter().categoryId || filter().isAvailable !== null) {
+          No items match your current filters.
+          <button type="button" class="btn btn--outline btn--sm" (click)="clearFilters()">Clear filters</button>
+        } @else {
+          No menu items yet.
+          @if (canCreateItem() && !isReadOnly()) {
+            <button type="button" class="btn btn--primary btn--sm" (click)="openCreateModal()">Add first item</button>
+          }
+        }
+      </p>
+    </div>
+  }
+
+  @if (pageState() === 'list' && menu(); as currentMenu) {
+    @if (isArchived()) {
+      <div class="menu-management__notice menu-management__notice--warning" role="alert">
+        This menu is archived &mdash; item management is read-only.
+      </div>
+    }
+
+    <app-menu-item-list
+      [items]="items()"
+      [canManage]="canManageItems() && !isReadOnly()"
+      [canDelete]="canDeleteItem() && !isReadOnly()"
+      [readOnly]="isReadOnly()"
+      [pendingIds]="pendingToggles()"
+      (edit)="openEditModal($event)"
+      (delete)="openDeleteDialog($event)"
+      (toggleAvailability)="toggleAvailability($event)"
+    />
+
+    @if (totalPages() > 1) {
+      <app-menu-pagination
+        [page]="filter().page"
+        [pageSize]="filter().pageSize"
+        [totalCount]="totalCount() ?? 0"
+        [totalPages]="totalPages()"
+        [loading]="itemsLoading()"
+        (pageChange)="onPageChange($event)"
+      />
+    }
+  }
+</section>
+
+<app-menu-item-modal
+  [open]="modalOpen()"
+  [mode]="modalMode()"
+  [item]="modalItem()"
+  [categories]="categories()"
+  (saved)="onItemSaved()"
+  (cancelled)="closeModal()"
+/>
+
+<app-confirmation-dialog
+  [open]="deleteOpen()"
+  [title]="'Delete item'"
+  [message]="deleteTarget() ? `Are you sure you want to delete &ldquo;${deleteTarget()!.name}&rdquo;?` : ''"
+  [confirmLabel]="'Delete'"
+  (confirmed)="confirmDelete()"
+  (cancelled)="cancelDelete()"
+></app-confirmation-dialog>

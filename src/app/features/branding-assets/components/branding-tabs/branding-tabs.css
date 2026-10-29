@@ -1,0 +1,45 @@
+:host {
+  display: contents;
+}
+
+.branding-tabs {
+  overflow-x: auto;
+}
+
+.branding-tab {
+  color: #64748b;
+  border-bottom-color: transparent;
+  background: transparent;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-width: 0 0 2px 0;
+  border-style: solid;
+}
+
+.branding-tab:hover {
+  color: #334155;
+}
+
+.branding-tab-active {
+  color: var(--resto-orange);
+  border-bottom-color: var(--resto-orange);
+  background: #fff7ed;
+}
+
+.text-muted {
+  color: #64748b !important;
+}
+
+.transition-colors {
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.border-bottom {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.rounded-top-3xl {
+  border-top-left-radius: 1.5rem;
+  border-top-right-radius: 1.5rem;
+}

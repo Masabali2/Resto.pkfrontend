@@ -1,0 +1,32 @@
+:host {
+  display: contents;
+}
+
+.branding-page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+}
+
+.branding-main {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.branding-section {
+  display: block;
+}
+
+.space-y-6 > * + * {
+  margin-top: 1.5rem;
+}
+
+.flex-grow-1 {
+  flex: 1;
+}
+
+.overflow-y-auto {
+  overflow-y: auto;
+}

@@ -1,0 +1,14 @@
+<div class="branding-tabs overflow-x-auto border-bottom border-subtle bg-white rounded-top-3xl px-2">
+  <div class="d-flex gap-0">
+    @for (tab of tabs; track tab.id) {
+      <button
+        type="button"
+        class="{{ tabClass(tab.id) }}"
+        (click)="selectTab(tab.id)"
+      >
+        <i class="bi {{ tab.icon }}"></i>
+        <span>{{ tab.label }}</span>
+      </button>
+    }
+  </div>
+</div>

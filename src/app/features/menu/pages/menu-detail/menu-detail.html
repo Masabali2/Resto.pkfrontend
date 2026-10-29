@@ -21,6 +21,9 @@
         @if (canUpdateMenu()) {
           <button app-button variant="outline" [disabled]="isArchived()" (click)="editMenu()">Edit Menu</button>
         }
+        @if (canManageMenu()) {
+          <button app-button variant="outline" [disabled]="isArchived() || !canManageMenu()" (click)="manageMenu()">Manage items</button>
+        }
       </div>
     }
   </header>

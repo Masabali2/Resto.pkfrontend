@@ -1,0 +1,74 @@
+<div class="branding-page flex flex-col w-full">
+  <app-branding-header
+    [restaurant]="restaurant()"
+    [storage]="storage()"
+    [storageLoading]="loading()"
+    [dirty]="dirty()"
+    [saving]="saving()"
+    (previewClicked)="openPreview()"
+    (saveClicked)="saveAll()"
+  />
+
+  <app-branding-tabs
+    [activeTab]="activeTab()"
+    (tabSelected)="switchTab($event)"
+  />
+
+  <main class="branding-main flex-grow-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
+    <!-- Section 1: Assets -->
+    <section [hidden]="activeTab() !== 'assets'" class="branding-section space-y-6">
+      <app-asset-management
+        [assets]="assets()"
+        [restaurant]="restaurant()?.id ?? null"
+        [loading]="loading()"
+        (assetsChange)="onAssetsChange($event)"
+      />
+    </section>
+
+    <!-- Section 2: Colors -->
+    <section [hidden]="activeTab() !== 'colors'" class="branding-section space-y-6">
+      <app-brand-colors
+        [theme]="theme()"
+        (themeChange)="onThemeChange($event)"
+      />
+    </section>
+
+    <!-- Section 3: Typography -->
+    <section [hidden]="activeTab() !== 'typography'" class="branding-section space-y-6">
+      <app-typography-settings
+        [typography]="typography()"
+        [theme]="theme()"
+        (typographyChange)="onTypographyChange($event)"
+      />
+    </section>
+
+    <!-- Section 4: Hero Layout -->
+    <section [hidden]="activeTab() !== 'hero'" class="branding-section space-y-6">
+      <app-hero-layout-settings
+        [heroLayout]="heroLayout()"
+        (heroLayoutChange)="onHeroLayoutChange($event)"
+      />
+    </section>
+
+    <!-- Section 5: Media Library -->
+    <section [hidden]="activeTab() !== 'library'" class="branding-section space-y-6">
+      <app-media-library
+        [assets]="assets()"
+        [restaurant]="restaurant()?.id ?? null"
+        [loading]="loading()"
+        (assetsChange)="onAssetsChange($event)"
+      />
+    </section>
+  </main>
+
+  <app-website-preview-modal
+    [open]="previewOpen()"
+    [restaurant]="{ id: restaurant()?.id ?? '', name: restaurant()?.name ?? '' }"
+    [logoUrl]="logoAsset()?.previewUrl ?? ''"
+    [heroBannerUrl]="heroBannerAsset()?.previewUrl ?? ''"
+    [theme]="theme()"
+    [typography]="typography()"
+    [heroLayout]="heroLayout()"
+    (close)="closePreview()"
+  />
+</div>
