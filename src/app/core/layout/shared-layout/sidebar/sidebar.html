@@ -35,9 +35,15 @@
       [attr.title]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
       (click)="collapseToggle.emit()"
     >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-           aria-hidden="true">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
         @if (collapsed()) {
           <path d="m9 6 6 6-6 6M4 4v16" />
         } @else {
@@ -52,8 +58,14 @@
       aria-label="Close navigation menu"
       (click)="closeMobile.emit()"
     >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        aria-hidden="true"
+      >
         <path d="m6 6 12 12M18 6 6 18" />
       </svg>
     </button>
@@ -104,6 +116,7 @@
                     [routerLink]="item.route"
                     [attr.title]="collapsed() ? item.label : null"
                     routerLinkActive="is-active"
+                    ariaCurrentWhenActive="page"
                     [routerLinkActiveOptions]="item.exactMatch ? exactMatchOptions : undefined"
                   >
                     <svg
@@ -118,6 +131,7 @@
                     >
                       <path [attr.d]="item.icon" />
                     </svg>
+
                     @if (!collapsed()) {
                       <span>{{ item.label }}</span>
                     }
@@ -140,6 +154,7 @@
                     >
                       <path [attr.d]="item.icon" />
                     </svg>
+
                     @if (!collapsed()) {
                       <span>{{ item.label }}</span>
                       <span class="setup-badge">Set up</span>
@@ -164,6 +179,7 @@
                     >
                       <path [attr.d]="item.icon" />
                     </svg>
+
                     @if (!collapsed()) {
                       <span>{{ item.label }}</span>
                       <span class="soon-badge">Soon</span>

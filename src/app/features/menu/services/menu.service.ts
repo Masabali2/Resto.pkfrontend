@@ -6,6 +6,7 @@ import type { ApiResponse } from '../../../core/models/api-response.model';
 import type { PagedResult } from '../../websites/models/paged-result.model';
 import type {
   CreateMenuRequest,
+  DefaultMenuDetailsDto,
   MenuDto,
   MenuDetailsDto,
   UpdateMenuRequest,
@@ -67,6 +68,28 @@ export class MenuService {
   getMenu(menuId: string): Observable<ApiResponse<MenuDetailsDto>> {
     return this.http.get<ApiResponse<MenuDetailsDto>>(
       `${this.menusUrl}/${menuId}`
+    );
+  }
+
+  /** Row 2b — GET api/v1/menus/default (read-only seeded catalogue). */
+  getDefaultMenu(): Observable<ApiResponse<DefaultMenuDetailsDto>> {
+    return this.http.get<ApiResponse<DefaultMenuDetailsDto>>(
+      `${this.menusUrl}/default`
+    );
+  }
+
+  /**
+   * Row 2c — POST api/v1/restaurants/{restaurantId}/menus/copy-default.
+   * Deep-copies the platform default menu into the restaurant. The backend
+   * derives the tenant from the authenticated session; only the destination
+   * restaurant is sent (in the URL path).
+   */
+  copyDefaultMenu(
+    restaurantId: string
+  ): Observable<ApiResponse<MenuDto>> {
+    return this.http.post<ApiResponse<MenuDto>>(
+      `${this.restaurantsMenusUrl(restaurantId)}/copy-default`,
+      {}
     );
   }
 

@@ -21,10 +21,13 @@ import { ConfirmationDialog } from '../../../../shared/components/confirmation-d
 import { Button } from '../../../../shared/components/button/button';
 import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
 import type { ApiResponse } from '../../../../core/models/api-response.model';
-import type { MenuDto } from '../../models/menu.model';
+import type { DefaultMenuDetailsDto, MenuDto } from '../../models/menu.model';
 import type { RestaurantDto } from '../../../websites/models/restaurant.model';
+import { formatPrice } from '../../models/menu-price.util';
 
 type PageState = 'loading' | 'list' | 'empty' | 'no-workspace' | 'forbidden' | 'error';
+type MenuSection = 'default' | 'restaurant';
+type DefaultMenuState = 'idle' | 'loading' | 'loaded' | 'error';
 
 @Component({
   selector: 'app-menu-list',
@@ -57,11 +60,22 @@ export class MenuList {
   protected readonly selectedRestaurantId = signal<string | null>(null);
   protected readonly menusLoading = signal(false);
 
+  protected readonly activeSection = signal<MenuSection>('restaurant');
+  protected readonly defaultMenu = signal<DefaultMenuDetailsDto | null>(null);
+  protected readonly defaultMenuState = signal<DefaultMenuState>('idle');
+  protected readonly defaultMenuError = signal('');
+  protected readonly defaultMenuExpanded = signal(false);
+  protected readonly copyingDefault = signal(false);
+  protected readonly copyDialogOpen = signal(false);
+
   protected readonly archiveOpen = signal(false);
   protected readonly archiveTarget = signal<MenuDto | null>(null);
 
   protected readonly canCreateMenu = computed(() =>
     this.authorization.hasPermission('Menu.Create')
+  );
+  protected readonly canCopyDefaultMenu = computed(() =>
+    this.canCreateMenu()
   );
   protected readonly canUpdateMenu = computed(() =>
     this.authorization.hasPermission('Menu.Update')
@@ -81,6 +95,7 @@ export class MenuList {
   private requestSequence = 0;
   private menuSequence = 0;
   private lastProcessedQueryId: string | null = null;
+  private defaultMenuOpenedId: string | null = null;
 
   constructor() {
     toObservable(this.tenantContext.activeTenantId)
@@ -94,6 +109,7 @@ export class MenuList {
         this.selectedRestaurantId.set(null);
         this.menus.set([]);
         this.lastProcessedQueryId = null;
+        this.defaultMenuOpenedId = null;
         this.pageState.set('loading');
         this.errorMessage.set('');
 
@@ -182,6 +198,7 @@ export class MenuList {
 
     if (!selected) {
       this.menus.set([]);
+      this.defaultMenuOpenedId = null;
       this.pageState.set(
         restaurants.length === 0 ? 'empty' : 'list'
       );
@@ -259,6 +276,8 @@ export class MenuList {
           this.pageState.set(
             this.menus().length === 0 ? 'empty' : 'list'
           );
+
+          this.navigateToDefaultMenu();
         },
         error: (error: unknown) => {
           if (!this.isMenuCurrent(requestId, restaurantId)) {
@@ -277,6 +296,167 @@ export class MenuList {
               'Unable to load menus. Please try again.'
           );
           this.pageState.set('error');
+        }
+      });
+  }
+
+  /* ---------- Default Menus section ---------- */
+
+  protected selectSection(section: MenuSection): void {
+    if (this.activeSection() === section) {
+      return;
+    }
+
+    this.activeSection.set(section);
+
+    if (section === 'default' && this.defaultMenuState() === 'idle') {
+      this.loadDefaultMenu();
+    }
+  }
+
+  protected loadDefaultMenu(): void {
+    if (this.defaultMenuState() === 'loading') {
+      return;
+    }
+
+    const tenantId = this.tenantContext.activeTenantId();
+    if (tenantId === null) {
+      this.defaultMenuState.set('error');
+      this.defaultMenuError.set('No active workspace.');
+      return;
+    }
+
+    this.defaultMenuState.set('loading');
+    this.defaultMenuError.set('');
+
+    this.menuService.getDefaultMenu().subscribe({
+      next: (response: ApiResponse<DefaultMenuDetailsDto>) => {
+        if (!response.success || !response.data) {
+          this.defaultMenuState.set('error');
+          this.defaultMenuError.set(
+            response.message ?? 'Unable to load the default menu.'
+          );
+          return;
+        }
+
+        this.defaultMenu.set(response.data);
+        this.defaultMenuState.set('loaded');
+      },
+      error: (error: unknown) => {
+        this.defaultMenuState.set('error');
+
+        if (error instanceof HttpErrorResponse && error.status === 403) {
+          this.defaultMenuError.set(
+            'You do not have permission to view the default menu.'
+          );
+          return;
+        }
+
+        this.defaultMenuError.set(
+          this.httpErrorHandler.extractBackendMessage(error) ??
+            'Unable to load the default menu. Please try again.'
+        );
+      }
+    });
+  }
+
+  protected retryDefaultMenu(): void {
+    this.defaultMenuState.set('idle');
+    this.loadDefaultMenu();
+  }
+
+  protected toggleDefaultMenu(): void {
+    this.defaultMenuExpanded.update(expanded => !expanded);
+  }
+
+  protected defaultMenuStatusLabel(status: string): string {
+    return this.statusLabel(status);
+  }
+
+  protected openCopyDefaultDialog(): void {
+    if (this.copyingDefault()) {
+      return;
+    }
+
+    if (!this.selectedRestaurantId()) {
+      this.defaultMenuError.set(
+        'Select a destination restaurant before using this menu.'
+      );
+      return;
+    }
+
+    if (!this.canCopyDefaultMenu()) {
+      this.defaultMenuError.set(
+        'You do not have permission to create menus in this workspace.'
+      );
+      return;
+    }
+
+    this.defaultMenuError.set('');
+    this.copyDialogOpen.set(true);
+  }
+
+  protected cancelCopyDefault(): void {
+    this.copyDialogOpen.set(false);
+  }
+
+  protected copyDefaultConfirmMessage(): string {
+    const menu = this.defaultMenu();
+    const restaurantId = this.selectedRestaurantId();
+
+    if (!menu || !restaurantId) {
+      return '';
+    }
+
+    return `Use "${menu.name}" for ${this.restaurantName(restaurantId)}? A draft copy will be created for this restaurant.`;
+  }
+
+  protected confirmCopyDefault(): void {
+    this.copyDialogOpen.set(false);
+
+    if (this.copyingDefault()) {
+      return;
+    }
+
+    const restaurantId = this.selectedRestaurantId();
+    const menu = this.defaultMenu();
+
+    if (!restaurantId || !menu) {
+      this.defaultMenuError.set(
+        'Select a destination restaurant before using this menu.'
+      );
+      return;
+    }
+
+    this.copyingDefault.set(true);
+    this.defaultMenuError.set('');
+
+    this.menuService.copyDefaultMenu(restaurantId)
+      .pipe(finalize(() => this.copyingDefault.set(false)))
+      .subscribe({
+        next: (response: ApiResponse<MenuDto>) => {
+          if (!response.success || !response.data) {
+            this.defaultMenuError.set(
+              response.message ?? 'Unable to copy the default menu.'
+            );
+            return;
+          }
+
+          const copied = response.data;
+          this.notificationService.success(
+            `"${copied.name}" was added to ${this.restaurantName(restaurantId)}.`
+          );
+
+          void this.router.navigate(['/menus', copied.id, 'manage'], {
+            queryParams: { restaurantId },
+            queryParamsHandling: 'merge'
+          });
+        },
+        error: (error: unknown) => {
+          this.defaultMenuError.set(
+            this.httpErrorHandler.extractBackendMessage(error) ??
+              'Unable to copy the default menu. Please try again.'
+          );
         }
       });
   }
@@ -304,6 +484,47 @@ export class MenuList {
     void this.router.navigate(['/menus/new'], {
       queryParams: { restaurantId: this.selectedRestaurantId() },
       queryParamsHandling: 'merge'
+    });
+  }
+
+  /**
+   * Opens the default menu of the selected restaurant automatically.
+   *
+   * Resolution rule (no default-menu flag exists on the MenuDto contract,
+   * so the first result is never assumed to be the default):
+   *  - exactly one menu   -> open that menu's management page,
+   *  - zero or many menus -> stay on the list, which acts as the menu
+   *    selector (never arbitrarily pick one).
+   *
+   * `replaceUrl` keeps the entry `/menus` out of the history stack so a
+   * browser back or refresh never re-enters the list and re-triggers the
+   * navigation, and keeps the resulting management URL shareable and
+   * refresh-safe.
+   */
+  private navigateToDefaultMenu(): void {
+    if (this.pageState() !== 'list') {
+      return;
+    }
+
+    const menus = this.menus();
+    const restaurantId = this.selectedRestaurantId();
+
+    if (
+      this.activeSection() !== 'restaurant' ||
+      menus.length !== 1 ||
+      !restaurantId ||
+      menus[0].id === this.defaultMenuOpenedId ||
+      !this.canManageMenu()
+    ) {
+      return;
+    }
+
+    this.defaultMenuOpenedId = menus[0].id;
+
+    void this.router.navigate(['/menus', menus[0].id, 'manage'], {
+      queryParams: { restaurantId },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
     });
   }
 
@@ -415,6 +636,10 @@ export class MenuList {
     return target
       ? `Are you sure you want to archive "${target.name}"? This cannot be undone.`
       : '';
+  }
+
+  protected formatAmount(value: number): string {
+    return formatPrice(value);
   }
 
   protected statusLabel(status: string): string {

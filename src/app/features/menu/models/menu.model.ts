@@ -1,4 +1,5 @@
 import type { MenuCategoryDto } from './menu-category.model';
+import type { MenuItemDto } from './menu-item.model';
 
 /**
  * Mirrors backend MenuDto / MenuDetailsDto
@@ -26,6 +27,28 @@ export interface MenuDto {
  */
 export interface MenuDetailsDto extends MenuDto {
   categories: MenuCategoryDto[];
+}
+
+/**
+ * Read-only platform default menu returned by GET /api/v1/menus/default.
+ * Mirrors DefaultMenuDetailsDto / DefaultMenuCategoryDto on the backend.
+ */
+export interface DefaultMenuCategoryDto {
+  id: string;
+  name: string;
+  description: string | null;
+  displayOrder: number;
+  items: MenuItemDto[];
+}
+
+export interface DefaultMenuDetailsDto {
+  id: string;
+  name: string;
+  description: string | null;
+  status: MenuStatus;
+  categoryCount: number;
+  itemCount: number;
+  categories: DefaultMenuCategoryDto[];
 }
 
 /** Body of POST /api/v1/restaurants/{restaurantId}/menus. */
