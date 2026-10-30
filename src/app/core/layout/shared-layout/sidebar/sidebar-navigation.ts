@@ -1,3 +1,4 @@
+
 export type SidebarNavStatus = 'available' | 'planned';
 
 export interface SidebarNavItem {
@@ -16,16 +17,6 @@ export interface SidebarNavGroup {
   items: readonly SidebarNavItem[];
 }
 
-/**
- * Navigation catalogue. `route` points only at verified routes from
- * app.routes.ts; planned features without a page render as disabled entries.
- * `setupRoute` links a planned item to an existing entry point (the
- * restaurant onboarding journey), following the treatment established by
- * DashboardSidebar. Permission identifiers come from the backend catalog
- * already used by the repository (Menu.*, Order.*, Staff.*, Website.*,
- * Restaurant.*). Sidebar visibility is a UX concern — the backend remains
- * the security authority.
- */
 export const SIDEBAR_NAVIGATION: readonly SidebarNavGroup[] = [
   {
     heading: 'Overview',
@@ -54,7 +45,8 @@ export const SIDEBAR_NAVIGATION: readonly SidebarNavGroup[] = [
         icon: 'M8 3v8a2 2 0 0 0 4 0V3M10 11v10M17 3c-1.7 1.2-2.5 3.4-2.5 6 0 1.7.8 2.8 2.5 3v9',
         status: 'available',
         route: ['/menus'],
-        requiredPermissions: ['Menu.View']
+        requiredPermissions: ['Menu.View', 'MenuItem.View'],
+        permissionMode: 'all'
       },
       {
         label: 'Orders',
@@ -90,7 +82,9 @@ export const SIDEBAR_NAVIGATION: readonly SidebarNavGroup[] = [
       {
         label: 'Branding & Assets',
         icon: 'M12 3a9 9 0 1 0 0 18c1 0 1.7-.8 1.7-1.7 0-.5-.2-.8-.5-1.2-.2-.3-.4-.6-.4-1 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5c0-4.4-4-8.5-9-8.5Zm-5 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm3-5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z',
-        status: 'planned'
+        status: 'available',
+        route: ['/branding-assets'],
+        requiredPermissions: ['Website.Update']
       },
       {
         label: 'Publish Website',

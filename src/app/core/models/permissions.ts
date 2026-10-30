@@ -17,6 +17,11 @@ export const PERMISSIONS = {
     Create: 'MenuItem.Create',
     Update: 'MenuItem.Update',
     Delete: 'MenuItem.Delete'
+  } as const,
+  Website: {
+    View: 'Website.View',
+    Update: 'Website.Update',
+    Publish: 'Website.Publish'
   } as const
 } as const;
 

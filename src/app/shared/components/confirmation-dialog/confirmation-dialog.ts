@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   effect,
+  ElementRef,
   inject,
   input,
   output,
@@ -31,8 +32,10 @@ export class ConfirmationDialog {
   readonly confirmed = output<void>();
   readonly cancelled = output<void>();
 
-  private readonly confirmButton = viewChild<HTMLElement>('confirmButton');
-  private readonly cancelButton = viewChild<HTMLElement>('cancelButton');
+  private readonly confirmButton =
+    viewChild<ElementRef<HTMLElement>>('confirmButton');
+  private readonly cancelButton =
+    viewChild<ElementRef<HTMLElement>>('cancelButton');
 
   constructor() {
     effect(() => {
@@ -59,8 +62,8 @@ export class ConfirmationDialog {
 
     if (event.key === 'Tab') {
       event.preventDefault();
-      const confirm = this.confirmButton();
-      const cancel = this.cancelButton();
+      const confirm = this.confirmButton()?.nativeElement;
+      const cancel = this.cancelButton()?.nativeElement;
       if (!confirm || !cancel) {
         return;
       }
@@ -74,7 +77,7 @@ export class ConfirmationDialog {
   }
 
   private trapFocus(): void {
-    const confirm = this.confirmButton();
+    const confirm = this.confirmButton()?.nativeElement;
     if (confirm) {
       confirm.focus();
     }

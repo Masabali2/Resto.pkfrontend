@@ -17,6 +17,49 @@
   font-size: 1.5rem;
 }
 
+.menu-list__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.menu-list__subtitle {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.menu-list__tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #f0d9cc;
+}
+
+.menu-list__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 1rem;
+  border: none;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: #6b7280;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.menu-list__tab:hover {
+  color: #d94918;
+}
+
+.menu-list__tab--active {
+  color: #f05a24;
+  border-bottom-color: #f05a24;
+  background: #fff4f0;
+}
+
 .menu-list__restaurant-picker {
   display: flex;
   align-items: center;
@@ -72,8 +115,202 @@
 
 .menu-list__loading {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
+  gap: 0.5rem;
   padding: 2rem;
+}
+
+.menu-list__loading-label {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+/* ---------- Default menus ---------- */
+
+.menu-list__default {
+  margin-bottom: 1rem;
+}
+
+.menu-list__default-card {
+  border: 1px solid #f0d9cc;
+  border-left: 4px solid #f05a24;
+  border-radius: 10px;
+  background: #fff;
+  padding: 1.25rem;
+}
+
+.menu-list__default-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.menu-list__default-title {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #1f2937;
+}
+
+.menu-list__default-tag {
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: #fff4f0;
+  color: #d94918;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.menu-list__default-description {
+  margin: 0.65rem 0 0;
+  color: #4b5563;
+  font-size: 0.95rem;
+}
+
+.menu-list__default-facts {
+  display: flex;
+  gap: 1.5rem;
+  margin: 1rem 0 0;
+}
+
+.menu-list__default-facts div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  background: #fff4f0;
+  min-width: 90px;
+}
+
+.menu-list__default-facts dt {
+  color: #9a3412;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.menu-list__default-facts dd {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.menu-list__default-hint,
+.menu-list__default-note {
+  margin: 0.75rem 0 0;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.menu-list__default-error {
+  margin: 0.75rem 0 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 0.9rem;
+}
+
+.menu-list__default-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.menu-list__default-catalogue {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.menu-list__default-category {
+  border: 1px solid #f3e4dc;
+  border-radius: 8px;
+  background: #fffdfc;
+  padding: 0.85rem;
+}
+
+.menu-list__default-category-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #f3e4dc;
+}
+
+.menu-list__default-category-header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #9a3412;
+}
+
+.menu-list__default-category-header span {
+  color: #6b7280;
+  font-size: 0.75rem;
+}
+
+.menu-list__default-category-description {
+  margin: 0.45rem 0 0;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.menu-list__default-items {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
+.menu-list__default-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px dashed #f3e4dc;
+}
+
+.menu-list__default-item:last-child {
+  border-bottom: none;
+}
+
+.menu-list__default-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.menu-list__default-item-name {
+  color: #1f2937;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.menu-list__default-item-description {
+  color: #6b7280;
+  font-size: 0.8rem;
+}
+
+.menu-list__default-item-price {
+  color: #d94918;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.menu-list__default-item--empty {
+  color: #6b7280;
+  font-size: 0.85rem;
 }
 
 .menu-list__table-section {
@@ -173,6 +410,20 @@
   .menu-list__restaurant-picker {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .menu-list__tabs {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .menu-list__tab {
+    justify-content: center;
+    border-bottom-width: 2px;
+  }
+
+  .menu-list__default-actions app-button {
+    width: 100%;
   }
 
   .menu-list__setup-link {

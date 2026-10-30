@@ -11,6 +11,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { forkJoin } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
 import { MenuService } from '../../services/menu.service';
 import { AuthorizationService } from '../../../../core/services/authorization.service';
 import { TenantContextService } from '../../../../core/services/tenant-context.service';
@@ -77,8 +78,15 @@ export class MenuDetail {
   protected readonly dialogKind = signal<'category' | 'item' | null>(null);
   protected readonly dialogTarget = signal<{ id: string; name: string } | null>(null);
 
+  protected readonly apiUrl = environment.apiUrl;
+
   protected readonly canUpdateMenu = computed(() =>
     this.authorization.hasPermission('Menu.Update')
+  );
+
+  protected readonly canManageMenu = computed(() =>
+    this.authorization.hasPermission('Menu.View') &&
+    this.authorization.hasPermission('MenuItem.View')
   );
 
   protected readonly canCreateCategory = computed(() =>
@@ -824,14 +832,7 @@ export class MenuDetail {
     }
 
     this.menuService.deleteItem(target.id).subscribe({
-      next: response => {
-        if (!response.success) {
-          this.errorMessage.set(
-            response.message ?? 'Unable to delete the item. Please try again.'
-          );
-          return;
-        }
-
+      next: () => {
         this.removeItemFromCategory(target.id);
 
         if (categoryId) {
@@ -981,6 +982,19 @@ export class MenuDetail {
     });
   }
 
+  protected manageMenu(): void {
+    const menu = this.menu();
+
+    if (!menu || !this.canManageMenu()) {
+      return;
+    }
+
+    void this.router.navigate(['/menus', menu.id, 'manage'], {
+      queryParams: { restaurantId: menu.restaurantId },
+      queryParamsHandling: 'merge'
+    });
+  }
+
   protected openBulkPriceDialog(): void {
     if (!this.canManageItems() || this.isReadOnly()) {
       return;
@@ -1070,6 +1084,13 @@ export class MenuDetail {
 
   protected formatMoney(value: number): string {
     return formatPrice(value);
+  }
+
+  protected imageFileUrl(fileId: string | null): string {
+    if (!fileId) {
+      return '';
+    }
+    return `${this.apiUrl}/v1/files/${fileId}`;
   }
 
   private isCurrent(requestId: number, tenantId: string): boolean {

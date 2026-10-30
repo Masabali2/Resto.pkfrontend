@@ -11,6 +11,7 @@ import type { SubscriptionState } from '../models/subscription-status.model';
 function plan(overrides: Partial<SubscriptionPlan> = {}): SubscriptionPlan {
   return {
     id: 'plan-1',
+    code: 'free-trial',
     name: 'Free Trial',
     description: '30-day free trial for a new Resto.pk workspace.',
     price: 0,

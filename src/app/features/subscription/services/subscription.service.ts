@@ -120,6 +120,55 @@ export class SubscriptionService {
   }
 
   /**
+   * Reads the publicly visible active plans. No authentication or tenant
+   * session is required — this is the endpoint the public pricing page uses.
+   */
+  loadPublicPlans(): Observable<SubscriptionPlan[]> {
+    return this.http
+      .get<ApiResponse<SubscriptionPlan[]>>(
+        `${environment.apiUrl}/subscriptions/plans/public`
+      )
+      .pipe(
+        map(response =>
+          response.success && response.data ? response.data : []
+        )
+      );
+  }
+
+  /**
+   * Cancels the subscription of the active workspace.
+   *
+   * The backend re-derives the workspace from the server-resolved tenant
+   * context and requires the caller to be a member with update permission, so
+   * the frontend never sends a tenant id and never trusts a client supplied
+   * one.
+   */
+  cancelSubscription(subscriptionId: string): Observable<TenantSubscription> {
+    return this.http
+      .post<ApiResponse<TenantSubscription>>(
+        `${environment.apiUrl}/subscriptions/${subscriptionId}/cancel`,
+        null
+      )
+      .pipe(
+        switchMap(response => {
+          if (!response.success || !response.data) {
+            return throwError(
+              () =>
+                new Error(
+                  response.message ??
+                    'The subscription could not be cancelled. Please try again.'
+                )
+            );
+          }
+
+          return this.loadState().pipe(
+            map(() => response.data!),
+          );
+        })
+      );
+  }
+
+  /**
    * Starts the 30-day free trial of the active workspace.
    *
    * After the backend accepted the trial the tenant context is refreshed (the

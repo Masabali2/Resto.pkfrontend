@@ -6,6 +6,7 @@ import type { ApiResponse } from '../../../core/models/api-response.model';
 import type { PagedResult } from '../../websites/models/paged-result.model';
 import type {
   CreateMenuRequest,
+  DefaultMenuDetailsDto,
   MenuDto,
   MenuDetailsDto,
   UpdateMenuRequest,
@@ -23,7 +24,9 @@ import type {
   CreateMenuItemRequest,
   UpdateMenuItemRequest,
   UpdateMenuItemAvailabilityRequest,
-  UpdateMenuItemStatusRequest
+  UpdateMenuItemStatusRequest,
+  MenuItemSummaryDto,
+  MenuItemListQuery
 } from '../models/menu-item.model';
 
 /**
@@ -68,6 +71,28 @@ export class MenuService {
     );
   }
 
+  /** Row 2b — GET api/v1/menus/default (read-only seeded catalogue). */
+  getDefaultMenu(): Observable<ApiResponse<DefaultMenuDetailsDto>> {
+    return this.http.get<ApiResponse<DefaultMenuDetailsDto>>(
+      `${this.menusUrl}/default`
+    );
+  }
+
+  /**
+   * Row 2c — POST api/v1/restaurants/{restaurantId}/menus/copy-default.
+   * Deep-copies the platform default menu into the restaurant. The backend
+   * derives the tenant from the authenticated session; only the destination
+   * restaurant is sent (in the URL path).
+   */
+  copyDefaultMenu(
+    restaurantId: string
+  ): Observable<ApiResponse<MenuDto>> {
+    return this.http.post<ApiResponse<MenuDto>>(
+      `${this.restaurantsMenusUrl(restaurantId)}/copy-default`,
+      {}
+    );
+  }
+
   /** Row 3 — POST api/v1/restaurants/{restaurantId}/menus. */
   createMenu(
     restaurantId: string,
@@ -101,9 +126,9 @@ export class MenuService {
     );
   }
 
-  /** Row 6 — DELETE api/v1/menus/{menuId} (terminal archive). */
-  archiveMenu(menuId: string): Observable<ApiResponse<unknown>> {
-    return this.http.delete<ApiResponse<unknown>>(`${this.menusUrl}/${menuId}`);
+  /** Row 6 — DELETE api/v1/menus/{menuId} (terminal archive, 204 NoContent). */
+  archiveMenu(menuId: string): Observable<void> {
+    return this.http.delete<void>(`${this.menusUrl}/${menuId}`);
   }
 
   /** Row 7 — GET api/v1/menus/{menuId}/categories (not paged). */
@@ -146,9 +171,9 @@ export class MenuService {
     );
   }
 
-  /** Row 11 — DELETE api/v1/menu-categories/{categoryId} (409 if items exist). */
-  deleteCategory(categoryId: string): Observable<ApiResponse<unknown>> {
-    return this.http.delete<ApiResponse<unknown>>(
+  /** Row 11 — DELETE api/v1/menu-categories/{categoryId} (409 if items exist, 204 NoContent). */
+  deleteCategory(categoryId: string): Observable<void> {
+    return this.http.delete<void>(
       `${this.categoriesUrl}/${categoryId}`
     );
   }
@@ -189,6 +214,46 @@ export class MenuService {
     return this.http.get<ApiResponse<PagedResult<MenuItemDto>>>(
       `${this.menusUrl}/${menuId}/items`,
       { params }
+    );
+  }
+
+  /** Row 14b — GET api/v1/menus/{menuId}/items with search, category, availability and sorting. */
+  getMenuItemsQuery(
+    menuId: string,
+    query: MenuItemListQuery
+  ): Observable<ApiResponse<PagedResult<MenuItemDto>>> {
+    let params = new HttpParams()
+      .set('page', query.page ?? 1)
+      .set('pageSize', query.pageSize ?? 20);
+
+    if (query.search) {
+      params = params.set('search', query.search);
+    }
+    if (query.categoryId) {
+      params = params.set('categoryId', query.categoryId);
+    }
+    if (query.isAvailable !== null && query.isAvailable !== undefined) {
+      params = params.set('isAvailable', query.isAvailable);
+    }
+    if (query.sortBy) {
+      params = params.set('sortBy', query.sortBy);
+    }
+    if (query.sortDirection) {
+      params = params.set('sortDirection', query.sortDirection);
+    }
+
+    return this.http.get<ApiResponse<PagedResult<MenuItemDto>>>(
+      `${this.menusUrl}/${menuId}/items`,
+      { params }
+    );
+  }
+
+  /** Row 14c — GET api/v1/menus/{menuId}/items/summary (dashboard stat cards). */
+  getMenuSummary(
+    menuId: string
+  ): Observable<ApiResponse<MenuItemSummaryDto>> {
+    return this.http.get<ApiResponse<MenuItemSummaryDto>>(
+      `${this.menusUrl}/${menuId}/items/summary`
     );
   }
 
@@ -241,8 +306,8 @@ export class MenuService {
     );
   }
 
-  /** Row 20 — DELETE api/v1/menu-items/{itemId} (soft delete). */
-  deleteItem(itemId: string): Observable<ApiResponse<unknown>> {
-    return this.http.delete<ApiResponse<unknown>>(`${this.itemsUrl}/${itemId}`);
+  /** Row 20 — DELETE api/v1/menu-items/{itemId} (soft delete, 204 NoContent). */
+  deleteItem(itemId: string): Observable<void> {
+    return this.http.delete<void>(`${this.itemsUrl}/${itemId}`);
   }
 }

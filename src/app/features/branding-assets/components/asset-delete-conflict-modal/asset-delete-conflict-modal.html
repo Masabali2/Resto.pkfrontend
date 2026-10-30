@@ -1,0 +1,22 @@
+@if(open()) {
+<div
+  class="conflict-modal-backdrop d-flex align-items-center justify-center p-3"
+>
+  <div class="conflict-modal w-100 max-w-md bg-white rounded-3xl border border-red-100 shadow-2xl p-4 text-center animate-in">
+    <div class="conflict-icon mx-auto d-flex align-items-center justify-center">
+      <i class="bi bi-triangle-exclamation-fill text-red"></i>
+    </div>
+    <h3 class="conflict-title">Asset Soft-Delete Blocked</h3>
+    <p class="conflict-subtitle">
+      Backend Code:
+      <span class="brand-code font-bold text-red">ASSET_STILL_REFERENCED (409)</span>
+    </p>
+    <div class="conflict-detail p-3 border border-subtle bg-surface-soft rounded-2xl text-xs text-muted">
+      This asset is linked to active menu items or public banners. Unlink it before performing deletion.
+    </div>
+    <button type="button" class="btn btn-dark w-auto mt-3 px-4 py-2 rounded-pill text-xs font-bold" (click)="dismiss.emit()">
+      Acknowledge Conflict
+    </button>
+  </div>
+</div>
+}

@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { Navbar } from '../../components/navbar/navbar';
+import { FloatingAccountCard } from '../../components/floating-account-card/floating-account-card';
 import { Hero } from '../../components/hero/hero';
 import { TemplateShowcase } from '../../components/template-showcase/template-showcase';
 import { Features } from '../../components/features/features';
@@ -15,6 +16,7 @@ import { Footer } from '../../components/footer/footer';
   standalone: true,
   imports: [
     Navbar,
+    FloatingAccountCard,
     Hero,
     TemplateShowcase,
     Features,

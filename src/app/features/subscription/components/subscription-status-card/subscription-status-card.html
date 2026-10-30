@@ -23,6 +23,40 @@
   } @else {
     <p class="status-detail">{{ status().detail }}</p>
 
+    @if (currentPlan(); as plan) {
+      <div class="plan-details" aria-labelledby="plan-details-heading">
+        <h4 id="plan-details-heading" class="plan-details-heading">Current plan</h4>
+        <dl class="plan-details-list">
+          <dt>Plan</dt>
+          <dd>{{ plan.name }}</dd>
+          @if (plan.priceAvailable) {
+            <dt>Amount</dt>
+            <dd>{{ plan.amount }} ({{ plan.currency }})</dd>
+            <dt>Billing interval</dt>
+            <dd>{{ plan.interval }}</dd>
+          } @else {
+            <dt>Amount</dt>
+            <dd>Pricing not available for this plan</dd>
+          }
+          <dt>Start date</dt>
+          <dd>{{ plan.startDate }}</dd>
+          <dt>Renewal / expiry date</dt>
+          <dd>{{ plan.expiryDate ?? 'Not set' }}</dd>
+          <dt>Auto-renew</dt>
+          <dd>{{ plan.autoRenew ? 'On' : 'Off' }}</dd>
+        </dl>
+
+        @if (plan.limits.length) {
+          <h5 class="plan-limits-heading">Plan limits</h5>
+          <ul class="plan-limits">
+            @for (limit of plan.limits; track limit) {
+              <li>{{ limit }}</li>
+            }
+          </ul>
+        }
+      </div>
+    }
+
     @if (status().daysRemaining !== null) {
       <p class="status-remaining">
         @if (status().daysRemaining === 0) {

@@ -198,7 +198,8 @@ export class MenuItemForm {
       description: orNull(value.description),
       currency: this.currency,
       imageFileId: null,
-      displayOrder: value.displayOrder.trim().length > 0 ? Number(value.displayOrder) : null
+      displayOrder: value.displayOrder.trim().length > 0 ? Number(value.displayOrder) : null,
+      isAvailable: value.isAvailable
     };
 
     this.submitting.set(true);
@@ -211,7 +212,8 @@ export class MenuItemForm {
           currency: request.currency,
           imageFileId: null,
           clearImage: false,
-          displayOrder: request.displayOrder
+          displayOrder: request.displayOrder,
+          isAvailable: value.isAvailable
         })
       : this.menuService.createItem(this.categoryId, request);
 

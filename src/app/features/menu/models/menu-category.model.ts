@@ -11,6 +11,7 @@ export interface MenuCategoryDto {
   isActive: boolean;
   createdAt: string;
   updatedAt: string | null;
+  itemCount: number;
 }
 
 /** Body of POST /api/v1/menus/{menuId}/categories. */

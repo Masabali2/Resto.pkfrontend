@@ -1,0 +1,135 @@
+@if (previewOpen()) {
+<div
+  class="preview-overlay position-fixed inset-0 z-1060 d-flex flex-column overflow-hidden bg-white"
+  style="background:#ffffff;"
+>
+  <!-- Top Modal Toolbar -->
+  <div class="preview-toolbar bg-dark text-white px-4 py-3 d-flex align-items-center justify-between border-bottom border-secondary shadow-sm">
+    <div class="d-flex align-items-center gap-2">
+      <span class="preview-dot bg-success rounded-circle" style="width:0.5rem;height:0.5rem;"></span>
+      <div>
+        <div class="preview-toolbar-title text-xs font-bold text-uppercase text-muted">Live Website Preview</div>
+        <div class="preview-toolbar-url text-[10px] text-muted">https://{{ restaurantSlug() }}.resto.pk</div>
+      </div>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <button
+        type="button"
+        class="btn btn-primary px-3 py-2 rounded-pill text-xs font-bold"
+        (click)="closePreview()"
+      >
+        <i class="bi bi-x-lg me-1"></i> Close Preview
+      </button>
+    </div>
+  </div>
+
+  <!-- Live Customer Website View -->
+  <div class="preview-container flex-grow-1 overflow-y-auto bg-gray-100">
+    <!-- Public Website Navigation Header -->
+    <nav class="preview-nav border-bottom border-secondary bg-white sticky top-0 z-20 shadow-sm">
+      <div class="preview-navbar container-fluid px-4 py-2 d-flex align-items-center justify-between">
+        <div class="d-flex align-items-center gap-2">
+          <div class="preview-nav-logo overflow-hidden rounded" style="width:2.5rem;height:2.5rem;border:1px solid #e2e8f0;background:#f8fafc;display:flex;align-items:center;justify-content:center;">
+            <img *ngIf="logoUrl" [src]="logoUrl" class="preview-nav-logo-img" alt="Restaurant logo" />
+            <div *ngIf="!logoUrl" class="preview-nav-logo-empty">R</div>
+          </div>
+          <span [class]="headingFontClass()" class="preview-nav-title">{{ restaurant()?.name ?? 'Restaurant' }}</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="preview-badge px-3 py-1 rounded-pill text-xs font-bold bg-orange-soft text-orange border border-orange">Open Now</span>
+          <button type="button" class="preview-cart-btn" [style.backgroundColor]="theme().primary">
+            <i class="bi bi-bag me-1"></i> Cart (0)
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Public Website Hero Section -->
+    <section
+      class="preview-hero position-relative min-h-20rem d-flex align-items-center justify-center text-white p-4"
+      [style.backgroundImage]="'url(' + heroBannerUrl() + ')'"
+      [class.bg-dark]="!heroBannerUrl()"
+    >
+      <div class="preview-hero-overlay position-absolute inset-0" style="background:linear-gradient(to top,#0f172a,#0f172a99,transparent);"></div>
+      <div class="preview-hero-content position-relative z-2 text-center w-100">
+        <span class="preview-hero-eyebrow d-inline-block px-3 py-1 rounded-pill text-xs font-bold text-white bg-white-20 border border-white-30 backdrop-blur-sm">
+          {{ restaurantSlug().replace(/-/g,' ') }}
+        </span>
+        <h2 [class]="headingFontClass()" class="preview-hero-heading mb-3">
+          Authentic Gourmet Burgers & Steaks
+        </h2>
+        <p class="preview-hero-text text-xs text-slate-200">
+          Order online directly for home delivery or table pickup.
+        </p>
+      </div>
+    </section>
+
+    <!-- Menu Categories & Items -->
+    <main class="preview-menu container-fluid px-4 py-5">
+      <!-- Category Filter Pills -->
+      <div class="d-flex gap-2 overflow-x-auto pb-3 mb-4">
+        <button
+          type="button"
+          class="preview-category-pill px-4 py-2 rounded-pill text-xs font-bold"
+          [class.bg-orange]="activeCategoryId() === null"
+          [class.text-white]="activeCategoryId() === null"
+          [class.bg-white]="activeCategoryId() !== null"
+          [class.text-dark]="activeCategoryId() !== null"
+          [class.border]="activeCategoryId() !== null"
+          [class.border-secondary]="activeCategoryId() !== null"
+          (click)="activeCategoryId.set(null)"
+        >
+          All Items
+        </button>
+        @for (category of categories(); track category.id) {
+          <button
+            type="button"
+            class="preview-category-pill px-4 py-2 rounded-pill text-xs font-bold"
+            [class.bg-orange]="activeCategoryId() === category.id"
+            [class.text-white]="activeCategoryId() === category.id"
+            [class.bg-white]="activeCategoryId() !== category.id"
+            [class.text-dark]="activeCategoryId() !== category.id"
+            [class.border]="activeCategoryId() !== category.id"
+            [class.border-secondary]="activeCategoryId() !== category.id"
+            (click)="activeCategoryId.set(category.id)"
+          >
+            {{ category.name }}
+          </button>
+        }
+      </div>
+
+      <!-- Loading / Empty -->
+      @if (loading()) {
+        <div class="text-center py-8 text-muted text-xs">Loading menu…</div>
+      } @else if (visibleItems().length === 0) {
+        <div class="text-center py-8 text-muted text-xs">No menu items available.</div>
+      } @else {
+        <!-- Sample Item Cards Grid -->
+        <div class="row g-4">
+          @for (item of visibleItems(); track item.id) {
+            <div class="col-12 col-sm-6 col-lg-4">
+              <div class="preview-item-card card border border-subtle rounded-3xl shadow-soft overflow-hidden h-100 d-flex flex-column">
+                <div class="preview-item-image h-48 overflow-hidden bg-surface-soft">
+                  <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80" class="preview-item-img w-100 h-100 object-fit-cover" alt="{{ item.name }}" />
+                </div>
+                <div class="p-3 d-flex flex-column flex-grow-1">
+                  <h4 [class]="headingFontClass()" class="preview-item-title mb-2">{{ item.name }}</h4>
+                  <p class="preview-item-desc text-xs text-muted mb-2">{{ item.description ?? '' }}</p>
+                </div>
+                <div class="p-3 border-top border-subtle d-flex justify-between align-items-center">
+                  <span class="preview-item-price" [style.color]="theme().primary">
+                    {{ formatPrice(item.price, item.currency) }}
+                  </span>
+                  <button type="button" class="preview-item-add btn px-3 py-1 rounded-pill text-xs font-bold" [style.backgroundColor]="theme().primary">
+                    Add +
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </main>
+  </div>
+</div>
+}

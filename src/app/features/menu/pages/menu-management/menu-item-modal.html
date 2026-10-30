@@ -1,0 +1,175 @@
+<div class="modal-overlay" [class.show]="open()" role="dialog" aria-modal="true" aria-label="Item details" (click)="onBackdropClick($event)">
+  <div class="modal-dialog" [class.show]="open()" (click)="$event.stopPropagation()">
+    <div class="modal__header">
+      <div class="modal__header-content">
+        <h2 class="modal__title">{{ pageTitle() }}</h2>
+        <p class="modal__subtitle">
+          @if (isEdit()) { Editing {{ item()?.name }} }
+          @else { Create a new menu item and optionally upload an image. }
+        </p>
+      </div>
+      <button type="button" class="modal__close" (click)="onCancel()" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="modal__body">
+      <form class="modal__form" (ngSubmit)="submit()">
+
+        @if (loading()) {
+          <div class="modal__loading"><app-loading-spinner /></div>
+        }
+
+        @if (!loading()) {
+          <div class="modal__field">
+            <label for="modal-name">Item name <span class="modal__required">*</span></label>
+            <input
+              id="modal-name"
+              type="text"
+              formControlName="name"
+              maxlength="150"
+              [class.input-error]="showFieldError('name')"
+              [aria-describedby]="'modal-name-error'"
+            />
+            @if (showFieldError('name')) {
+              <span id="modal-name-error" class="modal__inline-error">{{ getFieldError('name') }}</span>
+            }
+          </div>
+
+          @if (!isEdit()) {
+            <div class="modal__field">
+              <label for="modal-category">Category <span class="modal__required">*</span></label>
+              <select
+                id="modal-category"
+                formControlName="categoryId"
+                [class.input-error]="showFieldError('categoryId')"
+              >
+                <option value="">Select a category</option>
+                @for (cat of categories(); track cat.id) {
+                  <option [value]="cat.id">{{ cat.name }}</option>
+                }
+              </select>
+              @if (showFieldError('categoryId')) {
+                <span id="modal-category-error" class="modal__inline-error">{{ getFieldError('categoryId') }}</span>
+              }
+            </div>
+          }
+
+          <div class="modal__field">
+            <label for="modal-description">Description</label>
+            <textarea
+              id="modal-description"
+              formControlName="description"
+              maxlength="1000"
+              rows="3"
+              [class.input-error]="showFieldError('description')"
+              [aria-describedby]="'modal-description-error'"
+            ></textarea>
+            @if (showFieldError('description')) {
+              <span id="modal-description-error" class="modal__inline-error">{{ getFieldError('description') }}</span>
+            }
+            <p class="modal__hint">Up to 1000 characters.</p>
+          </div>
+
+          <div class="modal__field">
+            <label for="modal-price">Price <span class="modal__required">*</span></label>
+            <input
+              id="modal-price"
+              type="text"
+              inputmode="decimal"
+              formControlName="price"
+              [class.input-error]="showFieldError('price')"
+              [aria-describedby]="'modal-price-error'"
+            />
+            @if (showFieldError('price')) {
+              <span id="modal-price-error" class="modal__inline-error">{{ getFieldError('price') }}</span>
+            }
+            <p class="modal__hint">Non-negative, up to 2 decimal places.</p>
+          </div>
+
+          <div class="modal__field">
+            <label for="modal-displayOrder">Display order</label>
+            <input
+              id="modal-displayOrder"
+              type="text"
+              inputmode="numeric"
+              formControlName="displayOrder"
+              [class.input-error]="showFieldError('displayOrder')"
+              [aria-describedby]="'modal-displayOrder-error'"
+            />
+            @if (showFieldError('displayOrder')) {
+              <span id="modal-displayOrder-error" class="modal__inline-error">{{ getFieldError('displayOrder') }}</span>
+            }
+            <p class="modal__hint">Whole number (0, 1, 2&hellip;). Items appear in ascending order.</p>
+          </div>
+
+          <div class="modal__field modal__field--boolean">
+            <label>
+              <input type="checkbox" formControlName="isAvailable" />
+              Available
+            </label>
+            <p class="modal__hint">Unavailable items are hidden from the public menu.</p>
+          </div>
+
+          <div class="modal__field modal__field--image">
+            <label for="modal-image">Item image</label>
+            <app-image-upload
+              id="modal-image"
+              label="Upload item image"
+              hint="JPEG, PNG or WebP, up to 5 MiB."
+              [destination]="uploadDestination()"
+              [disabled]="!uploadDestination()"
+              (uploaded)="onImageUploaded($event)"
+            ></app-image-upload>
+            @if (imageUploading()) {
+              <p class="modal__hint">Attaching image&hellip;</p>
+            }
+            @if (imageError()) {
+              <p class="modal__hint modal__hint--error">{{ imageError() }}</p>
+            }
+            @if (itemImageFileId(); as assetId) {
+              <div class="modal__image-preview">
+                <img
+                  class="modal__image-preview-img"
+                  [src]="imagePreviewUrl()"
+                  [alt]="item()?.name + ' image'"
+                  loading="lazy"
+                />
+                @if (isEdit()) {
+                  <button type="button" class="modal__image-remove" (click)="clearImage()" [disabled]="imageUploading()" aria-label="Remove image">
+                    Remove
+                  </button>
+                }
+              </div>
+            }
+          </div>
+
+          @if (generalError()) {
+            <div class="modal__general-error" role="alert">{{ generalError() }}</div>
+          }
+
+          <div class="modal__actions">
+            <button type="button" class="btn btn--outline" (click)="onCancel()">Cancel</button>
+            <button
+              type="submit"
+              class="btn btn--primary"
+              [disabled]="submitting() || (!isEdit() && createdItemId() && imageUploading())"
+            >
+              @if (submitting()) {
+                <app-loading-spinner [size]="16" /> Saving&hellip;
+              } @else {
+                @if (isEdit()) {
+                  Save Item
+                } @else if (createdItemId()) {
+                  Done
+                } @else {
+                  Create Item
+                }
+              }
+            </button>
+          </div>
+        }
+      </form>
+    </div>
+  </div>
+</div>

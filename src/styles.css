@@ -134,3 +134,27 @@ a {
   background: var(--color-primary-soft);
   color: var(--color-text);
 }
+
+/* Layout utilities used across feature components */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
+.flex-grow-1 { flex-grow: 1; }
+.w-full { width: 100%; }
+.w-100 { width: 100%; }
+.h-100 { height: 100%; }
+.gap-2 { gap: 0.5rem; }
+.gap-3 { gap: 0.75rem; }
+.gap-4 { gap: 1rem; }
+.text-10px { font-size: 0.625rem; }
+.min-h-20rem { min-height: 20rem; }
+.position-relative { position: relative; }
+.position-absolute { position: absolute; }
+.inset-0 { inset: 0; }
+.overflow-hidden { overflow: hidden; }
+.overflow-y-auto { overflow-y: auto; }
+.d-none { display: none !important; }
+.d-inline-block { display: inline-block; }
+.cursor-pointer { cursor: pointer; }
+.text-decoration-none { text-decoration: none; }
+.text-uppercase { text-transform: uppercase; }

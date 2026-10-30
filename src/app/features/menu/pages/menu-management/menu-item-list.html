@@ -1,0 +1,23 @@
+<div class="item-list">
+  @if (empty()) {
+    <div class="item-list__empty">
+      <div class="item-list__empty-icon" aria-hidden="true"><i class="bi bi-layers"></i></div>
+      <p class="item-list__empty-message">No menu items found.</p>
+    </div>
+  } @else {
+    <div class="item-list__grid">
+      @for (item of items(); track item.id) {
+        <app-menu-item-row
+          [item]="item"
+          [canManage]="canManage()"
+          [canDelete]="canDelete()"
+          [readOnly]="readOnly()"
+          [pending]="isPending(item.id)"
+          (edit)="edit.emit($event)"
+          (delete)="delete.emit($event)"
+          (toggleAvailability)="toggleAvailability.emit($event)"
+        />
+      }
+    </div>
+  }
+</div>

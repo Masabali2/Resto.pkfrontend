@@ -34,6 +34,23 @@
       <app-subscription-plan-list [plans]="state()?.availablePlans ?? []" />
     </section>
 
+    @if (status().kind === 'trial' || status().kind === 'active') {
+      <section class="panel" aria-label="Cancel subscription">
+        <h3>Cancel subscription</h3>
+        <p>
+          Cancel your {{ state()!.subscription!.planName }} plan. You will keep
+          access until the end of the current billing period.
+        </p>
+        <app-button
+          variant="outline"
+          [fullWidth]="false"
+          (click)="cancelSubscription()"
+        >
+          Cancel my subscription
+        </app-button>
+      </section>
+    }
+
     <footer class="page-footer">
       <button type="button" class="link-button" (click)="backToDashboard()">
         Back to the dashboard

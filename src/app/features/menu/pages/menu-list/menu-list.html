@@ -1,17 +1,24 @@
 
 <div class="menu-list">
   <header class="menu-list__header">
-    <h1>Menus</h1>
-    <app-button variant="primary" [disabled]="!selectedRestaurantId() || !canCreateMenu()" (click)="createMenu()">Create Menu</app-button>
+    <div class="menu-list__heading">
+      <h1>Menus</h1>
+      <p class="menu-list__subtitle">
+        Manage restaurant menus or start from the Resto.pk default catalogue.
+      </p>
+    </div>
+    @if (activeSection() === 'restaurant') {
+      <app-button variant="primary" [disabled]="!selectedRestaurantId() || !canCreateMenu()" (click)="createMenu()">Create Menu</app-button>
+    }
   </header>
 
   @if (pageState() !== 'no-workspace' && pageState() !== 'forbidden') {
     <section class="menu-list__restaurant-picker">
-      <label class="menu-list__label">Restaurant</label>
-      <select class="menu-list__select" [value]="selectedRestaurantId()" (change)="selectRestaurant($any($event.target).value)">
-        <option [value]="null">Select a restaurant</option>
+      <label class="menu-list__label" for="menu-list-restaurant">Restaurant</label>
+      <select id="menu-list-restaurant" class="menu-list__select" [value]="selectedRestaurantId()" (change)="selectRestaurant($any($event.target).value)">
+        <option [value]="null" [selected]="selectedRestaurantId() === null">Select a restaurant</option>
         @for (r of restaurants(); track r.id) {
-          <option [value]="r.id">{{ r.name }}</option>
+          <option [value]="r.id" [selected]="r.id === selectedRestaurantId()">{{ r.name }}</option>
         }
       </select>
 
@@ -26,93 +33,243 @@
     </section>
   }
 
-  <section class="menu-list__states">
-    @if (pageState() === 'loading' || menusLoading()) {
-      <div class="menu-list__loading">
-        <app-loading-spinner></app-loading-spinner>
-      </div>
-    }
+  <nav class="menu-list__tabs" role="tablist" aria-label="Menu sections">
+    <button
+      type="button"
+      role="tab"
+      class="menu-list__tab"
+      [class.menu-list__tab--active]="activeSection() === 'default'"
+      [attr.aria-selected]="activeSection() === 'default'"
+      (click)="selectSection('default')"
+    >
+      <i class="bi bi-collection" aria-hidden="true"></i>
+      Default Menus
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="menu-list__tab"
+      [class.menu-list__tab--active]="activeSection() === 'restaurant'"
+      [attr.aria-selected]="activeSection() === 'restaurant'"
+      (click)="selectSection('restaurant')"
+    >
+      <i class="bi bi-shop" aria-hidden="true"></i>
+      Restaurant Menus
+    </button>
+  </nav>
 
-    @if (pageState() === 'error') {
-      <div class="menu-list__empty menu-list__error">
-        <p>{{ errorMessage() }}</p>
-        <app-button variant="secondary" (click)="retry()">Retry</app-button>
-      </div>
-    }
+  @if (activeSection() === 'default') {
+    <section class="menu-list__default" aria-label="Default menus">
+      @if (defaultMenuState() === 'loading') {
+        <div class="menu-list__loading">
+          <app-loading-spinner></app-loading-spinner>
+          <span class="menu-list__loading-label">Loading default menu&hellip;</span>
+        </div>
+      }
 
-    @if (pageState() === 'forbidden') {
-      <div class="menu-list__empty menu-list__forbidden">
-        <p>You do not have permission to view menus for this workspace.</p>
-      </div>
-    }
+      @if (defaultMenuState() === 'error') {
+        <div class="menu-list__empty menu-list__error" role="alert">
+          <p>{{ defaultMenuError() }}</p>
+          <app-button variant="secondary" (click)="retryDefaultMenu()">Retry</app-button>
+        </div>
+      }
 
-    @if (pageState() === 'no-workspace') {
-      <div class="menu-list__empty menu-list__no-workspace">
-        <p>No active workspace. Switch tenants or set up a restaurant to manage menus.</p>
-      </div>
-    }
+      @if (defaultMenuState() === 'loaded' && defaultMenu(); as defaultMenu) {
+        <article class="menu-list__default-card">
+          <div class="menu-list__default-title-row">
+            <h2 class="menu-list__default-title">{{ defaultMenu.name }}</h2>
+            <span class="menu-list__badge" [class]="'menu-list__badge--' + (defaultMenu.status === 'Draft' ? 'draft' : defaultMenu.status === 'Published' ? 'published' : 'archived')">
+              {{ defaultMenuStatusLabel(defaultMenu.status) }}
+            </span>
+            <span class="menu-list__default-tag">Default template</span>
+          </div>
 
-    @if (pageState() === 'empty' && restaurants().length === 0) {
-      <div class="menu-list__empty menu-list__empty-restaurants">
-        <p>No restaurants found. Set up a restaurant to manage menus.</p>
-        <app-button variant="primary" (click)="goToSetupRestaurant()">Set up restaurant</app-button>
-      </div>
-    }
-
-    @if (pageState() === 'empty' && restaurants().length > 0 && !selectedRestaurantId()) {
-      <div class="menu-list__empty">
-        <p>Select a restaurant to see its menus.</p>
-      </div>
-    }
-
-    @if (pageState() === 'empty' && selectedRestaurantId()) {
-      <div class="menu-list__empty menu-list__empty-menus">
-        <p>No menus yet for <strong>{{ restaurantName(selectedRestaurantId()!) }}</strong>.</p>
-        @if (canCreateMenu()) {
-          <app-button variant="primary" (click)="createMenu()">Create Menu</app-button>
-        }
-      </div>
-    }
-  </section>
-
-  @if (pageState() === 'list') {
-    <section class="menu-list__table-section">
-      <table class="menu-list__table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Restaurant</th>
-            <th>Status</th>
-            <th>Active</th>
-            <th>Updated</th>
-            <th class="menu-list__table-actions">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (menu of menus(); track menu.id) {
-            <tr>
-              <td class="menu-list__name">{{ menu.name }}</td>
-              <td>{{ restaurantName(menu.restaurantId) }}</td>
-              <td>
-                <span class="menu-list__badge" [class]="'menu-list__badge--' + (menu.status === 'Draft' ? 'draft' : menu.status === 'Published' ? 'published' : 'archived')">{{ statusLabel(menu.status) }}</span>
-              </td>
-              <td>
-                <span [class]="'menu-list__bool ' + (menu.isActive ? 'menu-list__bool--yes' : 'menu-list__bool--no')">
-                  {{ menu.isActive ? 'Yes' : 'No' }}
-                </span>
-              </td>
-              <td>{{ menu.updatedAt | date:'medium' : 'Asia/Karachi' }}</td>
-              <td class="menu-list__table-actions">
-                <app-button variant="outline" size="sm" [disabled]="!canViewMenu()" (click)="viewMenu(menu)">View</app-button>
-                <app-button variant="outline" size="sm" [disabled]="!canUpdateMenu()" (click)="editMenu(menu)">Edit</app-button>
-                <app-button variant="outline" size="sm" [disabled]="!canUpdateMenu() || menu.status === 'Archived'" (click)="setMenuActive(menu, !menu.isActive)">{{ menu.isActive ? 'Deactivate' : 'Activate' }}</app-button>
-                <app-button variant="danger" size="sm" [disabled]="!canDeleteMenu() || menu.status === 'Archived'" (click)="openArchiveDialog(menu)">Archive</app-button>
-              </td>
-            </tr>
+          @if (defaultMenu.description) {
+            <p class="menu-list__default-description">{{ defaultMenu.description }}</p>
           }
-        </tbody>
-      </table>
+
+          <dl class="menu-list__default-facts">
+            <div>
+              <dt>Categories</dt>
+              <dd>{{ defaultMenu.categoryCount }}</dd>
+            </div>
+            <div>
+              <dt>Dishes</dt>
+              <dd>{{ defaultMenu.itemCount }}</dd>
+            </div>
+          </dl>
+
+          <p class="menu-list__default-hint">
+            This catalogue is read-only. Using it creates an independent Draft copy for the
+            selected restaurant and never changes the original.
+          </p>
+
+          @if (defaultMenuError()) {
+            <p class="menu-list__default-error" role="alert">{{ defaultMenuError() }}</p>
+          }
+
+          <div class="menu-list__default-actions">
+            <app-button
+              variant="outline"
+              size="sm"
+              [fullWidth]="false"
+              (click)="toggleDefaultMenu()"
+            >
+              {{ defaultMenuExpanded() ? 'Hide menu' : 'View menu' }}
+              ({{ defaultMenu.categoryCount }} categories, {{ defaultMenu.itemCount }} dishes)
+            </app-button>
+
+            <app-button
+              variant="primary"
+              [fullWidth]="false"
+              [disabled]="!selectedRestaurantId() || !canCopyDefaultMenu() || copyingDefault()"
+              [loading]="copyingDefault()"
+              loadingText="Copying..."
+              (click)="openCopyDefaultDialog()"
+            >
+              Use This Menu
+            </app-button>
+          </div>
+
+          @if (!selectedRestaurantId()) {
+            <p class="menu-list__default-note">
+              Select a destination restaurant above to use this menu.
+            </p>
+          } @else if (!canCopyDefaultMenu()) {
+            <p class="menu-list__default-note">
+              You need menu creation permission in this workspace to use this menu.
+            </p>
+          }
+
+          @if (defaultMenuExpanded()) {
+            <div class="menu-list__default-catalogue">
+              @for (category of defaultMenu.categories; track category.id) {
+                <section class="menu-list__default-category">
+                  <header class="menu-list__default-category-header">
+                    <h3>{{ category.name }}</h3>
+                    <span>{{ category.items.length }} dishes</span>
+                  </header>
+
+                  @if (category.description) {
+                    <p class="menu-list__default-category-description">{{ category.description }}</p>
+                  }
+
+                  <ul class="menu-list__default-items">
+                    @for (item of category.items; track item.id) {
+                      <li class="menu-list__default-item">
+                        <div class="menu-list__default-item-text">
+                          <span class="menu-list__default-item-name">{{ item.name }}</span>
+                          @if (item.description) {
+                            <span class="menu-list__default-item-description">{{ item.description }}</span>
+                          }
+                        </div>
+                        <span class="menu-list__default-item-price">{{ formatAmount(item.price) }}</span>
+                      </li>
+                    } @empty {
+                      <li class="menu-list__default-item menu-list__default-item--empty">
+                        No dishes in this category.
+                      </li>
+                    }
+                  </ul>
+                </section>
+              }
+            </div>
+          }
+        </article>
+      }
     </section>
+  }
+
+  @if (activeSection() === 'restaurant') {
+    <section class="menu-list__states">
+      @if (pageState() === 'loading' || menusLoading()) {
+        <div class="menu-list__loading">
+          <app-loading-spinner></app-loading-spinner>
+        </div>
+      }
+
+      @if (pageState() === 'error') {
+        <div class="menu-list__empty menu-list__error">
+          <p>{{ errorMessage() }}</p>
+          <app-button variant="secondary" (click)="retry()">Retry</app-button>
+        </div>
+      }
+
+      @if (pageState() === 'forbidden') {
+        <div class="menu-list__empty menu-list__forbidden">
+          <p>You do not have permission to view menus for this workspace.</p>
+        </div>
+      }
+
+      @if (pageState() === 'no-workspace') {
+        <div class="menu-list__empty menu-list__no-workspace">
+          <p>No active workspace. Switch tenants or set up a restaurant to manage menus.</p>
+        </div>
+      }
+
+      @if (pageState() === 'empty' && restaurants().length === 0) {
+        <div class="menu-list__empty menu-list__empty-restaurants">
+          <p>No restaurants found. Set up a restaurant to manage menus.</p>
+          <app-button variant="primary" (click)="goToSetupRestaurant()">Set up restaurant</app-button>
+        </div>
+      }
+
+      @if (pageState() === 'empty' && restaurants().length > 0 && !selectedRestaurantId()) {
+        <div class="menu-list__empty">
+          <p>Select a restaurant to see its menus.</p>
+        </div>
+      }
+
+      @if (pageState() === 'empty' && selectedRestaurantId()) {
+        <div class="menu-list__empty menu-list__empty-menus">
+          <p>No menus yet for <strong>{{ restaurantName(selectedRestaurantId()!) }}</strong>.</p>
+          @if (canCreateMenu()) {
+            <app-button variant="primary" (click)="createMenu()">Create Menu</app-button>
+          }
+        </div>
+      }
+    </section>
+
+    @if (pageState() === 'list') {
+      <section class="menu-list__table-section">
+        <table class="menu-list__table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Restaurant</th>
+              <th>Status</th>
+              <th>Active</th>
+              <th>Updated</th>
+              <th class="menu-list__table-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (menu of menus(); track menu.id) {
+              <tr>
+                <td class="menu-list__name">{{ menu.name }}</td>
+                <td>{{ restaurantName(menu.restaurantId) }}</td>
+                <td>
+                  <span class="menu-list__badge" [class]="'menu-list__badge--' + (menu.status === 'Draft' ? 'draft' : menu.status === 'Published' ? 'published' : 'archived')">{{ statusLabel(menu.status) }}</span>
+                </td>
+                <td>
+                  <span [class]="'menu-list__bool ' + (menu.isActive ? 'menu-list__bool--yes' : 'menu-list__bool--no')">
+                    {{ menu.isActive ? 'Yes' : 'No' }}
+                  </span>
+                </td>
+                <td>{{ menu.updatedAt | date:'medium' : 'Asia/Karachi' }}</td>
+                <td class="menu-list__table-actions">
+                  <app-button variant="outline" size="sm" [disabled]="!canViewMenu()" (click)="viewMenu(menu)">View</app-button>
+                  <app-button variant="outline" size="sm" [disabled]="!canManageMenu()" (click)="manageMenu(menu)">Manage</app-button>
+                  <app-button variant="outline" size="sm" [disabled]="!canUpdateMenu()" (click)="editMenu(menu)">Edit</app-button>
+                  <app-button variant="outline" size="sm" [disabled]="!canUpdateMenu() || menu.status === 'Archived'" (click)="setMenuActive(menu, !menu.isActive)">{{ menu.isActive ? 'Deactivate' : 'Activate' }}</app-button>
+                  <app-button variant="danger" size="sm" [disabled]="!canDeleteMenu() || menu.status === 'Archived'" (click)="openArchiveDialog(menu)">Archive</app-button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+    }
   }
 
   <app-confirmation-dialog
@@ -122,5 +279,14 @@
     [confirmLabel]="'Archive'"
     (confirmed)="confirmArchive()"
     (cancelled)="cancelArchive()"
+  ></app-confirmation-dialog>
+
+  <app-confirmation-dialog
+    [open]="copyDialogOpen()"
+    [title]="'Use default menu'"
+    [message]="copyDefaultConfirmMessage()"
+    [confirmLabel]="'Use This Menu'"
+    (confirmed)="confirmCopyDefault()"
+    (cancelled)="cancelCopyDefault()"
   ></app-confirmation-dialog>
 </div>

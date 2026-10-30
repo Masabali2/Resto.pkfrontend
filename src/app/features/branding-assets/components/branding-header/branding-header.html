@@ -1,0 +1,83 @@
+
+<div
+  class="brand-header d-flex flex-column flex-lg-row gap-3 gap-lg-4 align-items-start align-items-lg-center justify-content-between border border-subtle rounded-3xl bg-white shadow-soft p-3 p-lg-4"
+>
+  <div class="brand-header-info d-flex flex-column gap-2 w-100">
+    <div class="d-flex align-items-center gap-3">
+      <div class="brand-logo-mark d-flex align-items-center justify-center">
+        R
+      </div>
+
+      <div>
+        <span class="brand-pill">Resto.pk Tenant Admin</span>
+      </div>
+    </div>
+
+    <h1 class="brand-header-title">Branding &amp; Assets Management</h1>
+
+    <p class="brand-header-subtitle">
+      Configure your brand identity, manage vector logos and banners, map
+      themes, and preview your public customer website in real time.
+      Bound directly to
+      <code class="brand-code">/api/restaurants/{{ '{' }}restaurantId{{ '}' }}/assets</code>
+      @if (restaurant(); as currentRestaurant) {
+        <span>{{ currentRestaurant.id }}</span>
+      }
+      .
+    </p>
+  </div>
+
+  <div
+    class="brand-header-actions d-flex flex-wrap gap-3 align-items-center w-100 justify-content-end justify-content-lg-start"
+  >
+    <div
+      class="brand-storage d-flex align-items-center gap-3 border border-subtle bg-surface-soft rounded-2xl p-3 shadow-2xs"
+    >
+      <div class="brand-storage-icon d-flex align-items-center justify-center">
+        <i class="bi bi-cloud-arrow-up-fill text-orange"></i>
+      </div>
+
+      <div>
+        <div class="d-flex justify-between gap-3 text-xs font-bold">
+          <span class="text-muted">Tenant Storage</span>
+          <span class="text-orange" id="storageText">
+            {{ storageUsedText() }}
+          </span>
+        </div>
+
+        <div
+          class="brand-storage-track w-44 h-1.5 bg-surface-border rounded overflow-hidden mt-2"
+        >
+          <div
+            id="storageBar"
+            class="brand-storage-bar bg-orange h-full rounded smooth-transition"
+            [style.width.%]="storagePercent()"
+          ></div>
+        </div>
+
+        <div class="text-[10px] text-muted mt-1">
+          6 MB multipart limit per file
+        </div>
+      </div>
+    </div>
+
+    <button
+      type="button"
+      class="brand-btn-preview btn px-4 py-3 rounded-pill text-xs font-bold d-flex align-items-center gap-2 shadow-lg active:scale-95"
+      (click)="previewClicked.emit()"
+    >
+      <i class="bi bi-globe text-base animate-pulse"></i>
+      <span>Preview Website</span>
+    </button>
+
+    <button
+      type="button"
+      class="brand-btn-save btn px-4 py-3 rounded-pill text-xs font-bold d-flex align-items-center gap-2 shadow-md active:scale-95"
+      [disabled]="saving()"
+      (click)="saveClicked.emit()"
+    >
+      <i class="bi bi-floppy-fill text-orange"></i>
+      <span>{{ saving() ? 'Saving...' : 'Save & Sync API' }}</span>
+    </button>
+  </div>
+</div>

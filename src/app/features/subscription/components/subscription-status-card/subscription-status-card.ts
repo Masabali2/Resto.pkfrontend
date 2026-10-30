@@ -8,7 +8,12 @@ import {
 import { LucideArrowRight, LucideCreditCard } from '@lucide/angular';
 import { Button } from '../../../../shared/components/button/button';
 import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
-import { resolveSubscriptionStatus } from '../../utils/subscription-status.util';
+import {
+  formatLimits,
+  formatPlanPrice,
+  formatUtcDate,
+  resolveSubscriptionStatus,
+} from '../../utils/subscription-status.util';
 import type { SubscriptionState } from '../../models/subscription-status.model';
 
 /**
@@ -51,5 +56,46 @@ export class SubscriptionStatusCard {
       default:
         return 'No subscription';
     }
+  });
+
+  protected readonly currentPlan = computed(() => {
+    const state = this.state();
+    const subscription = state?.subscription ?? null;
+
+    if (!subscription) {
+      return null;
+    }
+
+    // Price, currency and interval live on the plan catalogue, not on the
+    // subscription record. Resolve the current plan from the available plans
+    // the backend returned — never invent a price.
+    const plan = state?.availablePlans.find((p) => p.id === subscription.planId) ?? null;
+
+    const expiryDate = formatUtcDate(subscription.endDate);
+    const startDate = formatUtcDate(subscription.startDate);
+
+    return {
+      name: subscription.planName,
+      priceAvailable: plan !== null,
+      amount:
+        plan && plan.price !== 0
+          ? formatPlanPrice(plan.price, plan.currency)
+          : plan
+            ? 'Free'
+            : null,
+      currency: plan?.currency,
+      interval: plan?.billingInterval,
+      limits: plan
+        ? formatLimits(
+            plan.maxStaff,
+            plan.maxMenuItems,
+            plan.maxOrdersPerMonth,
+          )
+        : [],
+      startDate,
+      expiryDate,
+      autoRenew: subscription.autoRenew,
+      isEntitled: subscription.isEntitled,
+    };
   });
 }

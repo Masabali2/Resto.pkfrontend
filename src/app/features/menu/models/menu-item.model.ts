@@ -16,6 +16,27 @@ export interface MenuItemDto {
   isActive: boolean;
   createdAt: string;
   updatedAt: string | null;
+  categoryName: string | null;
+  imageUrl: string | null;
+}
+
+/** Dashboard totals computed server-side in one aggregate query. */
+export interface MenuItemSummaryDto {
+  totalItems: number;
+  availableItems: number;
+  unavailableItems: number;
+  categoryCount: number;
+}
+
+/** Server-side list contract for the menu management screen. */
+export interface MenuItemListQuery {
+  page?: number;
+  pageSize?: number;
+  search?: string | null;
+  categoryId?: string | null;
+  isAvailable?: boolean | null;
+  sortBy?: string | null;
+  sortDirection?: string | null;
 }
 
 /** Body of POST /api/v1/menu-categories/{categoryId}/items. */
@@ -26,6 +47,7 @@ export interface CreateMenuItemRequest {
   currency: string | null;
   imageFileId: string | null;
   displayOrder: number | null;
+  isAvailable: boolean;
 }
 
 /**
@@ -42,6 +64,7 @@ export interface UpdateMenuItemRequest {
   imageFileId: string | null;
   clearImage: boolean;
   displayOrder: number | null;
+  isAvailable?: boolean;
 }
 
 /** Body of PATCH /api/v1/menu-items/{itemId}/availability. */

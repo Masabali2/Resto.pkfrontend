@@ -1,0 +1,53 @@
+<div class="brand-colors">
+  <div class="d-flex justify-between align-items-start align-items-sm-center gap-3 mb-4">
+    <div>
+      <h2 class="brand-section-title">Brand Palette & Preset Themes</h2>
+      <p class="brand-section-subtitle">
+        Colors automatically cascade into buttons, badges, and background tints across your live menu.
+      </p>
+    </div>
+  </div>
+
+  <!-- 1-Click Theme Presets -->
+  <div class="row g-3 mb-5">
+    @for (preset of presets; track preset.name) {
+      <div class="col-12 col-sm-6 col-lg-3">
+        <button type="button" class="preset-card border border-subtle rounded-3xl p-3 bg-white hover:border-orange cursor-pointer transition-all" (click)="applyPreset(preset)">
+          <div class="d-flex gap-2 mb-2">
+            <span class="preset-swatch" [style.background]="preset.primary"></span>
+            <span class="preset-swatch" [style.background]="preset.secondary"></span>
+            <span class="preset-swatch" [style.background]="preset.tint" style="border:1px solid #e2e8f0;"></span>
+          </div>
+          <div class="preset-name text-xs font-bold text-dark">{{ preset.name }}</div>
+          <div class="preset-hint text-10px text-muted">{{ presetHint(preset) }}</div>
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- Custom color selection -->
+  <div class="card border border-subtle rounded-3xl shadow-soft p-4">
+    <div class="row g-4 align-items-end">
+      @for (field of colorFields(); track field.key) {
+        <div class="col-12 col-md-4">
+          <label class="form-label text-xs font-bold text-dark d-block mb-2">{{ field.label }}</label>
+          <div class="d-flex align-items-center gap-3">
+            <input
+              type="color"
+              [value]="field.value"
+              (input)="onColorPickerChange(field.key, $event)"
+              class="form-control-color color-picker w-8 h-8 rounded-2xl border-0 cursor-pointer"
+            />
+            <input
+              type="text"
+              [value]="field.value"
+              (input)="onColorTextChange(field.key, $event.target.value)"
+              class="form-control color-text px-3 py-2 rounded-xl text-xs font-mono font-bold text-uppercase bg-surface-soft border border-subtle"
+              maxlength="7"
+            />
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
