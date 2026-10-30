@@ -17,7 +17,6 @@ import { finalize } from 'rxjs';
 import { MenuService } from '../../services/menu.service';
 import { HttpErrorHandlerService } from '../../../../core/services/http-error-handler.service';
 import { NotificationService } from '../../../../core/services/notification.service';
-import { Button } from '../../../../shared/components/button/button';
 import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
 import { ImageUploadComponent } from '../../../../shared/components/image-upload/image-upload.component';
 import type { ApiResponse } from '../../../../core/models/api-response.model';
@@ -41,7 +40,6 @@ type FormFieldName = 'name' | 'categoryId' | 'description' | 'price' | 'displayO
   standalone: true,
   imports: [
     ReactiveFormsModule,
-    Button,
     LoadingSpinner,
     ImageUploadComponent
   ],
@@ -77,6 +75,7 @@ export class MenuItemModal {
   protected readonly generalError = signal('');
   protected readonly fieldErrors = signal<Record<string, string>>({});
   protected readonly loading = signal(true);
+  protected readonly activeTab = signal<'basic' | 'pricing' | 'addons'>('basic');
 
   protected readonly createdItemId = signal<string | null>(null);
   protected readonly imageUploading = signal(false);
@@ -199,6 +198,10 @@ export class MenuItemModal {
       }
     }
     return null;
+  }
+
+  protected switchTab(tab: 'basic' | 'pricing' | 'addons'): void {
+    this.activeTab.set(tab);
   }
 
   protected submit(): void {

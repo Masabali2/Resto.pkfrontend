@@ -1,32 +1,21 @@
 :host {
-  display: contents;
+  display: block;
+  width: 100%;
 }
 
 .branding-page {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  min-height: 0;
+  padding-bottom: 3rem;
 }
 
-.branding-main {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
+.branding-content-card {
+  border-radius: 1.75rem;
+  border-color: #e2e8f0;
 }
 
-.branding-section {
-  display: block;
+.animate-fade-in {
+  animation: fadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.space-y-6 > * + * {
-  margin-top: 1.5rem;
-}
-
-.flex-grow-1 {
-  flex: 1;
-}
-
-.overflow-y-auto {
-  overflow-y: auto;
+.border-subtle {
+  border-color: #e2e8f0 !important;
 }

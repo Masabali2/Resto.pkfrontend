@@ -1,21 +1,22 @@
 <div class="typography-settings">
-  <div class="d-flex justify-between align-items-start align-items-sm-center gap-3 mb-4">
+  <div class="d-flex justify-content-between align-items-start align-items-sm-center gap-3 mb-4">
     <div>
-      <h2 class="brand-section-title">Typography Scale & Font Families</h2>
-      <p class="brand-section-subtitle">
+      <h2 class="brand-section-title text-base font-black text-dark m-0">Typography Scale &amp; Font Families</h2>
+      <p class="brand-section-subtitle text-xs text-muted m-0 mt-0.5">
         Pick font pairings for headings, item titles, and body descriptions.
       </p>
     </div>
   </div>
 
   <div class="row g-4">
+    <!-- Left Configuration Card -->
     <div class="col-12 col-md-6">
-      <div class="card border border-subtle rounded-3xl shadow-soft p-4">
-        <div class="mb-4">
+      <div class="typo-card bg-white border border-subtle rounded-3xl p-4 p-lg-5 shadow-soft d-flex flex-column gap-4">
+        <div>
           <label class="form-label text-xs font-bold text-dark d-block mb-2">Main Heading Font</label>
           <select
             #headingFontSelect
-            class="form-select form-select-sm rounded-xl bg-surface-soft border border-subtle text-xs font-semibold"
+            class="form-select rounded-2xl bg-surface-soft border border-subtle text-xs font-semibold px-3.5 py-2.5"
             [value]="headingFont()"
             (change)="onHeadingFontChange(headingFontSelect.value)"
           >
@@ -25,11 +26,11 @@
           </select>
         </div>
 
-        <div class="mb-4">
+        <div>
           <label class="form-label text-xs font-bold text-dark d-block mb-2">Body Text Font</label>
           <select
             #bodyFontSelect
-            class="form-select form-select-sm rounded-xl bg-surface-soft border border-subtle text-xs font-semibold"
+            class="form-select rounded-2xl bg-surface-soft border border-subtle text-xs font-semibold px-3.5 py-2.5"
             [value]="bodyFont()"
             (change)="onBodyFontChange(bodyFontSelect.value)"
           >
@@ -40,9 +41,9 @@
         </div>
 
         <div>
-          <div class="d-flex justify-between align-items-center text-xs font-bold text-dark mb-2">
+          <div class="d-flex justify-content-between align-items-center text-xs font-bold text-dark mb-2">
             <span>Font Scaling Modifier</span>
-            <span class="text-orange">{{ fontScale() }}%</span>
+            <span class="text-orange fw-bold">{{ fontScale() }}%</span>
           </div>
           <input
             #fontScaleSelect
@@ -57,15 +58,27 @@
       </div>
     </div>
 
-    <div class="col-12 col-md-6 d-flex align-items-center">
-      <div class="typo-preview-card bg-white p-4 rounded-2xl border border-subtle shadow-2xs w-100 d-flex flex-column justify-center">
-        <span class="text-10px font-bold text-uppercase text-muted mb-3">Live Text Hierarchy Sample</span>
-        <div class="typo-preview-inner bg-white p-4 rounded-xl border border-subtle shadow-2xs flex-grow-1 d-flex flex-column">
-          <h3 [class]="headingFontClass()" class="typo-heading">Smoked Angus Truffle Smash</h3>
-          <p [class]="bodyFontClass()" class="typo-body">
+    <!-- Right Live Hierarchy Sample Card -->
+    <div class="col-12 col-md-6 d-flex align-items-stretch">
+      <div class="typo-sample-outer bg-surface-soft border border-subtle rounded-3xl p-4 p-lg-5 shadow-soft w-100 d-flex flex-column justify-content-center">
+        <span class="text-10px font-bold text-uppercase text-muted mb-2 tracking-wider">
+          Live Text Hierarchy Sample
+        </span>
+        
+        <div
+          class="typo-sample-box bg-white p-4 rounded-2xl border border-subtle shadow-2xs d-flex flex-column gap-2 smooth-transition"
+          [style.transform]="'scale(' + (fontScale() / 100) + ')'"
+          style="transform-origin: top left;"
+        >
+          <h3 [class]="headingFontClass()" class="text-lg font-black text-dark m-0">
+            Smoked Angus Truffle Smash
+          </h3>
+          <p [class]="bodyFontClass()" class="text-xs text-muted m-0 leading-relaxed">
             Juicy smash patties with black truffle mayonnaise, aged sharp cheddar, and crispy fried shallots on freshly baked brioche.
           </p>
-          <div class="typo-price mt-auto pt-2" [style.color]="themePrimary()">PKR 1,450</div>
+          <div class="text-sm font-black pt-1" [style.color]="themePrimary()">
+            PKR 1,450
+          </div>
         </div>
       </div>
     </div>

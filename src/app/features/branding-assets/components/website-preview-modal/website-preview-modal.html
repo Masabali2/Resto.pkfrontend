@@ -1,21 +1,29 @@
 @if (previewOpen()) {
 <div
-  class="preview-overlay position-fixed inset-0 z-1060 d-flex flex-column overflow-hidden bg-white"
-  style="background:#ffffff;"
+  class="preview-overlay position-fixed inset-0 z-1060 d-flex flex-column overflow-hidden bg-white animate-fade-in"
 >
   <!-- Top Modal Toolbar -->
-  <div class="preview-toolbar bg-dark text-white px-4 py-3 d-flex align-items-center justify-between border-bottom border-secondary shadow-sm">
-    <div class="d-flex align-items-center gap-2">
-      <span class="preview-dot bg-success rounded-circle" style="width:0.5rem;height:0.5rem;"></span>
+  <div class="preview-toolbar bg-dark text-white px-4 py-3 d-flex align-items-center justify-content-between border-bottom border-dark shadow-md flex-shrink-0">
+    <div class="d-flex align-items-center gap-3">
+      <span class="preview-dot bg-success rounded-circle animate-pulse-dot" style="width: 10px; height: 10px;"></span>
       <div>
-        <div class="preview-toolbar-title text-xs font-bold text-uppercase text-muted">Live Website Preview</div>
-        <div class="preview-toolbar-url text-[10px] text-muted">https://{{ restaurantSlug() }}.resto.pk</div>
+        <div class="preview-toolbar-title text-10px font-black text-uppercase text-light tracking-wider">
+          Live Website Preview
+        </div>
+        <div class="preview-toolbar-url text-10px text-muted font-mono">
+          https://{{ restaurantSlug() }}.resto.pk
+        </div>
       </div>
     </div>
-    <div class="d-flex align-items-center gap-2">
+
+    <div class="d-flex align-items-center gap-2.5">
+      <span class="badge rounded-pill bg-dark border border-secondary text-muted px-3 py-1.5 text-xs font-semibold d-none d-sm-inline-block">
+        Customer View Simulator
+      </span>
       <button
         type="button"
-        class="btn btn-primary px-3 py-2 rounded-pill text-xs font-bold"
+        class="btn btn-sm btn-close-preview rounded-xl text-xs font-black text-white px-3 py-2 smooth-transition active:scale-95"
+        [style.backgroundColor]="theme().primary"
         (click)="closePreview()"
       >
         <i class="bi bi-x-lg me-1"></i> Close Preview
@@ -23,22 +31,36 @@
     </div>
   </div>
 
-  <!-- Live Customer Website View -->
-  <div class="preview-container flex-grow-1 overflow-y-auto bg-gray-100">
+  <!-- Live Customer Website View Container -->
+  <div class="preview-container flex-grow-1 overflow-y-auto bg-surface-soft">
+    
     <!-- Public Website Navigation Header -->
-    <nav class="preview-nav border-bottom border-secondary bg-white sticky top-0 z-20 shadow-sm">
-      <div class="preview-navbar container-fluid px-4 py-2 d-flex align-items-center justify-between">
-        <div class="d-flex align-items-center gap-2">
-          <div class="preview-nav-logo overflow-hidden rounded" style="width:2.5rem;height:2.5rem;border:1px solid #e2e8f0;background:#f8fafc;display:flex;align-items:center;justify-content:center;">
-            <img *ngIf="logoUrl" [src]="logoUrl" class="preview-nav-logo-img" alt="Restaurant logo" />
-            <div *ngIf="!logoUrl" class="preview-nav-logo-empty">R</div>
+    <nav class="preview-nav bg-white border-bottom border-subtle sticky-top z-2 shadow-2xs">
+      <div class="container-xl px-4 py-2.5 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2.5">
+          <div class="preview-nav-logo-box rounded-xl bg-surface-soft border border-subtle d-flex align-items-center justify-content-center overflow-hidden" style="width: 40px; height: 40px;">
+            @if (logoUrl()) {
+              <img [src]="logoUrl()" class="preview-nav-logo-img w-100 h-100 object-contain" alt="Restaurant logo" />
+            } @else {
+              <div class="preview-nav-logo-empty font-black text-orange">R</div>
+            }
           </div>
-          <span [class]="headingFontClass()" class="preview-nav-title">{{ restaurant()?.name ?? 'Restaurant' }}</span>
+          <span [class]="headingFontClass()" class="preview-nav-title text-base font-black text-dark m-0">
+            {{ restaurant()?.name ?? 'Restaurant Name' }}
+          </span>
         </div>
-        <div class="d-flex align-items-center gap-2">
-          <span class="preview-badge px-3 py-1 rounded-pill text-xs font-bold bg-orange-soft text-orange border border-orange">Open Now</span>
-          <button type="button" class="preview-cart-btn" [style.backgroundColor]="theme().primary">
-            <i class="bi bi-bag me-1"></i> Cart (0)
+
+        <div class="d-flex align-items-center gap-3">
+          <span class="badge rounded-pill bg-orange-soft text-orange border border-orange px-3 py-1 text-xs font-bold">
+            Open Now
+          </span>
+          <button
+            type="button"
+            class="btn btn-sm rounded-xl text-xs font-black text-white px-3.5 py-2 shadow-sm d-inline-flex align-items-center gap-1.5"
+            [style.backgroundColor]="theme().primary"
+          >
+            <i class="bi bi-bag-fill"></i>
+            <span>Cart (0)</span>
           </button>
         </div>
       </div>
@@ -46,51 +68,49 @@
 
     <!-- Public Website Hero Section -->
     <section
-      class="preview-hero position-relative min-h-20rem d-flex align-items-center justify-center text-white p-4"
-      [style.backgroundImage]="'url(' + heroBannerUrl() + ')'"
-      [class.bg-dark]="!heroBannerUrl()"
+      class="preview-hero position-relative min-h-20rem d-flex align-items-center justify-content-center text-white p-4 p-md-5 bg-dark"
+      [style.backgroundImage]="heroBannerUrl() ? 'url(' + heroBannerUrl() + ')' : null"
+      style="background-size: cover; background-position: center;"
     >
-      <div class="preview-hero-overlay position-absolute inset-0" style="background:linear-gradient(to top,#0f172a,#0f172a99,transparent);"></div>
-      <div class="preview-hero-content position-relative z-2 text-center w-100">
-        <span class="preview-hero-eyebrow d-inline-block px-3 py-1 rounded-pill text-xs font-bold text-white bg-white-20 border border-white-30 backdrop-blur-sm">
-          {{ restaurantSlug().replace(/-/g,' ') }}
+      <div class="preview-hero-overlay position-absolute inset-0" style="background: linear-gradient(to top, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.65), rgba(15, 23, 42, 0.4));"></div>
+      
+      <div class="preview-hero-content position-relative z-2 text-center w-100 max-w-2xl mx-auto d-flex flex-column align-items-center gap-2">
+        <span class="preview-hero-eyebrow px-3 py-1 rounded-pill text-xs font-bold text-white bg-white-20 border border-white-30 backdrop-blur-sm">
+          Gulberg III &bull; Lahore
         </span>
-        <h2 [class]="headingFontClass()" class="preview-hero-heading mb-3">
-          Authentic Gourmet Burgers & Steaks
+        <h2 [class]="headingFontClass()" class="preview-hero-heading text-2xl text-md-4xl font-black text-white tracking-tight m-0">
+          Authentic Gourmet Burgers &amp; Steaks
         </h2>
-        <p class="preview-hero-text text-xs text-slate-200">
-          Order online directly for home delivery or table pickup.
+        <p class="preview-hero-text text-xs sm:text-sm text-slate-300 m-0">
+          Order online directly for express delivery or table pickup.
         </p>
       </div>
     </section>
 
-    <!-- Menu Categories & Items -->
-    <main class="preview-menu container-fluid px-4 py-5">
+    <!-- Menu Categories & Items Strip -->
+    <main class="preview-menu container-xl px-4 py-5">
       <!-- Category Filter Pills -->
-      <div class="d-flex gap-2 overflow-x-auto pb-3 mb-4">
+      <div class="d-flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-none">
         <button
           type="button"
-          class="preview-category-pill px-4 py-2 rounded-pill text-xs font-bold"
-          [class.bg-orange]="activeCategoryId() === null"
-          [class.text-white]="activeCategoryId() === null"
-          [class.bg-white]="activeCategoryId() !== null"
-          [class.text-dark]="activeCategoryId() !== null"
+          class="btn btn-sm rounded-pill text-xs font-black px-4 py-2 smooth-transition flex-shrink-0"
+          [style.backgroundColor]="activeCategoryId() === null ? theme().primary : '#ffffff'"
+          [style.color]="activeCategoryId() === null ? '#ffffff' : '#0f172a'"
           [class.border]="activeCategoryId() !== null"
-          [class.border-secondary]="activeCategoryId() !== null"
+          [class.border-subtle]="activeCategoryId() !== null"
           (click)="activeCategoryId.set(null)"
         >
-          All Items
+          🔥 Bestsellers
         </button>
+
         @for (category of categories(); track category.id) {
           <button
             type="button"
-            class="preview-category-pill px-4 py-2 rounded-pill text-xs font-bold"
-            [class.bg-orange]="activeCategoryId() === category.id"
-            [class.text-white]="activeCategoryId() === category.id"
-            [class.bg-white]="activeCategoryId() !== category.id"
-            [class.text-dark]="activeCategoryId() !== category.id"
+            class="btn btn-sm rounded-pill text-xs font-bold px-4 py-2 smooth-transition flex-shrink-0"
+            [style.backgroundColor]="activeCategoryId() === category.id ? theme().primary : '#ffffff'"
+            [style.color]="activeCategoryId() === category.id ? '#ffffff' : '#0f172a'"
             [class.border]="activeCategoryId() !== category.id"
-            [class.border-secondary]="activeCategoryId() !== category.id"
+            [class.border-subtle]="activeCategoryId() !== category.id"
             (click)="activeCategoryId.set(category.id)"
           >
             {{ category.name }}
@@ -100,27 +120,50 @@
 
       <!-- Loading / Empty -->
       @if (loading()) {
-        <div class="text-center py-8 text-muted text-xs">Loading menu…</div>
+        <div class="text-center py-5 text-muted text-xs">
+          <i class="bi bi-hourglass-split d-block mb-2" style="font-size: 1.5rem;"></i>
+          <span>Loading menu preview&hellip;</span>
+        </div>
       } @else if (visibleItems().length === 0) {
-        <div class="text-center py-8 text-muted text-xs">No menu items available.</div>
+        <div class="text-center py-5 text-muted text-xs bg-white rounded-3xl border border-subtle p-4">
+          <i class="bi bi-egg-fried d-block mb-2 text-orange" style="font-size: 2rem;"></i>
+          <span>No menu items active yet.</span>
+        </div>
       } @else {
         <!-- Sample Item Cards Grid -->
         <div class="row g-4">
           @for (item of visibleItems(); track item.id) {
             <div class="col-12 col-sm-6 col-lg-4">
-              <div class="preview-item-card card border border-subtle rounded-3xl shadow-soft overflow-hidden h-100 d-flex flex-column">
-                <div class="preview-item-image h-48 overflow-hidden bg-surface-soft">
-                  <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80" class="preview-item-img w-100 h-100 object-fit-cover" alt="{{ item.name }}" />
+              <div class="card-hover bg-white border border-subtle rounded-3xl shadow-soft overflow-hidden h-100 d-flex flex-column justify-content-between">
+                <div>
+                  <div class="position-relative overflow-hidden bg-surface-soft" style="height: 180px;">
+                    <img
+                      [src]="item.imageUrl || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80'"
+                      [alt]="item.name"
+                      class="w-100 h-100 object-cover"
+                      loading="lazy"
+                    />
+                    <span class="position-absolute top-2 end-2 badge bg-white text-dark rounded-pill px-2.5 py-1 text-10px font-black shadow-sm">
+                      Bestseller
+                    </span>
+                  </div>
+                  <div class="p-3.5 d-flex flex-column gap-1">
+                    <h4 [class]="headingFontClass()" class="text-sm font-black text-dark m-0">{{ item.name }}</h4>
+                    @if (item.description) {
+                      <p class="text-xs text-muted m-0 line-clamp-2 leading-relaxed">{{ item.description }}</p>
+                    }
+                  </div>
                 </div>
-                <div class="p-3 d-flex flex-column flex-grow-1">
-                  <h4 [class]="headingFontClass()" class="preview-item-title mb-2">{{ item.name }}</h4>
-                  <p class="preview-item-desc text-xs text-muted mb-2">{{ item.description ?? '' }}</p>
-                </div>
-                <div class="p-3 border-top border-subtle d-flex justify-between align-items-center">
-                  <span class="preview-item-price" [style.color]="theme().primary">
+
+                <div class="p-3.5 pt-0 border-top border-subtle d-flex justify-content-between align-items-center mt-2">
+                  <span class="text-base font-black" [style.color]="theme().primary">
                     {{ formatPrice(item.price, item.currency) }}
                   </span>
-                  <button type="button" class="preview-item-add btn px-3 py-1 rounded-pill text-xs font-bold" [style.backgroundColor]="theme().primary">
+                  <button
+                    type="button"
+                    class="btn btn-sm rounded-xl text-xs font-black text-white px-3.5 py-1.5 shadow-xs smooth-transition"
+                    [style.backgroundColor]="theme().primary"
+                  >
                     Add +
                   </button>
                 </div>

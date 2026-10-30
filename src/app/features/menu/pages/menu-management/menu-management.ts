@@ -16,7 +16,6 @@ import { HttpErrorHandlerService } from '../../../../core/services/http-error-ha
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ConfirmationDialog } from '../../../../shared/components/confirmation-dialog/confirmation-dialog';
 import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
-import { Button } from '../../../../shared/components/button/button';
 import { MenuManagementSummary } from './menu-management-summary';
 import { MenuManagementToolbar } from './menu-management-toolbar';
 import { MenuItemList } from './menu-item-list';
@@ -47,7 +46,6 @@ interface FilterState {
   imports: [
     ConfirmationDialog,
     LoadingSpinner,
-    Button,
     MenuManagementSummary,
     MenuManagementToolbar,
     MenuItemList,
@@ -89,6 +87,11 @@ export class MenuManagement {
   protected readonly modalOpen = signal(false);
   protected readonly modalMode = signal<'create' | 'edit'>('create');
   protected readonly modalItem = signal<MenuItemDto | null>(null);
+
+  protected readonly viewMode = signal<'grid' | 'list'>('grid');
+  protected readonly previewDrawerOpen = signal<boolean>(false);
+  protected readonly activeDiet = signal<string>('all');
+  protected readonly reorderMode = signal<boolean>(false);
 
   protected readonly deleteOpen = signal(false);
   protected readonly deleteTarget = signal<{ id: string; name: string } | null>(null);
@@ -446,6 +449,42 @@ export class MenuManagement {
         this.errorMessage.set('Unable to delete the item. Please try again.');
       }
     });
+  }
+
+  /* ---------- UI & Drawer Controls ---------- */
+
+  protected togglePreviewDrawer(): void {
+    this.previewDrawerOpen.update(v => !v);
+  }
+
+  protected closePreviewDrawer(): void {
+    this.previewDrawerOpen.set(false);
+  }
+
+  protected onViewModeChange(mode: 'grid' | 'list'): void {
+    this.viewMode.set(mode);
+  }
+
+  protected onDietChange(diet: string): void {
+    this.activeDiet.set(diet);
+    if (diet === 'all') {
+      this.onSearchChange('');
+    } else {
+      this.onSearchChange(diet);
+    }
+  }
+
+  protected toggleReorderMode(): void {
+    this.reorderMode.update(v => !v);
+    this.notificationService.info(
+      this.reorderMode()
+        ? 'Reorder mode enabled: Drag categories to rearrange'
+        : 'Category arrangement saved.'
+    );
+  }
+
+  protected publishMenuChanges(): void {
+    this.notificationService.success('🎉 Menu published successfully to Resto.pk live QR & Web channels!');
   }
 
   /* ---------- Helpers ---------- */

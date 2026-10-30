@@ -1,13 +1,17 @@
-<div class="branding-tabs overflow-x-auto border-bottom border-subtle bg-white rounded-top-3xl px-2">
-  <div class="d-flex gap-0">
+<div class="branding-tabs-container bg-white border-bottom border-subtle rounded-top-3xl px-3 overflow-x-auto">
+  <div class="d-flex align-items-center gap-1 flex-nowrap">
     @for (tab of tabs; track tab.id) {
       <button
         type="button"
-        class="{{ tabClass(tab.id) }}"
+        class="branding-tab-btn btn py-3 px-4 text-xs font-bold d-inline-flex align-items-center gap-2 flex-shrink-0 smooth-transition position-relative"
+        [class.branding-tab-btn--active]="activeTab() === tab.id"
         (click)="selectTab(tab.id)"
       >
-        <i class="bi {{ tab.icon }}"></i>
+        <i class="bi" [class]="tab.icon"></i>
         <span>{{ tab.label }}</span>
+        @if (activeTab() === tab.id) {
+          <span class="tab-indicator position-absolute bottom-0 start-0 w-100 bg-orange" style="height: 2px;"></span>
+        }
       </button>
     }
   </div>

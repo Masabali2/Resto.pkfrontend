@@ -1,136 +1,81 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
 .menu-management {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  padding: 1.25rem;
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
 }
 
 .menu-management__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  padding: 1rem 1.25rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-sm);
+  border-radius: 1.5rem;
+  transition: box-shadow 0.25s ease;
 }
 
-.menu-management__heading {
-  flex: 1;
-  min-width: 240px;
+.btn-preview-drawer,
+.btn-new-category {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-preview-drawer:hover,
+.btn-new-category:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
 }
 
-.menu-management__title-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 0;
+.btn-add-item {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  border: none;
+  box-shadow: 0 4px 14px -2px rgba(249, 115, 22, 0.35);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-add-item:hover {
+  background: linear-gradient(135deg, #ea580c, #c2410c);
+  box-shadow: 0 6px 20px -2px rgba(249, 115, 22, 0.45);
+  transform: translateY(-1px);
 }
 
-.menu-management__title {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--color-text);
-  letter-spacing: -0.01em;
+.btn-publish {
+  background-color: #0f172a;
+  border: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-publish:hover {
+  background-color: #1e293b;
+  transform: translateY(-1px);
 }
 
-.menu-management__item-count {
-  padding: 0.15rem 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  background: var(--color-surface-secondary);
-  color: var(--color-text-secondary);
-  font-size: 0.8rem;
-  font-weight: 700;
-  white-space: nowrap;
+/* Slide-over Preview Drawer */
+.preview-drawer-backdrop {
+  animation: fadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.menu-management__subtitle {
-  margin: 0.25rem 0 0;
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
+.preview-drawer {
+  animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.menu-management__actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-shrink: 0;
-  flex-wrap: wrap;
+.phone-frame {
+  border-radius: 2rem;
 }
 
-.menu-management__states {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.phone-banner {
+  border-top-left-radius: 1.85rem;
+  border-top-right-radius: 1.85rem;
 }
 
-.menu-management__loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 2rem;
+.bg-orange {
+  background-color: #f97316 !important;
 }
-
-.menu-management__loading-label {
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
+.bg-orange-soft {
+  background-color: #fff7ed !important;
 }
-
-.menu-management__empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 1rem;
-  text-align: center;
-  border: 1px dashed var(--color-border);
-  border-radius: var(--radius-card);
-  background: var(--color-surface);
-  color: var(--color-text-muted);
+.text-orange {
+  color: #ea580c !important;
 }
-
-.menu-management__empty p {
-  margin: 0 0 1rem;
-  font-size: 0.95rem;
-  color: var(--color-text);
+.border-subtle {
+  border-color: #e2e8f0 !important;
 }
-
-.menu-management__notice {
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--color-warning-border);
-  border-radius: var(--radius-card);
-  background: var(--color-warning-soft);
-  color: var(--color-warning);
-  font-size: 0.9rem;
-}
-
-.menu-management__notice--warning {
-  border-color: var(--color-warning-border);
-  background: var(--color-warning-soft);
-  color: var(--color-warning);
-}
-
-@media (max-width: 640px) {
-  .menu-management__header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.75rem;
-  }
-
-  .menu-management__actions {
-    width: 100%;
-    justify-content: flex-end;
-  }
-
-  .menu-management__actions button {
-    width: 100%;
-    justify-content: center;
-  }
+.bg-surface-soft {
+  background-color: #f8fafc;
 }

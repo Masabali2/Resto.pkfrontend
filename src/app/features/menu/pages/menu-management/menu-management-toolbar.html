@@ -1,85 +1,178 @@
-<div class="toolbar">
-  <div class="toolbar__search">
-    <span class="toolbar__search-icon" aria-hidden="true"><i class="bi bi-search"></i></span>
-    <input
-      type="text"
-      class="toolbar__search-input"
-      [value]="search()"
-      (input)="onSearchInput($event)"
-      placeholder="Search items by name…"
-      aria-label="Search menu items"
-    />
-    @if (search()) {
-      <button type="button" class="toolbar__search-clear" (click)="onClearSearch()" aria-label="Clear search">
-        <i class="bi bi-x-lg"></i>
-      </button>
-    }
+<!-- CATEGORIES NAV & REORDERING STRIP -->
+<div class="category-strip bg-white rounded-3xl border border-subtle p-3 p-lg-4 shadow-soft mb-4">
+  <div class="d-flex align-items-center justify-content-between mb-3 px-1">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <h2 class="category-strip-title text-xs font-bold text-uppercase text-muted m-0">Menu Categories</h2>
+      <span class="text-xs text-muted d-none d-sm-inline">(Drag handles or select to filter items)</span>
+    </div>
+    <button
+      type="button"
+      class="btn btn-sm btn-reorder d-flex align-items-center gap-1.5 text-xs font-bold text-orange"
+      [class.btn-reorder--active]="reorderMode()"
+      (click)="onToggleReorder()"
+    >
+      <i class="bi bi-arrow-down-up"></i>
+      <span>{{ reorderMode() ? 'Exit Reorder' : 'Reorder Mode' }}</span>
+    </button>
   </div>
 
-  <div class="toolbar__filters">
-    <div class="toolbar__filter">
-      <label class="toolbar__filter-label">Category</label>
-      <select
-        class="toolbar__filter-select"
-        [value]="selectedCategory()?.id ?? 'all'"
-        (change)="onCategorySelect($any($event.target).value === 'all' ? null : $any($event.target).value)"
-      >
-        <option value="all">All categories</option>
-        @for (cat of categories(); track cat.id) {
-          <option [value]="cat.id">{{ cat.name }}</option>
-        }
-      </select>
-    </div>
+  <!-- Categories Scrollable Container -->
+  <div class="category-pills d-flex align-items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+    <!-- "All Categories" Pill -->
+    <button
+      type="button"
+      class="category-pill flex-shrink-0 d-inline-flex align-items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-bold border smooth-transition"
+      [class.category-pill--active]="selectedCategory() === null"
+      (click)="onCategorySelect(null)"
+    >
+      <i class="bi bi-grid-3x3-gap-fill"></i>
+      <span>All Categories</span>
+      <span class="category-pill__badge ms-1 opacity-75">({{ totalItems() }})</span>
+    </button>
 
-    <div class="toolbar__filter">
-      <label class="toolbar__filter-label">Availability</label>
-      <select
-        class="toolbar__filter-select"
-        [value]="availability()"
-        (change)="onAvailabilitySelect($any($event.target).value)"
+    <!-- Specific Category Pills -->
+    @for (cat of categories(); track cat.id; let i = $index) {
+      <button
+        type="button"
+        class="category-pill flex-shrink-0 d-inline-flex align-items-center gap-2 px-3 py-2 rounded-2xl text-xs font-bold border smooth-transition"
+        [class.category-pill--active]="selectedCategory()?.id === cat.id"
+        (click)="onCategorySelect(cat.id)"
       >
-        @for (opt of availabilityOptions; track opt.value) {
-          <option [value]="opt.value">{{ opt.label }}</option>
-        }
-      </select>
-    </div>
-  </div>
-
-  <div class="toolbar__actions">
-    @if (activeFilterCount() > 0) {
-      <button type="button" class="btn btn--outline btn--sm" (click)="onClearFilters()">
-        Clear filters
-      </button>
-    }
-    @if (canCreate() && !readOnly()) {
-      <button type="button" class="btn btn--primary" (click)="onCreate()">
-        <i class="bi bi-plus-lg" aria-hidden="true"></i> Add item
+        <i class="bi" [class]="getCategoryIcon(i)"></i>
+        <span>{{ cat.name }}</span>
+        <span class="category-pill__badge opacity-75">({{ cat.itemCount }})</span>
       </button>
     }
   </div>
 </div>
 
-@if (categories().length > 0) {
-  <div class="chips">
-    <button
-      type="button"
-      class="chip"
-      [class.chip--active]="selectedCategory() === null"
-      (click)="onCategorySelect(null)"
-    >
-      All categories
-      <span class="chip__count">{{ totalItems() }}</span>
-    </button>
-    @for (cat of categories(); track cat.id) {
+<!-- FILTERS & VIEW MODE CONTROLS BAR -->
+<div class="filter-bar bg-surface-soft rounded-3xl border border-subtle p-3 p-lg-3.5 shadow-2xs d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center justify-content-between gap-3 mb-4">
+  
+  <!-- Left: Search & Dietary Filter Badges -->
+  <div class="d-flex flex-wrap align-items-center gap-2 flex-grow-1">
+    <!-- Search Input -->
+    <div class="filter-search position-relative flex-grow-1" style="min-width: 220px; max-width: 320px;">
+      <i class="bi bi-search position-absolute text-muted" style="left: 0.85rem; top: 50%; transform: translateY(-50%); font-size: 0.85rem;"></i>
+      <input
+        type="text"
+        class="form-control filter-search-input rounded-2xl text-xs font-semibold ps-5 pe-4 py-2 border border-subtle bg-white"
+        [value]="search()"
+        (input)="onSearchInput($event)"
+        placeholder="Filter items by name..."
+        aria-label="Filter items by name"
+      />
+      @if (search()) {
+        <button
+          type="button"
+          class="btn btn-sm btn-clear-search position-absolute text-muted p-1"
+          style="right: 0.5rem; top: 50%; transform: translateY(-50%);"
+          (click)="onClearSearch()"
+          aria-label="Clear search"
+        >
+          <i class="bi bi-x-circle-fill"></i>
+        </button>
+      }
+    </div>
+
+    <div class="filter-divider d-none d-sm-block bg-subtle" style="width: 1px; height: 1.5rem;"></div>
+
+    <!-- Diet / Tag Filters -->
+    <div class="d-flex flex-wrap align-items-center gap-1.5">
       <button
         type="button"
-        class="chip"
-        [class.chip--active]="selectedCategory()?.id === cat.id"
-        (click)="onCategorySelect(cat.id)"
+        class="diet-pill btn btn-sm rounded-xl text-xs font-bold smooth-transition"
+        [class.diet-pill--active]="activeDiet() === 'all'"
+        (click)="onDietClick('all')"
       >
-        {{ cat.name }}
-        <span class="chip__count">{{ cat.itemCount }}</span>
+        All Items
+      </button>
+      <button
+        type="button"
+        class="diet-pill btn btn-sm rounded-xl text-xs font-medium smooth-transition d-inline-flex align-items-center gap-1.5"
+        [class.diet-pill--active]="activeDiet() === 'veg'"
+        (click)="onDietClick('veg')"
+      >
+        <span class="diet-dot bg-success rounded-circle"></span>
+        <span>Veg</span>
+      </button>
+      <button
+        type="button"
+        class="diet-pill btn btn-sm rounded-xl text-xs font-medium smooth-transition d-inline-flex align-items-center gap-1.5"
+        [class.diet-pill--active]="activeDiet() === 'nonveg'"
+        (click)="onDietClick('nonveg')"
+      >
+        <span class="diet-dot bg-danger rounded-circle"></span>
+        <span>Non-Veg</span>
+      </button>
+      <button
+        type="button"
+        class="diet-pill btn btn-sm rounded-xl text-xs font-medium smooth-transition d-inline-flex align-items-center gap-1.5"
+        [class.diet-pill--active]="activeDiet() === 'chef'"
+        (click)="onDietClick('chef')"
+      >
+        <i class="bi bi-star-fill text-amber" style="font-size: 0.75rem;"></i>
+        <span>Chef's Special</span>
+      </button>
+      <button
+        type="button"
+        class="diet-pill btn btn-sm rounded-xl text-xs font-medium smooth-transition d-inline-flex align-items-center gap-1.5"
+        [class.diet-pill--active]="activeDiet() === 'spicy'"
+        (click)="onDietClick('spicy')"
+      >
+        <i class="bi bi-fire text-danger" style="font-size: 0.75rem;"></i>
+        <span>Spicy</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Right: Availability Filter & Grid/List View Toggles -->
+  <div class="d-flex align-items-center justify-content-between justify-content-lg-end gap-2.5">
+    <!-- Availability Filter Dropdown -->
+    <select
+      class="form-select form-select-sm filter-availability-select rounded-xl text-xs font-bold border border-subtle bg-white px-3 py-2"
+      style="width: auto; min-width: 140px;"
+      [value]="availability()"
+      (change)="onAvailabilitySelect($any($event.target).value)"
+    >
+      <option value="all">All Statuses</option>
+      <option value="available">In Stock Only</option>
+      <option value="unavailable">Out of Stock Only</option>
+    </select>
+
+    @if (activeFilterCount() > 0) {
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary rounded-xl text-xs font-bold px-3 py-1.5"
+        (click)="onClearFilters()"
+      >
+        Clear Filters
       </button>
     }
+
+    <!-- Grid vs List View Switcher -->
+    <div class="view-mode-switcher bg-white p-1 rounded-2xl border border-subtle shadow-2xs d-inline-flex align-items-center gap-1">
+      <button
+        type="button"
+        class="btn btn-sm view-mode-btn rounded-xl text-xs font-bold d-inline-flex align-items-center gap-1 px-2.5 py-1 smooth-transition"
+        [class.view-mode-btn--active]="viewMode() === 'grid'"
+        (click)="onViewModeClick('grid')"
+        title="Grid View"
+      >
+        <i class="bi bi-grid-fill"></i>
+        <span class="d-none d-sm-inline">Grid</span>
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm view-mode-btn rounded-xl text-xs font-medium d-inline-flex align-items-center gap-1 px-2.5 py-1 smooth-transition"
+        [class.view-mode-btn--active]="viewMode() === 'list'"
+        (click)="onViewModeClick('list')"
+        title="List View"
+      >
+        <i class="bi bi-list-ul"></i>
+        <span class="d-none d-sm-inline">List</span>
+      </button>
+    </div>
   </div>
-}
+
+</div>

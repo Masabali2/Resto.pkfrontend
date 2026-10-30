@@ -1,142 +1,283 @@
-<header class="menu-management__header">
-  <div class="menu-management__heading">
-    <div class="menu-management__title-row">
-      <h1 class="menu-management__title">Menu Management</h1>
-      @if (menu(); as m) {
-        <span class="menu-management__item-count">
-          {{ summary()?.totalItems ?? totalCount() }} items
+<div class="menu-management d-flex flex-column gap-4 w-100 pb-5">
+
+  <!-- HEADER SECTION WITH METRICS & PRIMARY ACTIONS -->
+  <header class="menu-management__header bg-white p-4 p-lg-5 rounded-3xl border border-subtle shadow-soft d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-4">
+    <div class="menu-management__heading">
+      <div class="d-flex align-items-center gap-3 flex-wrap">
+        <h1 class="menu-management__title text-2xl font-black text-dark m-0">Menu Management</h1>
+        <span class="badge rounded-pill bg-surface-soft text-dark border border-subtle px-3 py-1.5 text-xs font-bold d-inline-flex align-items-center gap-1.5 shadow-2xs">
+          <i class="bi bi-egg-fried text-orange"></i>
+          <span>{{ summary()?.totalItems ?? totalCount() ?? 0 }} Items Active</span>
         </span>
-      }
-    </div>
-    <p class="menu-management__subtitle">
-      Organize items, set pricing, and manage availability across all ordering channels.
-      @if (menu(); as m) { <strong>{{ m.name }}</strong> }
-    </p>
-  </div>
-  <div class="menu-management__actions">
-    @if (canCreateCategory() && !isReadOnly()) {
-      <app-button type="button" class="btn btn--outline btn--sm" (click)="createCategory()">
-        <i class="bi bi-folder-plus" aria-hidden="true"></i> New category
-      </app-button>
-    }
-    <app-button   (click)="openCreateModal()" [disabled]="!canCreateItem() || isReadOnly()">
-      <i class="bi bi-plus-lg" aria-hidden="true"></i> Add item
-    </app-button>
-  </div>
-</header>
-
-<app-menu-management-summary [summary]="summary()" [totalCount]="totalCount()" />
-
-<app-menu-management-toolbar
-  [categories]="categories()"
-  [selectedCategory]="filteredCategory()"
-  [search]="filter().search ?? ''"
-  [availability]="availabilityLabelKey()"
-  [activeFilterCount]="activeFilterCount()"
-  [totalItems]="totalCount() ?? 0"
-  [canCreate]="canCreateItem() && !isReadOnly()"
-  [readOnly]="isReadOnly()"
-  (searchChange)="onSearchChange($event)"
-  (categoryChange)="onCategoryChange($event)"
-  (availabilityChange)="onAvailabilityChangeFromKey($event)"
-  (clearFilters)="clearFilters()"
-  (create)="openCreateModal()"
-/>
-
-<section class="menu-management__states">
-  @if (pageState() === 'loading' || itemsLoading() || summaryLoading() || categoriesLoading()) {
-    <div class="menu-management__loading">
-      <app-loading-spinner />
-      <span class="menu-management__loading-label">Loading&hellip;</span>
-    </div>
-  }
-
-  @if (pageState() === 'error') {
-    <div class="menu-management__empty menu-management__error" role="alert">
-      <p>{{ errorMessage() }}</p>
-      <app-button type="button" class="btn btn--outline" (click)="retry()">Retry</app-button>
-    </div>
-  }
-
-  @if (pageState() === 'not-found') {
-    <div class="menu-management__empty menu-management__not-found" role="alert">
-      <p>Menu not found.</p>
-    </div>
-  }
-
-  @if (pageState() === 'forbidden') {
-    <div class="menu-management__empty menu-management__forbidden" role="alert">
-      <p>You do not have permission to view this menu.</p>
-    </div>
-  }
-
-  @if (pageState() === 'no-workspace') {
-    <div class="menu-management__empty menu-management__no-workspace" role="alert">
-      <p>No active workspace.</p>
-    </div>
-  }
-
-  @if (pageState() === 'empty' && !itemsLoading()) {
-    <div class="menu-management__empty menu-management__empty-state">
-      <p>
-        @if (filter().search || filter().categoryId || filter().isAvailable !== null) {
-          No items match your current filters.
-          <app-button type="button" class="btn btn--outline btn--sm" (click)="clearFilters()">Clear filters</app-button>
-        } @else {
-          No menu items yet.
-          @if (canCreateItem() && !isReadOnly()) {
-            <app-button type="button" class="btn btn--primary btn--sm" (click)="openCreateModal()">Add first item</app-button>
-          }
-        }
+      </div>
+      <p class="menu-management__subtitle text-xs text-muted m-0 mt-1 max-w-2xl">
+        Organize your digital food menu, set pricing, add-ons, and real-time stock status across all ordering channels.
+        @if (menu(); as m) { <span class="fw-bold text-dark">&bull; {{ m.name }}</span> }
       </p>
     </div>
-  }
 
-  @if (pageState() === 'list' && menu(); as currentMenu) {
-    @if (isArchived()) {
-      <div class="menu-management__notice menu-management__notice--warning" role="alert">
-        This menu is archived &mdash; item management is read-only.
+    <!-- Action Buttons -->
+    <div class="menu-management__actions d-flex flex-wrap align-items-center gap-2.5">
+      <!-- Preview Public Menu Drawer Button -->
+      <button
+        type="button"
+        class="btn btn-preview-drawer bg-white border border-subtle rounded-2xl text-xs font-bold text-dark px-3.5 py-2.5 d-inline-flex align-items-center gap-2 shadow-2xs smooth-transition"
+        (click)="togglePreviewDrawer()"
+      >
+        <i class="bi bi-eye text-orange"></i>
+        <span>Preview Menu</span>
+      </button>
+
+      <!-- Add Category Button -->
+      @if (canCreateCategory() && !isReadOnly()) {
+        <button
+          type="button"
+          class="btn btn-new-category bg-white border border-subtle rounded-2xl text-xs font-bold text-dark px-3.5 py-2.5 d-inline-flex align-items-center gap-2 shadow-2xs smooth-transition"
+          (click)="createCategory()"
+        >
+          <i class="bi bi-folder-plus text-muted"></i>
+          <span>+ New Category</span>
+        </button>
+      }
+
+      <!-- Add Food Item Button -->
+      <button
+        type="button"
+        class="btn btn-add-item rounded-2xl text-xs font-bold text-white px-4 py-2.5 d-inline-flex align-items-center gap-2 shadow-glow smooth-transition active:scale-95"
+        (click)="openCreateModal()"
+        [disabled]="!canCreateItem() || isReadOnly()"
+      >
+        <i class="bi bi-plus-lg"></i>
+        <span>+ Add Food Item</span>
+      </button>
+
+      <!-- Save/Publish Menu Button -->
+      <button
+        type="button"
+        class="btn btn-publish rounded-2xl text-xs font-bold text-white bg-dark px-4 py-2.5 d-inline-flex align-items-center gap-2 shadow-sm smooth-transition active:scale-95"
+        (click)="publishMenuChanges()"
+      >
+        <i class="bi bi-cloud-arrow-up text-orange"></i>
+        <span>Publish Changes</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- SUMMARY CARDS METRICS STRIP -->
+  <app-menu-management-summary [summary]="summary()" [totalCount]="totalCount()" />
+
+  <!-- CATEGORIES & FILTERS & VIEW MODE CONTROLS BAR -->
+  <app-menu-management-toolbar
+    [categories]="categories()"
+    [selectedCategory]="filteredCategory()"
+    [search]="filter().search ?? ''"
+    [availability]="availabilityLabelKey()"
+    [activeFilterCount]="activeFilterCount()"
+    [totalItems]="totalCount() ?? 0"
+    [canCreate]="canCreateItem() && !isReadOnly()"
+    [readOnly]="isReadOnly()"
+    [viewMode]="viewMode()"
+    [activeDiet]="activeDiet()"
+    [reorderMode]="reorderMode()"
+    (searchChange)="onSearchChange($event)"
+    (categoryChange)="onCategoryChange($event)"
+    (availabilityChange)="onAvailabilityChangeFromKey($event)"
+    (clearFilters)="clearFilters()"
+    (create)="openCreateModal()"
+    (viewModeChange)="onViewModeChange($event)"
+    (dietChange)="onDietChange($event)"
+    (toggleReorder)="toggleReorderMode()"
+  />
+
+  <!-- MAIN LIST / STATES SECTION -->
+  <section class="menu-management__states">
+    @if (pageState() === 'loading' || itemsLoading() || summaryLoading() || categoriesLoading()) {
+      <div class="menu-management__loading bg-white rounded-3xl border border-subtle p-5 text-center shadow-soft d-flex flex-column align-items-center justify-content-center">
+        <app-loading-spinner />
+        <span class="menu-management__loading-label text-xs text-muted mt-2">Loading menu items&hellip;</span>
       </div>
     }
 
-    <app-menu-item-list
-      [items]="items()"
-      [canManage]="canManageItems() && !isReadOnly()"
-      [canDelete]="canDeleteItem() && !isReadOnly()"
-      [readOnly]="isReadOnly()"
-      [pendingIds]="pendingToggles()"
-      (edit)="openEditModal($event)"
-      (delete)="openDeleteDialog($event)"
-      (toggleAvailability)="toggleAvailability($event)"
-    />
-
-    @if (totalPages() > 1) {
-      <app-menu-pagination
-        [page]="filter().page"
-        [pageSize]="filter().pageSize"
-        [totalCount]="totalCount() ?? 0"
-        [totalPages]="totalPages()"
-        [loading]="itemsLoading()"
-        (pageChange)="onPageChange($event)"
-      />
+    @if (pageState() === 'error') {
+      <div class="menu-management__empty menu-management__error bg-white rounded-3xl border border-dashed border-danger p-5 text-center shadow-soft" role="alert">
+        <i class="bi bi-exclamation-triangle-fill text-danger mb-2" style="font-size: 2rem;"></i>
+        <p class="text-xs font-semibold text-danger mb-3">{{ errorMessage() }}</p>
+        <button type="button" class="btn btn-sm btn-outline-secondary rounded-xl text-xs font-bold px-3 py-2" (click)="retry()">
+          Retry
+        </button>
+      </div>
     }
+
+    @if (pageState() === 'not-found') {
+      <div class="menu-management__empty bg-white rounded-3xl border border-dashed border-subtle p-5 text-center shadow-soft" role="alert">
+        <p class="text-xs text-muted m-0">Menu not found.</p>
+      </div>
+    }
+
+    @if (pageState() === 'forbidden') {
+      <div class="menu-management__empty bg-white rounded-3xl border border-dashed border-subtle p-5 text-center shadow-soft" role="alert">
+        <p class="text-xs text-muted m-0">You do not have permission to view this menu.</p>
+      </div>
+    }
+
+    @if (pageState() === 'no-workspace') {
+      <div class="menu-management__empty bg-white rounded-3xl border border-dashed border-subtle p-5 text-center shadow-soft" role="alert">
+        <p class="text-xs text-muted m-0">No active workspace.</p>
+      </div>
+    }
+
+    @if (pageState() === 'empty' && !itemsLoading()) {
+      <div class="menu-management__empty bg-white rounded-3xl border border-dashed border-subtle p-5 text-center shadow-soft">
+        <div class="rounded-circle bg-orange-soft text-orange mx-auto d-flex align-items-center justify-center mb-3" style="width: 4rem; height: 4rem;">
+          <i class="bi bi-egg-fried" style="font-size: 2rem;"></i>
+        </div>
+        <h3 class="text-base font-bold text-dark mb-1">No food items found</h3>
+        <p class="text-xs text-muted max-w-md mx-auto mb-3">
+          @if (filter().search || filter().categoryId || filter().isAvailable !== null) {
+            No items match your selected filter or search terms. Try clearing filters or add a new food item.
+          } @else {
+            No menu items yet. Add your first item to build your digital menu.
+          }
+        </p>
+        @if (filter().search || filter().categoryId || filter().isAvailable !== null) {
+          <button type="button" class="btn btn-sm btn-outline-secondary rounded-xl text-xs font-bold px-3 py-2" (click)="clearFilters()">
+            Clear Filters
+          </button>
+        } @else if (canCreateItem() && !isReadOnly()) {
+          <button type="button" class="btn btn-sm btn-add-item text-white rounded-xl text-xs font-bold px-4 py-2" (click)="openCreateModal()">
+            + Add First Food Item
+          </button>
+        }
+      </div>
+    }
+
+    @if (pageState() === 'list' && menu(); as currentMenu) {
+      @if (isArchived()) {
+        <div class="alert alert-warning rounded-2xl border border-warning-subtle text-xs d-flex align-items-center gap-2 mb-3 shadow-2xs" role="alert">
+          <i class="bi bi-info-circle-fill text-warning"></i>
+          <span>This menu is archived &mdash; item management is read-only.</span>
+        </div>
+      }
+
+      <app-menu-item-list
+        [items]="items()"
+        [canManage]="canManageItems() && !isReadOnly()"
+        [canDelete]="canDeleteItem() && !isReadOnly()"
+        [readOnly]="isReadOnly()"
+        [pendingIds]="pendingToggles()"
+        [viewMode]="viewMode()"
+        (edit)="openEditModal($event)"
+        (delete)="openDeleteDialog($event)"
+        (toggleAvailability)="toggleAvailability($event)"
+      />
+
+      @if (totalPages() > 1) {
+        <div class="mt-4">
+          <app-menu-pagination
+            [page]="filter().page"
+            [pageSize]="filter().pageSize"
+            [totalCount]="totalCount() ?? 0"
+            [totalPages]="totalPages()"
+            [loading]="itemsLoading()"
+            (pageChange)="onPageChange($event)"
+          />
+        </div>
+      }
+    }
+  </section>
+
+  <!-- ADD / EDIT ITEM MODAL -->
+  <app-menu-item-modal
+    [open]="modalOpen()"
+    [mode]="modalMode()"
+    [item]="modalItem()"
+    [categories]="categories()"
+    (saved)="onItemSaved()"
+    (cancelled)="closeModal()"
+  />
+
+  <!-- CONFIRM DELETE DIALOG -->
+  <app-confirmation-dialog
+    [open]="deleteOpen()"
+    [title]="'Delete item'"
+    [message]="deleteTarget() ? `Are you sure you want to delete &ldquo;${deleteTarget()!.name}&rdquo;?` : ''"
+    [confirmLabel]="'Delete'"
+    (confirmed)="confirmDelete()"
+    (cancelled)="cancelDelete()"
+  ></app-confirmation-dialog>
+
+  <!-- PUBLIC MENU PREVIEW DRAWER (SLIDE-OVER) -->
+  @if (previewDrawerOpen()) {
+    <div
+      class="preview-drawer-backdrop position-fixed inset-0 z-1060 modal-backdrop-blur d-flex justify-content-end"
+      (click)="closePreviewDrawer()"
+    >
+      <div
+        class="preview-drawer bg-white shadow-2xl border-start border-subtle d-flex flex-column h-100"
+        style="width: 100%; max-width: 440px;"
+        (click)="$event.stopPropagation()"
+      >
+        <!-- Drawer Header -->
+        <div class="p-3 bg-dark text-white d-flex align-items-center justify-content-between flex-shrink-0">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-phone text-orange"></i>
+            <span class="text-xs font-bold">Live QR Menu Preview</span>
+          </div>
+          <button
+            type="button"
+            class="btn btn-sm btn-icon-round text-white p-1"
+            (click)="closePreviewDrawer()"
+            aria-label="Close"
+          >
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <!-- Simulated Smartphone Frame -->
+        <div class="preview-drawer__body flex-grow-1 overflow-y-auto p-3 bg-surface-soft d-flex flex-column align-items-center">
+          <div class="phone-frame bg-white rounded-3xl shadow-xl overflow-hidden border border-subtle w-100" style="max-width: 320px;">
+            <!-- Simulated Restaurant Mobile Banner -->
+            <div class="phone-banner position-relative p-3 bg-dark text-white d-flex flex-column justify-content-end" style="height: 120px; background: linear-gradient(135deg, #1e293b, #0f172a);">
+              <div class="position-relative z-2">
+                <span class="badge bg-orange text-white rounded-pill px-2 py-0.5 text-10px font-bold mb-1 d-inline-block">Open Now</span>
+                <h4 class="text-sm font-black m-0 text-white">{{ menu()?.name ?? 'Restaurant Menu' }}</h4>
+                <p class="text-10px text-muted m-0">Live Customer QR Ordering</p>
+              </div>
+            </div>
+
+            <!-- Simulated Menu Items inside Frame -->
+            <div class="p-3 d-flex flex-column gap-2">
+              @for (item of items().slice(0, 6); track item.id) {
+                <div class="d-flex align-items-center gap-2 p-2 bg-surface-soft rounded-2xl border border-subtle">
+                  <div class="rounded-xl overflow-hidden bg-white border border-subtle flex-shrink-0" style="width: 40px; height: 40px;">
+                    @if (item.imageUrl) {
+                      <img [src]="item.imageUrl" [alt]="item.name" class="w-100 h-100 object-cover" />
+                    } @else {
+                      <div class="w-100 h-100 d-flex align-items-center justify-center text-muted">
+                        <i class="bi bi-egg-fried"></i>
+                      </div>
+                    }
+                  </div>
+                  <div class="flex-grow-1 min-w-0">
+                    <div class="text-xs font-bold text-dark text-truncate">{{ item.name }}</div>
+                    <div class="text-10px text-orange font-bold">{{ item.currency }} {{ formatMoney(item.price) }}</div>
+                  </div>
+                  @if (item.isAvailable) {
+                    <span class="badge bg-success-subtle text-success text-10px px-1.5 py-0.5 rounded-pill font-bold">In Stock</span>
+                  } @else {
+                    <span class="badge bg-danger-subtle text-danger text-10px px-1.5 py-0.5 rounded-pill font-bold">Sold Out</span>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 border-top border-subtle bg-white text-center flex-shrink-0">
+          <span class="text-10px text-muted">Customer view automatically updates when changes are saved</span>
+        </div>
+      </div>
+    </div>
   }
-</section>
 
-<app-menu-item-modal
-  [open]="modalOpen()"
-  [mode]="modalMode()"
-  [item]="modalItem()"
-  [categories]="categories()"
-  (saved)="onItemSaved()"
-  (cancelled)="closeModal()"
-/>
-
-<app-confirmation-dialog
-  [open]="deleteOpen()"
-  [title]="'Delete item'"
-  [message]="deleteTarget() ? `Are you sure you want to delete &ldquo;${deleteTarget()!.name}&rdquo;?` : ''"
-  [confirmLabel]="'Delete'"
-  (confirmed)="confirmDelete()"
-  (cancelled)="cancelDelete()"
-></app-confirmation-dialog>
+</div>

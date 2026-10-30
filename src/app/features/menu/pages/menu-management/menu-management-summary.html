@@ -1,13 +1,24 @@
-<div class="summary-cards">
+<div class="row g-3 g-lg-4 mb-4">
   @for (card of cards(); track card.label) {
-    <div class="summary-card" [style.--card-accent]="card.color">
-      <div class="summary-card__body">
-        <div class="summary-card__label">{{ card.label }}</div>
-        <div class="summary-card__value">{{ card.value }}</div>
-        <div class="summary-card__subtitle">{{ card.subtitle }}</div>
-      </div>
-      <div class="summary-card__icon">
-        <i class="bi" [class]="card.icon" aria-hidden="true"></i>
+    <div class="col-6 col-lg-3">
+      <div class="summary-card card-hover bg-white rounded-3xl border border-subtle p-3 p-lg-4 shadow-soft d-flex align-items-center justify-content-between h-100 position-relative overflow-hidden">
+        <div class="summary-card__body">
+          <span class="summary-card__label text-10px font-bold text-uppercase text-muted d-block mb-1">
+            {{ card.label }}
+          </span>
+          <div class="summary-card__value text-2xl font-black text-dark leading-none">
+            {{ card.value }}
+          </div>
+          <span class="summary-card__subtitle text-10px text-muted font-medium d-block mt-1">
+            {{ card.subtitle }}
+          </span>
+        </div>
+        <div
+          class="summary-card__icon rounded-2xl d-flex align-items-center justify-center flex-shrink-0"
+          [style.color]="card.color"
+        >
+          <i class="bi" [class]="card.icon" style="font-size: 1.25rem;"></i>
+        </div>
       </div>
     </div>
   }
