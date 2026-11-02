@@ -87,7 +87,7 @@ describe('MenuItemModal', () => {
       name: 'Cheeseburger',
       price: 12.5,
       description: null,
-      currency: 'USD',
+      currency: 'PKR',
       imageFileId: null,
       displayOrder: null,
       isAvailable: true
@@ -118,9 +118,22 @@ describe('MenuItemModal', () => {
     fixture.componentRef.setInput('item', item);
     fixture.detectChanges();
 
+    httpMock
+      .expectOne({ method: 'GET', url: `${API_ROOT}/menu-items/item-1` })
+      .flush({
+        success: true,
+        data: item,
+        message: null,
+        errorCode: null,
+        errors: null,
+        traceId: null
+      } as ApiResponse<MenuItemDto>);
+    fixture.detectChanges();
+
     const nameInput = fixture.nativeElement.querySelector('#modal-name') as HTMLInputElement;
     expect(nameInput.value).toBe('Cheeseburger');
     const priceInput = fixture.nativeElement.querySelector('#modal-price') as HTMLInputElement;
     expect(priceInput.value).toBe('12.50');
+    expect(fixture.nativeElement.querySelector('#modal-category')).toBeNull();
   });
 });

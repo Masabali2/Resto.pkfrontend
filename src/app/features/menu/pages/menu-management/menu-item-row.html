@@ -1,96 +1,121 @@
-
-<article class="item-row">
-  <div class="item-row__photo">
-    <div class="item-row__placeholder">
-      <i class="bi bi-image" aria-hidden="true"></i>
-    </div>
-
-    @if (!item().isAvailable) {
-      <span class="item-row__status-badge item-row__status-badge--out">
-        Out of stock
-      </span>
-    } @else if (!item().isActive) {
-      <span class="item-row__status-badge item-row__status-badge--hidden">
-        Hidden
-      </span>
+<article class="card-hover item-card bg-white rounded-3xl border border-subtle overflow-hidden d-flex flex-column justify-content-between shadow-soft h-100 position-relative">
+  
+  <!-- Image Container & Badges -->
+  <div class="item-card__media position-relative overflow-hidden bg-surface-soft">
+    @if (item().imageUrl) {
+      <img
+        [src]="item().imageUrl"
+        [alt]="item().name"
+        class="item-card__image w-100 h-100 object-cover smooth-transition"
+        loading="lazy"
+        onerror="this.style.display='none'; this.nextElementSibling.classList.remove('d-none');"
+      />
+      <div class="item-card__placeholder w-100 h-100 d-none d-flex align-items-center justify-center text-muted">
+        <i class="bi bi-egg-fried" style="font-size: 2.25rem;"></i>
+      </div>
     } @else {
-      <span class="item-row__status-badge item-row__status-badge--live">
-        Available
-      </span>
-    }
-  </div>
-
-  <div class="item-row__body">
-    <div class="item-row__header">
-      <span class="item-row__category">Menu item</span>
-    </div>
-
-    <h3 class="item-row__name" [title]="item().name">
-      {{ item().name }}
-    </h3>
-
-    @if (item().description) {
-      <p class="item-row__description" [title]="item().description">
-        {{ item().description }}
-      </p>
+      <div class="item-card__placeholder w-100 h-100 d-flex align-items-center justify-center text-muted">
+        <i class="bi bi-egg-fried" style="font-size: 2.25rem;"></i>
+      </div>
     }
 
-    <div class="item-row__footer">
-      <div class="item-row__price">
-        <span class="item-row__amount">
-          {{ formatMoney(item().price) }}
+    <!-- Badges Overlay -->
+    <div class="position-absolute top-2 start-2 d-flex flex-wrap gap-1 z-2">
+      @if (!item().isAvailable) {
+        <span class="badge bg-danger text-white rounded-pill px-2.5 py-1 text-10px font-bold shadow-sm">
+          Sold Out
         </span>
-        <span class="item-row__currency">
-          {{ item().currency }}
+      } @else {
+        <span class="badge bg-success text-white rounded-pill px-2.5 py-1 text-10px font-bold shadow-sm">
+          In Stock
+        </span>
+      }
+      @if (!item().isActive) {
+        <span class="badge bg-secondary text-white rounded-pill px-2 py-0.5 text-10px font-bold shadow-sm">
+          Hidden
+        </span>
+      }
+    </div>
+
+    <!-- Quick Action Floating Buttons -->
+    <div class="item-card__actions position-absolute top-2 end-2 d-flex gap-1 z-2">
+      <button
+        type="button"
+        class="btn btn-sm btn-action bg-white rounded-circle shadow-sm d-flex align-items-center justify-center"
+        [disabled]="!canManage() || readOnly()"
+        title="Edit item"
+        aria-label="Edit item"
+        (click)="onEdit()"
+      >
+        <i class="bi bi-pencil-fill text-muted hover:text-dark" style="font-size: 0.75rem;"></i>
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-sm btn-action bg-white rounded-circle shadow-sm d-flex align-items-center justify-center"
+        [disabled]="!canDelete() || readOnly()"
+        title="Delete item"
+        aria-label="Delete item"
+        (click)="onDelete()"
+      >
+        <i class="bi bi-trash3-fill text-danger" style="font-size: 0.75rem;"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Body Content -->
+  <div class="p-3 p-lg-3.5 flex-grow-1 d-flex flex-column justify-content-between gap-2">
+    <div>
+      <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+        <span class="item-card__category text-orange text-10px font-bold text-uppercase">
+          {{ item().categoryName || 'Food Item' }}
+        </span>
+        <span class="text-10px text-muted font-medium d-inline-flex align-items-center gap-1">
+          <i class="bi bi-clock"></i> 15-20 min
         </span>
       </div>
 
-      <div class="item-row__availability">
-        <button
-          type="button"
-          role="switch"
-          [attr.aria-checked]="item().isAvailable"
-          class="toggle"
-          [class.toggle--on]="item().isAvailable"
-          [disabled]="readOnly() || pending() || !canManage()"
-          [title]="item().isAvailable ? 'Mark out of stock' : 'Mark available'"
-          (click)="onToggleAvailability()"
-        >
-          <span class="toggle__thumb"></span>
-        </button>
+      <h3 class="item-card__title text-sm font-bold text-dark m-0" [title]="item().name">
+        {{ item().name }}
+      </h3>
 
-        <span class="item-row__availability-label">
-          {{ item().isAvailable ? 'Available' : 'Out of stock' }}
+      @if (item().description) {
+        <p class="item-card__desc text-xs text-muted m-0 mt-1" [title]="item().description">
+          {{ item().description }}
+        </p>
+      }
+    </div>
+
+    <!-- Footer: Price & Stock Switch -->
+    <div class="pt-2.5 border-top border-subtle d-flex align-items-center justify-content-between mt-2">
+      <div>
+        <span class="item-card__price-sub text-10px text-muted font-semibold d-block">Price</span>
+        <span class="item-card__price text-sm font-black text-dark">
+          {{ item().currency }} {{ formatMoney(item().price) }}
         </span>
-
-        @if (pending()) {
-          <span class="item-row__saving">Saving&hellip;</span>
-        }
       </div>
 
-      <div class="item-row__actions">
-        <button
-          type="button"
-          class="icon-btn"
-          [disabled]="!canManage() || readOnly()"
-          title="Edit item"
-          aria-label="Edit item"
-          (click)="onEdit()"
+      <!-- In-Stock Toggle Switch -->
+      <div class="d-flex align-items-center gap-2">
+        <span
+          class="item-card__stock-text text-10px font-bold"
+          [class.text-success]="item().isAvailable"
+          [class.text-muted]="!item().isAvailable"
         >
-          <i class="bi bi-pencil-square" aria-hidden="true"></i>
-        </button>
+          {{ item().isAvailable ? 'In Stock' : 'Sold Out' }}
+        </span>
 
-        <button
-          type="button"
-          class="icon-btn icon-btn--danger"
-          [disabled]="!canDelete() || readOnly()"
-          title="Delete item"
-          aria-label="Delete item"
-          (click)="onDelete()"
-        >
-          <i class="bi bi-trash3" aria-hidden="true"></i>
-        </button>
+        <label class="toggle-switch m-0" [title]="item().isAvailable ? 'Mark Sold Out' : 'Mark In Stock'">
+          <input
+            type="checkbox"
+            [checked]="item().isAvailable"
+            [disabled]="readOnly() || pending() || !canManage()"
+            (change)="onToggleAvailability()"
+          />
+          <span class="toggle-slider"></span>
+        </label>
       </div>
     </div>
   </div>
+
 </article>

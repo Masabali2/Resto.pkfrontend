@@ -1,61 +1,67 @@
 <div class="media-library">
-  <div class="d-flex flex-wrap justify-between align-items-start align-items-sm-center gap-3 mb-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-start align-items-sm-center gap-3 mb-4">
     <div>
-      <h2 class="brand-section-title">CDN Storage Manager</h2>
-      <p class="brand-section-subtitle">
+      <h2 class="brand-section-title text-base font-black text-dark m-0">CDN Storage Manager</h2>
+      <p class="brand-section-subtitle text-xs text-muted m-0 mt-0.5">
         View and manage uploaded CDN asset keys inside your tenant isolation boundary.
       </p>
     </div>
-    <span class="library-endpoint text-xs text-muted">
-      <code class="brand-code">GET /api/restaurants/{{ '{' }}restaurantId{{ '}' }}/assets</code>
+    <span class="library-endpoint text-xs text-muted d-inline-flex align-items-center gap-1.5 bg-surface-soft px-3 py-1.5 rounded-pill border border-subtle">
+      <code class="brand-code text-orange font-bold font-mono text-10px">/api/v1/files</code>
     </span>
   </div>
 
-  <div class="card border border-subtle rounded-3xl shadow-soft overflow-hidden">
+  <div class="media-library-card bg-white border border-subtle rounded-3xl shadow-soft overflow-hidden">
     <div class="table-responsive">
-      <table class="library-table table table-borderless mb-0 align-middle">
+      <table class="table table-hover align-middle mb-0">
         <thead>
-          <tr class="text-10px font-bold text-uppercase text-muted border-bottom border-subtle">
-            <th class="library-cell px-4 py-3">File & Asset Name</th>
-            <th class="library-cell px-4 py-3">Asset Type</th>
-            <th class="library-cell px-4 py-3">Storage Key</th>
-            <th class="library-cell px-4 py-3">Size</th>
-            <th class="library-cell px-4 py-3">Date</th>
-            <th class="library-cell px-4 py-3 text-end">Actions</th>
+          <tr class="bg-surface-soft border-bottom border-subtle text-10px font-bold text-uppercase text-muted">
+            <th class="py-3.5 px-4">File &amp; Asset Name</th>
+            <th class="py-3.5 px-4">Asset Type</th>
+            <th class="py-3.5 px-4">Storage Key</th>
+            <th class="py-3.5 px-4">Size</th>
+            <th class="py-3.5 px-4">Date</th>
+            <th class="py-3.5 px-4 text-end">Actions</th>
           </tr>
         </thead>
         <tbody class="text-xs font-medium divide-y divide-subtle">
           @if (rows().length === 0) {
             <tr>
-              <td colspan="6" class="library-cell px-4 py-8 text-center text-muted">
-                No assets uploaded yet. Use the asset dropzones to upload your branding files.
+              <td colspan="6" class="py-5 px-4 text-center text-muted">
+                <i class="bi bi-folder2-open d-block mb-2" style="font-size: 2rem;"></i>
+                <span>No assets uploaded yet. Use the asset dropzones to upload your branding files.</span>
               </td>
             </tr>
           } @else {
             @for (asset of rows(); track asset.id) {
-              <tr class="library-row hover:bg-surface-soft transition-colors">
-                <td class="library-cell px-4 py-3">
-                  <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-file-image text-orange"></i>
-                    <span class="font-bold text-dark">{{ asset.fileName }}</span>
+              <tr class="smooth-transition">
+                <td class="py-3.5 px-4">
+                  <div class="d-flex align-items-center gap-2.5">
+                    <div class="rounded-xl bg-orange-soft text-orange d-flex align-items-center justify-content-center flex-shrink-0" style="width: 32px; height: 32px;">
+                      <i class="bi bi-file-earmark-image"></i>
+                    </div>
+                    <span class="font-bold text-dark text-xs">{{ asset.fileName }}</span>
                   </div>
                 </td>
-                <td class="library-cell px-4 py-3">
-                  <span [class]="typeBadgeClass(asset.assetType)">{{ asset.assetType }}</span>
+                <td class="py-3.5 px-4">
+                  <span class="badge rounded-pill text-10px font-mono font-bold px-2.5 py-1" [class]="typeBadgeClass(asset.assetType)">
+                    {{ asset.assetType }}
+                  </span>
                 </td>
-                <td class="library-cell px-4 py-3">
+                <td class="py-3.5 px-4">
                   <div class="font-mono text-10px text-muted">{{ asset.storageKey }}</div>
                 </td>
-                <td class="library-cell px-4 py-3 text-muted">{{ sizeText(asset.fileSize) }}</td>
-                <td class="library-cell px-4 py-3 text-muted">{{ asset.created }}</td>
-                <td class="library-cell px-4 py-3 text-end">
+                <td class="py-3.5 px-4 text-muted">{{ sizeText(asset.fileSize) }}</td>
+                <td class="py-3.5 px-4 text-muted">{{ asset.created }}</td>
+                <td class="py-3.5 px-4 text-end">
                   <button
                     type="button"
-                    class="btn btn-sm btn-outline text-red hover:bg-red-soft p-2"
+                    class="btn btn-sm btn-icon-round text-danger p-1.5"
                     [disabled]="deleting() === asset.id"
                     (click)="handleDelete(asset)"
+                    title="Delete asset"
                   >
-                    <i class="bi bi-trash3"></i>
+                    <i class="bi bi-trash3-fill" style="font-size: 0.85rem;"></i>
                   </button>
                 </td>
               </tr>

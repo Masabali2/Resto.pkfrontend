@@ -68,14 +68,11 @@ export class MenuDetail {
 
   protected readonly activeCategoryId = signal<string | null>(null);
   protected readonly searchQuery = signal('');
-  protected readonly isAddingCategory = signal(false);
-  protected readonly newCategoryName = signal('');
-  protected readonly addingCategory = signal(false);
   protected readonly bulkPriceOpen = signal(false);
   protected readonly pendingToggles = signal<Set<string>>(new Set());
 
   protected readonly dialogOpen = signal(false);
-  protected readonly dialogKind = signal<'category' | 'item' | null>(null);
+  protected readonly dialogKind = signal<'item' | null>(null);
   protected readonly dialogTarget = signal<{ id: string; name: string } | null>(null);
 
   protected readonly apiUrl = environment.apiUrl;
@@ -87,18 +84,6 @@ export class MenuDetail {
   protected readonly canManageMenu = computed(() =>
     this.authorization.hasPermission('Menu.View') &&
     this.authorization.hasPermission('MenuItem.View')
-  );
-
-  protected readonly canCreateCategory = computed(() =>
-    this.authorization.hasPermission('MenuCategory.Create')
-  );
-
-  protected readonly canManageCategories = computed(() =>
-    this.authorization.hasPermission('MenuCategory.Update')
-  );
-
-  protected readonly canDeleteCategory = computed(() =>
-    this.authorization.hasPermission('MenuCategory.Delete')
   );
 
   protected readonly canCreateItem = computed(() =>
@@ -325,236 +310,6 @@ export class MenuDetail {
     if (!this.categoryItemState()[category.id]) {
       this.loadCategoryItems(category.id, 1);
     }
-  }
-
-  protected onNewCategoryNameChange(value: string): void {
-    this.newCategoryName.set(value);
-  }
-
-  protected startAddCategory(): void {
-    if (!this.canCreateCategory() || this.isReadOnly()) {
-      return;
-    }
-
-    this.isAddingCategory.set(true);
-    this.newCategoryName.set('');
-  }
-
-  protected cancelAddCategory(): void {
-    this.isAddingCategory.set(false);
-    this.newCategoryName.set('');
-  }
-
-  protected submitAddCategory(): void {
-    const menu = this.menu();
-    const name = this.newCategoryName().trim();
-
-    if (!menu || name.length === 0 || this.addingCategory()) {
-      return;
-    }
-
-    this.addingCategory.set(true);
-
-    this.menuService.createCategory(menu.id, {
-      name,
-      description: null,
-      displayOrder: null
-    }).subscribe({
-      next: response => {
-        this.addingCategory.set(false);
-
-        if (!response.success || !response.data) {
-          this.errorMessage.set(
-            response.message ?? 'Unable to add the category. Please try again.'
-          );
-          return;
-        }
-
-        const created = response.data;
-
-        this.menu.update(current =>
-          current ? { ...current, categories: [...current.categories, created] } : null
-        );
-
-        this.activeCategoryId.set(created.id);
-        this.isAddingCategory.set(false);
-        this.newCategoryName.set('');
-        this.notificationService.success(`Category "${created.name}" added.`);
-      },
-      error: error => {
-        this.addingCategory.set(false);
-        this.errorMessage.set(
-          this.httpErrorHandler.extractBackendMessage(error) ??
-            'Unable to add the category. Please try again.'
-        );
-      }
-    });
-  }
-
-  protected moveCategory(index: number, direction: 'up' | 'down'): void {
-    const menu = this.menu();
-
-    if (!menu || !this.canManageCategories() || this.isReadOnly()) {
-      return;
-    }
-
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-
-    if (index < 0 || targetIndex < 0 || targetIndex >= menu.categories.length) {
-      return;
-    }
-
-    const categories = [...menu.categories];
-    [categories[index], categories[targetIndex]] = [
-      categories[targetIndex],
-      categories[index]
-    ];
-
-    const previous = menu.categories;
-    const ordered = categories.map(category => category.id);
-
-    this.menu.update(current =>
-      current ? { ...current, categories } : null
-    );
-
-    this.menuService.reorderCategories(menu.id, ordered).subscribe({
-      next: response => {
-        if (response.success && response.data) {
-          this.menu.update(current =>
-            current ? { ...current, categories: response.data! } : null
-          );
-        }
-      },
-      error: () => {
-        this.menu.update(current =>
-          current ? { ...current, categories: previous } : null
-        );
-        this.errorMessage.set(
-          'The category order could not be saved. The previous order was restored.'
-        );
-      }
-    });
-  }
-
-  protected editCategory(category: MenuCategoryDto): void {
-    const menu = this.menu();
-
-    if (!menu || !this.canManageCategories()) {
-      return;
-    }
-
-    void this.router.navigate(
-      ['/menus', menu.id, 'categories', category.id, 'edit'],
-      {
-        queryParams: { restaurantId: menu.restaurantId },
-        queryParamsHandling: 'merge'
-      }
-    );
-  }
-
-  protected toggleCategoryActive(category: MenuCategoryDto): void {
-    if (!this.canManageCategories() || this.isReadOnly()) {
-      return;
-    }
-
-    const isActive = !category.isActive;
-
-    this.menuService.setCategoryActive(category.id, isActive).subscribe({
-      next: response => {
-        if (!response.success || !response.data) {
-          this.errorMessage.set(response.message ?? 'Unable to update the category.');
-          return;
-        }
-
-        const updated = response.data;
-
-        this.menu.update(current => {
-          if (!current) {
-            return null;
-          }
-
-          return {
-            ...current,
-            categories: current.categories.map(existing =>
-              existing.id === updated.id
-                ? { ...existing, isActive: updated.isActive }
-                : existing
-            )
-          };
-        });
-
-        this.notificationService.success(
-          `Category "${updated.name}" ${updated.isActive ? 'activated' : 'deactivated'}.`
-        );
-      },
-      error: error => {
-        this.errorMessage.set(
-          this.httpErrorHandler.extractBackendMessage(error) ??
-            'Unable to update the category. Please try again.'
-        );
-      }
-    });
-  }
-
-  protected openDeleteCategoryDialog(category: MenuCategoryDto): void {
-    if (!this.canDeleteCategory() || this.isReadOnly()) {
-      return;
-    }
-
-    this.dialogKind.set('category');
-    this.dialogTarget.set({ id: category.id, name: category.name });
-    this.dialogOpen.set(true);
-  }
-
-  private deleteCategory(): void {
-    const target = this.dialogTarget();
-
-    if (!target || this.dialogKind() !== 'category') {
-      return;
-    }
-
-    this.closeDialog();
-
-    this.menuService.deleteCategory(target.id).subscribe({
-      next: () => {
-        this.menu.update(current => {
-          if (!current) {
-            return null;
-          }
-
-          return {
-            ...current,
-            categories: current.categories.filter(category => category.id !== target.id)
-          };
-        });
-
-        this.categoryItemState.update(states => {
-          const { [target.id]: removed, ...remaining } = states;
-          return remaining;
-        });
-
-        if (this.activeCategoryId() === target.id) {
-          this.activeCategoryId.set(null);
-          this.ensureActiveItemsLoaded();
-        }
-
-        this.notificationService.success(`"${target.name}" has been deleted.`);
-      },
-      error: error => {
-        if (error instanceof HttpErrorResponse && error.status === 409) {
-          this.errorMessage.set(
-            this.httpErrorHandler.extractBackendMessage(error) ??
-              'This category still has menu items. Deactivate it or remove the items first.'
-          );
-          return;
-        }
-
-        this.errorMessage.set(
-          this.httpErrorHandler.extractBackendMessage(error) ??
-            'Unable to delete the category. Please try again.'
-        );
-      }
-    });
   }
 
   protected loadCategoryItems(categoryId: string, page = 1): void {
@@ -1025,9 +780,7 @@ export class MenuDetail {
   }
 
   protected confirmDialog(): void {
-    if (this.dialogKind() === 'category') {
-      this.deleteCategory();
-    } else if (this.dialogKind() === 'item') {
+    if (this.dialogKind() === 'item') {
       this.deleteItem();
     } else {
       this.closeDialog();
@@ -1052,14 +805,6 @@ export class MenuDetail {
 
   protected onSearchChange(value: string): void {
     this.searchQuery.set(value);
-  }
-
-  protected isFirstCategory(index: number): boolean {
-    return index === 0;
-  }
-
-  protected isLastCategory(index: number): boolean {
-    return index === this.categories().length - 1;
   }
 
   protected isFirstItem(index: number): boolean {

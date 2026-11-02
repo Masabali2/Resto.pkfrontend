@@ -3,10 +3,9 @@ import {
   Component,
   computed,
   input,
-  output
+  output,signal
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Button } from '../../../../shared/components/button/button';
 import type { MenuCategoryDto } from '../../models/menu-category.model';
 
 type Availability = 'all' | 'available' | 'unavailable';
@@ -15,8 +14,7 @@ type Availability = 'all' | 'available' | 'unavailable';
   selector: 'app-menu-management-toolbar',
   standalone: true,
   imports: [
-    FormsModule,
-    Button
+    FormsModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './menu-management-toolbar.html',
@@ -31,12 +29,16 @@ export class MenuManagementToolbar {
   readonly totalItems = input<number>(0);
   readonly canCreate = input<boolean>(false);
   readonly readOnly = input<boolean>(false);
+  readonly viewMode = input<'grid' | 'list'>('grid');
+  readonly activeDiet = input<string>('all');
 
   readonly searchChange = output<string>();
   readonly categoryChange = output<string | null>();
   readonly availabilityChange = output<Availability>();
   readonly clearFilters = output<void>();
   readonly create = output<void>();
+  readonly viewModeChange = output<'grid' | 'list'>();
+  readonly dietChange = output<string>();
 
   protected readonly availabilityOptions: { value: Availability; label: string }[] = [
     { value: 'all', label: 'All statuses' },
@@ -65,6 +67,19 @@ export class MenuManagementToolbar {
     this.clearFilters.emit();
   }
 
+  protected onDietClick(diet: string): void {
+    this.dietChange.emit(diet);
+  }
+
+  protected onViewModeClick(mode: 'grid' | 'list'): void {
+    this.viewModeChange.emit(mode);
+  }
+
+  protected getCategoryIcon(index: number): string {
+    const icons = ['bi-fire', 'bi-egg-fried', 'bi-cup-straw', 'bi-cake2', 'bi-basket2', 'bi-cup-hot'];
+    return icons[index % icons.length];
+  }
+
   protected onCreate(): void {
     this.create.emit();
   }
@@ -73,4 +88,38 @@ export class MenuManagementToolbar {
     const cat = this.selectedCategory();
     return cat ? cat.name : 'All categories';
   }
+  readonly isCategoryModalOpen = signal(false);
+readonly categorySearch = signal('');
+
+readonly filteredCategories = computed(() => {
+  const searchTerm = this.categorySearch().trim().toLowerCase();
+
+  if (!searchTerm) {
+    return this.categories();
+  }
+
+  return this.categories().filter(category =>
+    category.name.toLowerCase().includes(searchTerm)
+  );
+});
+
+protected openCategoryModal(): void {
+  this.categorySearch.set('');
+  this.isCategoryModalOpen.set(true);
+}
+
+protected closeCategoryModal(): void {
+  this.isCategoryModalOpen.set(false);
+  this.categorySearch.set('');
+}
+
+protected onCategorySearch(event: Event): void {
+  const value = (event.target as HTMLInputElement).value;
+  this.categorySearch.set(value);
+}
+
+protected onModalCategorySelect(categoryId: string | null): void {
+  this.categoryChange.emit(categoryId);
+  this.closeCategoryModal();
+}
 }

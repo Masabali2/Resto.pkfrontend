@@ -1,20 +1,26 @@
-@if(open()) {
+@if (open()) {
 <div
-  class="conflict-modal-backdrop d-flex align-items-center justify-center p-3"
+  class="conflict-modal-backdrop position-fixed inset-0 z-1060 d-flex align-items-center justify-content-center p-3 modal-backdrop-blur"
 >
-  <div class="conflict-modal w-100 max-w-md bg-white rounded-3xl border border-red-100 shadow-2xl p-4 text-center animate-in">
-    <div class="conflict-icon mx-auto d-flex align-items-center justify-center">
-      <i class="bi bi-triangle-exclamation-fill text-red"></i>
+  <div class="conflict-modal bg-white rounded-3xl border border-danger-subtle shadow-2xl p-4 p-md-5 text-center position-relative">
+    <div class="conflict-icon mx-auto rounded-2xl d-flex align-items-center justify-content-center mb-3">
+      <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 1.5rem;"></i>
     </div>
-    <h3 class="conflict-title">Asset Soft-Delete Blocked</h3>
-    <p class="conflict-subtitle">
-      Backend Code:
-      <span class="brand-code font-bold text-red">ASSET_STILL_REFERENCED (409)</span>
+    
+    <h3 class="conflict-title text-base font-black text-dark m-0">Asset Soft-Delete Blocked</h3>
+    <p class="conflict-subtitle text-xs text-muted mt-1 mb-3">
+      Backend Code: <span class="font-mono text-danger font-bold">ASSET_STILL_REFERENCED (409)</span>
     </p>
-    <div class="conflict-detail p-3 border border-subtle bg-surface-soft rounded-2xl text-xs text-muted">
+
+    <div class="conflict-detail p-3 border border-subtle bg-surface-soft rounded-2xl text-xs text-muted mb-4 text-start leading-relaxed">
       This asset is linked to active menu items or public banners. Unlink it before performing deletion.
     </div>
-    <button type="button" class="btn btn-dark w-auto mt-3 px-4 py-2 rounded-pill text-xs font-bold" (click)="dismiss.emit()">
+
+    <button
+      type="button"
+      class="btn btn-dark w-100 py-2.5 rounded-2xl text-xs font-bold text-white shadow-sm smooth-transition active:scale-95"
+      (click)="dismiss.emit()"
+    >
       Acknowledge Conflict
     </button>
   </div>

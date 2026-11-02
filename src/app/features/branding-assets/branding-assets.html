@@ -1,4 +1,4 @@
-<div class="branding-page flex flex-col w-full">
+<div class="branding-page d-flex flex-column w-100 gap-4" style="max-width: 1600px; margin: 0 auto;">
   <app-branding-header
     [restaurant]="restaurant()"
     [storage]="storage()"
@@ -9,57 +9,59 @@
     (saveClicked)="saveAll()"
   />
 
-  <app-branding-tabs
-    [activeTab]="activeTab()"
-    (tabSelected)="switchTab($any($event))"
-  />
+  <div class="branding-content-card bg-white rounded-3xl border border-subtle shadow-soft overflow-hidden">
+    <app-branding-tabs
+      [activeTab]="activeTab()"
+      (tabSelected)="switchTab($any($event))"
+    />
 
-  <main class="branding-main flex-grow-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
-    <!-- Section 1: Assets -->
-    <section [hidden]="activeTab() !== 'assets'" class="branding-section space-y-6">
-      <app-asset-management
-        [assets]="assets()"
-        [restaurant]="restaurant()?.id ?? null"
-        [loading]="loading()"
-        (assetsChange)="onAssetsChange($any($event))"
-      />
-    </section>
+    <main class="branding-main p-4 p-md-5">
+      <!-- Section 1: Assets -->
+      <section [hidden]="activeTab() !== 'assets'" class="branding-section animate-fade-in">
+        <app-asset-management
+          [assets]="assets()"
+          [restaurant]="restaurant()?.id ?? null"
+          [loading]="loading()"
+          (assetsChange)="onAssetsChange($any($event))"
+        />
+      </section>
 
-    <!-- Section 2: Colors -->
-    <section [hidden]="activeTab() !== 'colors'" class="branding-section space-y-6">
-      <app-brand-colors
-        [theme]="theme()"
-        (themeChange)="onThemeChange($any($event))"
-      />
-    </section>
+      <!-- Section 2: Colors -->
+      <section [hidden]="activeTab() !== 'colors'" class="branding-section animate-fade-in">
+        <app-brand-colors
+          [theme]="theme()"
+          (themeChange)="onThemeChange($any($event))"
+        />
+      </section>
 
-    <!-- Section 3: Typography -->
-    <section [hidden]="activeTab() !== 'typography'" class="branding-section space-y-6">
-      <app-typography-settings
-        [typography]="typography()"
-        [theme]="theme()"
-        (typographyChange)="onTypographyChange($any($event))"
-      />
-    </section>
+      <!-- Section 3: Typography -->
+      <section [hidden]="activeTab() !== 'typography'" class="branding-section animate-fade-in">
+        <app-typography-settings
+          [typography]="typography()"
+          [theme]="theme()"
+          (typographyChange)="onTypographyChange($any($event))"
+        />
+      </section>
 
-    <!-- Section 4: Hero Layout -->
-    <section [hidden]="activeTab() !== 'hero'" class="branding-section space-y-6">
-      <app-hero-layout-settings
-        [heroLayout]="heroLayout()"
-        (heroLayoutChange)="onHeroLayoutChange($any($event))"
-      />
-    </section>
+      <!-- Section 4: Hero Layout -->
+      <section [hidden]="activeTab() !== 'hero'" class="branding-section animate-fade-in">
+        <app-hero-layout-settings
+          [heroLayout]="heroLayout()"
+          (heroLayoutChange)="onHeroLayoutChange($any($event))"
+        />
+      </section>
 
-    <!-- Section 5: Media Library -->
-    <section [hidden]="activeTab() !== 'library'" class="branding-section space-y-6">
-      <app-media-library
-        [assets]="assets()"
-        [restaurant]="restaurant()?.id ?? null"
-        [loading]="loading()"
-        (assetsChange)="onAssetsChange($any($event))"
-      />
-    </section>
-  </main>
+      <!-- Section 5: Media Library -->
+      <section [hidden]="activeTab() !== 'library'" class="branding-section animate-fade-in">
+        <app-media-library
+          [assets]="assets()"
+          [restaurant]="restaurant()?.id ?? null"
+          [loading]="loading()"
+          (assetsChange)="onAssetsChange($any($event))"
+        />
+      </section>
+    </main>
+  </div>
 
   <app-website-preview-modal
     [open]="previewOpen()"

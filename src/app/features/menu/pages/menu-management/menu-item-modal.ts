@@ -17,7 +17,6 @@ import { finalize } from 'rxjs';
 import { MenuService } from '../../services/menu.service';
 import { HttpErrorHandlerService } from '../../../../core/services/http-error-handler.service';
 import { NotificationService } from '../../../../core/services/notification.service';
-import { Button } from '../../../../shared/components/button/button';
 import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
 import { ImageUploadComponent } from '../../../../shared/components/image-upload/image-upload.component';
 import type { ApiResponse } from '../../../../core/models/api-response.model';
@@ -41,7 +40,6 @@ type FormFieldName = 'name' | 'categoryId' | 'description' | 'price' | 'displayO
   standalone: true,
   imports: [
     ReactiveFormsModule,
-    Button,
     LoadingSpinner,
     ImageUploadComponent
   ],
@@ -59,6 +57,7 @@ export class MenuItemModal {
   readonly mode = input<'create' | 'edit'>('create');
   readonly item = input<MenuItemDto | null>(null);
   readonly categories = input<MenuCategoryDto[]>([]);
+  readonly defaultCategoryId = input<string | null>(null);
 
   readonly saved = output<void>();
   readonly cancelled = output<void>();
@@ -77,6 +76,7 @@ export class MenuItemModal {
   protected readonly generalError = signal('');
   protected readonly fieldErrors = signal<Record<string, string>>({});
   protected readonly loading = signal(true);
+  protected readonly activeTab = signal<'basic' | 'pricing' | 'addons'>('basic');
 
   protected readonly createdItemId = signal<string | null>(null);
   protected readonly imageUploading = signal(false);
@@ -96,12 +96,17 @@ export class MenuItemModal {
     return { kind: 'menu-item', menuItemId: id };
   });
 
-  /** Category selected for create (defaults to first category). */
-  protected readonly selectedCategoryId = computed(() => {
+  /**
+   * Category selected for create (defaults to first category).
+   *
+   * This must read the form control lazily. A computed() would cache the
+   * first value because form-control values are not signals, so a retry
+   * after a failed submit could post to a category the user has changed.
+   */
+  protected selectedCategoryId(): string | null {
     if (this.isEdit()) return this.item()?.menuCategoryId ?? null;
-    const id = this.form.controls.categoryId.value;
-    return id || null;
-  });
+    return this.form.controls.categoryId.value || null;
+  }
 
   constructor() {
     effect(() => {
@@ -123,7 +128,7 @@ export class MenuItemModal {
       } else {
         this.form.reset({
           name: '',
-          categoryId: this.categories()[0]?.id ?? '',
+          categoryId: this.initialCategoryId(),
           description: '',
           price: '',
           displayOrder: '',
@@ -133,6 +138,17 @@ export class MenuItemModal {
         this.loading.set(false);
       }
     });
+  }
+
+  private initialCategoryId(): string {
+    const preferred = this.defaultCategoryId();
+    const categories = this.categories();
+
+    if (preferred && categories.some(category => category.id === preferred)) {
+      return preferred;
+    }
+
+    return categories[0]?.id ?? '';
   }
 
   private loadEditItem(item: MenuItemDto): void {
@@ -199,6 +215,10 @@ export class MenuItemModal {
       }
     }
     return null;
+  }
+
+  protected switchTab(tab: 'basic' | 'pricing' | 'addons'): void {
+    this.activeTab.set(tab);
   }
 
   protected submit(): void {
