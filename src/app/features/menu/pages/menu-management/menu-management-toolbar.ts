@@ -3,7 +3,7 @@ import {
   Component,
   computed,
   input,
-  output
+  output,signal
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import type { MenuCategoryDto } from '../../models/menu-category.model';
@@ -94,4 +94,38 @@ export class MenuManagementToolbar {
     const cat = this.selectedCategory();
     return cat ? cat.name : 'All categories';
   }
+  readonly isCategoryModalOpen = signal(false);
+readonly categorySearch = signal('');
+
+readonly filteredCategories = computed(() => {
+  const searchTerm = this.categorySearch().trim().toLowerCase();
+
+  if (!searchTerm) {
+    return this.categories();
+  }
+
+  return this.categories().filter(category =>
+    category.name.toLowerCase().includes(searchTerm)
+  );
+});
+
+protected openCategoryModal(): void {
+  this.categorySearch.set('');
+  this.isCategoryModalOpen.set(true);
+}
+
+protected closeCategoryModal(): void {
+  this.isCategoryModalOpen.set(false);
+  this.categorySearch.set('');
+}
+
+protected onCategorySearch(event: Event): void {
+  const value = (event.target as HTMLInputElement).value;
+  this.categorySearch.set(value);
+}
+
+protected onModalCategorySelect(categoryId: string | null): void {
+  this.categoryChange.emit(categoryId);
+  this.closeCategoryModal();
+}
 }

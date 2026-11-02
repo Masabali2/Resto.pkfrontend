@@ -1,72 +1,254 @@
-<!-- CATEGORIES NAV & REORDERING STRIP -->
-<div class="category-strip bg-white rounded-3xl border border-subtle p-3 p-lg-4 shadow-soft mb-4">
-  <div class="d-flex align-items-center justify-content-between mb-3 px-1">
-    <div class="d-flex align-items-center gap-2 flex-wrap">
-      <h2 class="category-strip-title text-xs font-bold text-uppercase text-muted m-0">Menu Categories</h2>
-      <span class="text-xs text-muted d-none d-sm-inline">(Drag handles or select to filter items)</span>
+
+<!-- CATEGORY NAVIGATION -->
+<section class="category-strip mb-4">
+  <div class="category-strip__header">
+    <div>
+      <h2 class="category-strip-title">Menu Categories</h2>
+      <p class="category-strip-subtitle">
+        Select a category to filter your menu items
+      </p>
     </div>
+
     <button
       type="button"
-      class="btn btn-sm btn-reorder d-flex align-items-center gap-1.5 text-xs font-bold text-orange"
+      class="btn-reorder"
       [class.btn-reorder--active]="reorderMode()"
       (click)="onToggleReorder()"
     >
       <i class="bi bi-arrow-down-up"></i>
-      <span>{{ reorderMode() ? 'Exit Reorder' : 'Reorder Mode' }}</span>
+      <span>{{ reorderMode() ? 'Exit Reorder' : 'Reorder Categories' }}</span>
     </button>
   </div>
 
-  <!-- Categories Scrollable Container -->
-  <div class="category-pills d-flex align-items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-    <!-- "All Categories" Pill -->
+  <div class="category-pills">
+
+    <!-- BROWSE ALL CATEGORIES -->
     <button
       type="button"
-      class="category-pill flex-shrink-0 d-inline-flex align-items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-bold border smooth-transition"
+      class="category-pill category-pill--browse"
       [class.category-pill--active]="selectedCategory() === null"
-      (click)="onCategorySelect(null)"
+      (click)="openCategoryModal()"
+      aria-label="Browse all menu categories"
     >
       <i class="bi bi-grid-3x3-gap-fill"></i>
       <span>All Categories</span>
-      <span class="category-pill__badge ms-1 opacity-75">({{ totalItems() }})</span>
+      <span class="category-pill__badge">{{ categories().length }}</span>
+      <i class="bi bi-chevron-down category-pill__arrow"></i>
     </button>
 
-    <!-- Specific Category Pills -->
-    @for (cat of categories(); track cat.id; let i = $index) {
+    <!-- QUICK CATEGORY FILTERS -->
+    @for (cat of categories().slice(0, 5); track cat.id; let i = $index) {
       <button
         type="button"
-        class="category-pill flex-shrink-0 d-inline-flex align-items-center gap-2 px-3 py-2 rounded-2xl text-xs font-bold border smooth-transition"
+        class="category-pill"
         [class.category-pill--active]="selectedCategory()?.id === cat.id"
         (click)="onCategorySelect(cat.id)"
       >
-        <i class="bi" [class]="getCategoryIcon(i)"></i>
+        <i [class]="'bi ' + getCategoryIcon(i)"></i>
         <span>{{ cat.name }}</span>
-        <span class="category-pill__badge opacity-75">({{ cat.itemCount }})</span>
+        <span class="category-pill__badge">{{ cat.itemCount }}</span>
       </button>
     }
-  </div>
-</div>
 
-<!-- FILTERS & VIEW MODE CONTROLS BAR -->
-<div class="filter-bar bg-surface-soft rounded-3xl border border-subtle p-3 p-lg-3.5 shadow-2xs d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center justify-content-between gap-3 mb-4">
-  
-  <!-- Left: Search & Dietary Filter Badges -->
-  <div class="d-flex flex-wrap align-items-center gap-2 flex-grow-1">
-    <!-- Search Input -->
-    <div class="filter-search position-relative flex-grow-1" style="min-width: 220px; max-width: 320px;">
-      <i class="bi bi-search position-absolute text-muted" style="left: 0.85rem; top: 50%; transform: translateY(-50%); font-size: 0.85rem;"></i>
+    @if (categories().length > 5) {
+      <button
+        type="button"
+        class="category-pill category-pill--more"
+        (click)="openCategoryModal()"
+      >
+        <i class="bi bi-three-dots"></i>
+        <span>View All</span>
+      </button>
+    }
+
+  </div>
+</section>
+
+<!-- ALL CATEGORIES MODAL -->
+@if (isCategoryModalOpen()) {
+  <div
+    class="category-modal-backdrop"
+    (click)="closeCategoryModal()"
+    (keydown.escape)="closeCategoryModal()"
+  >
+    <section
+      class="category-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="category-modal-title"
+      (click)="$event.stopPropagation()"
+    >
+
+      <!-- MODAL HEADER -->
+      <div class="category-modal__header">
+        <div class="category-modal__heading">
+          <div class="category-modal__icon">
+            <i class="bi bi-grid-3x3-gap-fill"></i>
+          </div>
+
+          <div>
+            <h2 id="category-modal-title">Browse Categories</h2>
+            <p>Explore and select a menu category</p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="category-modal__close"
+          (click)="closeCategoryModal()"
+          aria-label="Close categories"
+        >
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <!-- MODAL SEARCH -->
+      <div class="category-modal__search">
+        <i class="bi bi-search"></i>
+
+        <input
+          type="text"
+          placeholder="Search categories..."
+          [value]="categorySearch()"
+          (input)="onCategorySearch($event)"
+          aria-label="Search categories"
+        />
+
+        @if (categorySearch()) {
+          <button
+            type="button"
+            (click)="categorySearch.set('')"
+            aria-label="Clear category search"
+          >
+            <i class="bi bi-x-circle-fill"></i>
+          </button>
+        }
+      </div>
+
+      <!-- CATEGORY SUMMARY -->
+      <div class="category-modal__summary">
+        <span>Available Categories</span>
+        <span class="category-modal__count">
+          {{ filteredCategories().length }} of {{ categories().length }}
+        </span>
+      </div>
+
+      <!-- CATEGORY GRID -->
+      <div class="category-modal__body">
+
+        <!-- ALL ITEMS OPTION -->
+        <button
+          type="button"
+          class="category-modal__item category-modal__item--all"
+          [class.category-modal__item--selected]="selectedCategory() === null"
+          (click)="onModalCategorySelect(null)"
+        >
+          <div class="category-modal__item-icon">
+            <i class="bi bi-grid-fill"></i>
+          </div>
+
+          <div class="category-modal__item-info">
+            <span class="category-modal__item-name">All Menu Items</span>
+            <span class="category-modal__item-description">
+              Browse every item in your menu
+            </span>
+          </div>
+
+          <span class="category-modal__item-count">
+            {{ totalItems() }}
+          </span>
+
+          @if (selectedCategory() === null) {
+            <i class="bi bi-check-circle-fill category-modal__check"></i>
+          }
+        </button>
+
+        @for (cat of filteredCategories(); track cat.id; let i = $index) {
+          <button
+            type="button"
+            class="category-modal__item"
+            [class.category-modal__item--selected]="selectedCategory()?.id === cat.id"
+            (click)="onModalCategorySelect(cat.id)"
+          >
+            <div class="category-modal__item-icon">
+              <i [class]="'bi ' + getCategoryIcon(i)"></i>
+            </div>
+
+            <div class="category-modal__item-info">
+              <span class="category-modal__item-name">{{ cat.name }}</span>
+              <span class="category-modal__item-description">
+                Menu category
+              </span>
+            </div>
+
+            <span class="category-modal__item-count">
+              {{ cat.itemCount }}
+            </span>
+
+            @if (selectedCategory()?.id === cat.id) {
+              <i class="bi bi-check-circle-fill category-modal__check"></i>
+            }
+          </button>
+        }
+
+        @if (filteredCategories().length === 0) {
+          <div class="category-modal__empty">
+            <div class="category-modal__empty-icon">
+              <i class="bi bi-search"></i>
+            </div>
+            <h3>No categories found</h3>
+            <p>Try searching with a different category name.</p>
+            <button
+              type="button"
+              (click)="categorySearch.set('')"
+            >
+              Clear Search
+            </button>
+          </div>
+        }
+
+      </div>
+
+      <!-- MODAL FOOTER -->
+      <div class="category-modal__footer">
+        <span>
+          <i class="bi bi-info-circle"></i>
+          Select a category to filter your menu
+        </span>
+
+        <button
+          type="button"
+          class="category-modal__done"
+          (click)="closeCategoryModal()"
+        >
+          Done
+          <i class="bi bi-check2"></i>
+        </button>
+      </div>
+
+    </section>
+  </div>
+}
+<!-- MENU FILTER TOOLBAR -->
+<section class="filter-bar mb-4">
+
+  <div class="filter-bar__main">
+    <div class="filter-search">
+      <i class="bi bi-search filter-search__icon"></i>
+
       <input
         type="text"
-        class="form-control filter-search-input rounded-2xl text-xs font-semibold ps-5 pe-4 py-2 border border-subtle bg-white"
+        class="filter-search-input"
         [value]="search()"
         (input)="onSearchInput($event)"
-        placeholder="Filter items by name..."
-        aria-label="Filter items by name"
+        placeholder="Search menu items..."
+        aria-label="Search menu items"
       />
+
       @if (search()) {
         <button
           type="button"
-          class="btn btn-sm btn-clear-search position-absolute text-muted p-1"
-          style="right: 0.5rem; top: 50%; transform: translateY(-50%);"
+          class="filter-search__clear"
           (click)="onClearSearch()"
           aria-label="Clear search"
         >
@@ -75,104 +257,114 @@
       }
     </div>
 
-    <div class="filter-divider d-none d-sm-block bg-subtle" style="width: 1px; height: 1.5rem;"></div>
+    <div class="filter-bar__divider"></div>
 
-    <!-- Diet / Tag Filters -->
-    <div class="d-flex flex-wrap align-items-center gap-1.5">
+    <div class="diet-filters">
       <button
         type="button"
-        class="diet-pill btn btn-sm rounded-xl text-xs font-bold smooth-transition"
+        class="diet-pill"
         [class.diet-pill--active]="activeDiet() === 'all'"
         (click)="onDietClick('all')"
       >
         All Items
       </button>
+
       <button
         type="button"
-        class="diet-pill btn btn-sm rounded-xl text-xs font-medium smooth-transition d-inline-flex align-items-center gap-1.5"
+        class="diet-pill"
         [class.diet-pill--active]="activeDiet() === 'veg'"
         (click)="onDietClick('veg')"
       >
-        <span class="diet-dot bg-success rounded-circle"></span>
-        <span>Veg</span>
+        <span class="diet-dot diet-dot--veg"></span>
+        Veg
       </button>
+
       <button
         type="button"
-        class="diet-pill btn btn-sm rounded-xl text-xs font-medium smooth-transition d-inline-flex align-items-center gap-1.5"
+        class="diet-pill"
         [class.diet-pill--active]="activeDiet() === 'nonveg'"
         (click)="onDietClick('nonveg')"
       >
-        <span class="diet-dot bg-danger rounded-circle"></span>
-        <span>Non-Veg</span>
+        <span class="diet-dot diet-dot--nonveg"></span>
+        Non-Veg
       </button>
+
       <button
         type="button"
-        class="diet-pill btn btn-sm rounded-xl text-xs font-medium smooth-transition d-inline-flex align-items-center gap-1.5"
+        class="diet-pill"
         [class.diet-pill--active]="activeDiet() === 'chef'"
         (click)="onDietClick('chef')"
       >
-        <i class="bi bi-star-fill text-amber" style="font-size: 0.75rem;"></i>
-        <span>Chef's Special</span>
+        <i class="bi bi-star-fill"></i>
+        Chef's Special
       </button>
+
       <button
         type="button"
-        class="diet-pill btn btn-sm rounded-xl text-xs font-medium smooth-transition d-inline-flex align-items-center gap-1.5"
+        class="diet-pill"
         [class.diet-pill--active]="activeDiet() === 'spicy'"
         (click)="onDietClick('spicy')"
       >
-        <i class="bi bi-fire text-danger" style="font-size: 0.75rem;"></i>
-        <span>Spicy</span>
+        <i class="bi bi-fire"></i>
+        Spicy
       </button>
     </div>
   </div>
 
-  <!-- Right: Availability Filter & Grid/List View Toggles -->
-  <div class="d-flex align-items-center justify-content-between justify-content-lg-end gap-2.5">
-    <!-- Availability Filter Dropdown -->
-    <select
-      class="form-select form-select-sm filter-availability-select rounded-xl text-xs font-bold border border-subtle bg-white px-3 py-2"
-      style="width: auto; min-width: 140px;"
-      [value]="availability()"
-      (change)="onAvailabilitySelect($any($event.target).value)"
-    >
-      <option value="all">All Statuses</option>
-      <option value="available">In Stock Only</option>
-      <option value="unavailable">Out of Stock Only</option>
-    </select>
+  <div class="filter-bar__controls">
+
+    <div class="availability-control">
+      <i class="bi bi-funnel"></i>
+      <select
+        class="filter-availability-select"
+        [value]="availability()"
+        (change)="onAvailabilitySelect($any($event.target).value)"
+        aria-label="Filter by availability"
+      >
+        <option value="all">All Statuses</option>
+        <option value="available">In Stock</option>
+        <option value="unavailable">Out of Stock</option>
+      </select>
+    </div>
 
     @if (activeFilterCount() > 0) {
       <button
         type="button"
-        class="btn btn-sm btn-outline-secondary rounded-xl text-xs font-bold px-3 py-1.5"
+        class="btn-clear-filters"
         (click)="onClearFilters()"
       >
-        Clear Filters
+        <i class="bi bi-x-circle"></i>
+        Clear
       </button>
     }
 
-    <!-- Grid vs List View Switcher -->
-    <div class="view-mode-switcher bg-white p-1 rounded-2xl border border-subtle shadow-2xs d-inline-flex align-items-center gap-1">
+    <div class="view-mode-switcher">
       <button
         type="button"
-        class="btn btn-sm view-mode-btn rounded-xl text-xs font-bold d-inline-flex align-items-center gap-1 px-2.5 py-1 smooth-transition"
+        class="view-mode-btn"
         [class.view-mode-btn--active]="viewMode() === 'grid'"
         (click)="onViewModeClick('grid')"
         title="Grid View"
+        aria-label="Grid view"
       >
         <i class="bi bi-grid-fill"></i>
-        <span class="d-none d-sm-inline">Grid</span>
+        <span>Grid</span>
       </button>
+
       <button
         type="button"
-        class="btn btn-sm view-mode-btn rounded-xl text-xs font-medium d-inline-flex align-items-center gap-1 px-2.5 py-1 smooth-transition"
+        class="view-mode-btn"
         [class.view-mode-btn--active]="viewMode() === 'list'"
         (click)="onViewModeClick('list')"
         title="List View"
+        aria-label="List view"
       >
         <i class="bi bi-list-ul"></i>
-        <span class="d-none d-sm-inline">List</span>
+        <span>List</span>
       </button>
     </div>
-  </div>
 
-</div>
+  </div>
+</section>
+
+
