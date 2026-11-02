@@ -78,7 +78,6 @@
     [readOnly]="isReadOnly()"
     [viewMode]="viewMode()"
     [activeDiet]="activeDiet()"
-    [reorderMode]="reorderMode()"
     (searchChange)="onSearchChange($event)"
     (categoryChange)="onCategoryChange($event)"
     (availabilityChange)="onAvailabilityChangeFromKey($event)"
@@ -86,8 +85,31 @@
     (create)="openCreateModal()"
     (viewModeChange)="onViewModeChange($event)"
     (dietChange)="onDietChange($event)"
-    (toggleReorder)="toggleReorderMode()"
   />
+
+  <!-- CATEGORY LIFECYCLE MANAGEMENT -->
+  @if (canViewCategory()) {
+    <app-menu-category-manager
+      [categories]="categories()"
+      [selectedCategoryId]="filter().categoryId"
+      [loading]="categoriesLoading()"
+      [readOnly]="isReadOnly()"
+      [canCreate]="canCreateCategory()"
+      [canUpdate]="canUpdateCategory()"
+      [canDelete]="canDeleteCategory()"
+      [canReorder]="canUpdateCategory()"
+      [pendingIds]="pendingCategoryIds()"
+      [reordering]="categoryReordering()"
+      [error]="categoryError()"
+      (create)="createCategory()"
+      (edit)="editCategory($event)"
+      (select)="onCategorySelectedFromManager($event)"
+      (toggleActive)="toggleCategoryActive($event)"
+      (delete)="openDeleteCategoryDialog($event)"
+      (moveUp)="moveCategory($event, 'up')"
+      (moveDown)="moveCategory($event, 'down')"
+    />
+  }
 
   <!-- MAIN LIST / STATES SECTION -->
   <section class="menu-management__states">
@@ -151,7 +173,7 @@
       </div>
     }
 
-    @if (pageState() === 'list' && menu(); as currentMenu) {
+    @if (pageState() === 'list' && !itemsLoading() && menu(); as currentMenu) {
       @if (isArchived()) {
         <div class="alert alert-warning rounded-2xl border border-warning-subtle text-xs d-flex align-items-center gap-2 mb-3 shadow-2xs" role="alert">
           <i class="bi bi-info-circle-fill text-warning"></i>
@@ -192,6 +214,7 @@
     [mode]="modalMode()"
     [item]="modalItem()"
     [categories]="categories()"
+    [defaultCategoryId]="filter().categoryId"
     (saved)="onItemSaved()"
     (cancelled)="closeModal()"
   />
@@ -199,8 +222,8 @@
   <!-- CONFIRM DELETE DIALOG -->
   <app-confirmation-dialog
     [open]="deleteOpen()"
-    [title]="'Delete item'"
-    [message]="deleteTarget() ? `Are you sure you want to delete &ldquo;${deleteTarget()!.name}&rdquo;?` : ''"
+    [title]="deleteDialogTitle()"
+    [message]="deleteDialogMessage()"
     [confirmLabel]="'Delete'"
     (confirmed)="confirmDelete()"
     (cancelled)="cancelDelete()"

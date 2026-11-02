@@ -31,7 +31,6 @@ export class MenuManagementToolbar {
   readonly readOnly = input<boolean>(false);
   readonly viewMode = input<'grid' | 'list'>('grid');
   readonly activeDiet = input<string>('all');
-  readonly reorderMode = input<boolean>(false);
 
   readonly searchChange = output<string>();
   readonly categoryChange = output<string | null>();
@@ -40,7 +39,6 @@ export class MenuManagementToolbar {
   readonly create = output<void>();
   readonly viewModeChange = output<'grid' | 'list'>();
   readonly dietChange = output<string>();
-  readonly toggleReorder = output<void>();
 
   protected readonly availabilityOptions: { value: Availability; label: string }[] = [
     { value: 'all', label: 'All statuses' },
@@ -75,10 +73,6 @@ export class MenuManagementToolbar {
 
   protected onViewModeClick(mode: 'grid' | 'list'): void {
     this.viewModeChange.emit(mode);
-  }
-
-  protected onToggleReorder(): void {
-    this.toggleReorder.emit();
   }
 
   protected getCategoryIcon(index: number): string {

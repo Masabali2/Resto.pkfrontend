@@ -269,16 +269,6 @@ export const routes: Routes = [
                 m => m.MenuManagement
               )
           },
-          {
-            path: ':menuId',
-            title: 'Menu — Resto.pk',
-            canActivate: [permissionGuard],
-            data: { permission: 'Menu.View' },
-            loadComponent: () =>
-              import('./features/menu/pages/menu-detail/menu-detail').then(
-                m => m.MenuDetail
-              )
-          },
         ],
       },
     ],

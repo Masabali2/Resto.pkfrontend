@@ -8,16 +8,6 @@
         Select a category to filter your menu items
       </p>
     </div>
-
-    <button
-      type="button"
-      class="btn-reorder"
-      [class.btn-reorder--active]="reorderMode()"
-      (click)="onToggleReorder()"
-    >
-      <i class="bi bi-arrow-down-up"></i>
-      <span>{{ reorderMode() ? 'Exit Reorder' : 'Reorder Categories' }}</span>
-    </button>
   </div>
 
   <div class="category-pills">
@@ -42,6 +32,8 @@
         type="button"
         class="category-pill"
         [class.category-pill--active]="selectedCategory()?.id === cat.id"
+        [class.category-pill--inactive]="!cat.isActive"
+        [attr.title]="cat.isActive ? cat.name : cat.name + ' (inactive)'"
         (click)="onCategorySelect(cat.id)"
       >
         <i [class]="'bi ' + getCategoryIcon(i)"></i>

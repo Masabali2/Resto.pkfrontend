@@ -1,3 +1,4 @@
+
 import {
   ChangeDetectionStrategy,
   Component,
@@ -5,6 +6,7 @@ import {
   input,
   output
 } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { MenuItemRow } from './menu-item-row';
 import type { MenuItemDto } from '../../models/menu-item.model';
 import { formatPrice } from '../../models/menu-price.util';
@@ -12,7 +14,7 @@ import { formatPrice } from '../../models/menu-price.util';
 @Component({
   selector: 'app-menu-item-list',
   standalone: true,
-  imports: [MenuItemRow],
+  imports: [MenuItemRow, DecimalPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './menu-item-list.html',
   styleUrl: './menu-item-list.css'
@@ -37,5 +39,10 @@ export class MenuItemList {
 
   protected isPending(itemId: string): boolean {
     return this.pendingIds().has(itemId);
+  }
+
+  protected itemListImageFallback(event: Event): void {
+    const image = event.currentTarget as HTMLImageElement;
+    image.style.display = 'none';
   }
 }

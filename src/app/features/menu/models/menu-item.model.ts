@@ -18,6 +18,8 @@ export interface MenuItemDto {
   updatedAt: string | null;
   categoryName: string | null;
   imageUrl: string | null;
+  averageRating?: number | null;
+reviewCount?: number;
 }
 
 /** Dashboard totals computed server-side in one aggregate query. */

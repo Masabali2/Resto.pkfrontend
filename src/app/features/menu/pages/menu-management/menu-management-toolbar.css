@@ -45,30 +45,6 @@
   font-size: 0.78rem;
 }
 
-.btn-reorder {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  min-height: 36px;
-  padding: 0.45rem 0.8rem;
-  border: 1px solid var(--toolbar-border);
-  border-radius: 0.65rem;
-  background: #fff;
-  color: var(--toolbar-text);
-  font-size: 0.78rem;
-  font-weight: 650;
-  white-space: nowrap;
-  transition: 0.2s ease;
-}
-
-.btn-reorder:hover,
-.btn-reorder--active {
-  color: var(--toolbar-primary-dark);
-  background: var(--toolbar-primary-soft);
-  border-color: #f7c4b3;
-}
-
 .category-pills {
   display: flex;
   align-items: center;
@@ -142,6 +118,16 @@
 .category-pill--active .category-pill__badge {
   background: #fbd9cd;
   color: var(--toolbar-primary-dark);
+}
+
+.category-pill--inactive {
+  border-style: dashed;
+  opacity: 0.78;
+}
+
+.category-pill--inactive > span:not(.category-pill__badge) {
+  text-decoration: line-through;
+  text-decoration-color: #cbd5e1;
 }
 
 /* FILTER TOOLBAR */
@@ -387,7 +373,6 @@
 /* ACCESSIBILITY */
 
 .category-pill:focus-visible,
-.btn-reorder:focus-visible,
 .diet-pill:focus-visible,
 .view-mode-btn:focus-visible,
 .btn-clear-filters:focus-visible,
@@ -424,10 +409,6 @@
   .category-strip__header {
     align-items: flex-start;
     flex-direction: column;
-  }
-
-  .btn-reorder {
-    width: 100%;
   }
 
   .filter-bar {
@@ -496,7 +477,6 @@
 @media (prefers-reduced-motion: reduce) {
   .category-pill,
   .diet-pill,
-  .btn-reorder,
   .view-mode-btn,
   .filter-search-input {
     transition: none;

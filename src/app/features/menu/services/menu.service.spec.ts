@@ -234,7 +234,8 @@ describe('MenuService', () => {
         description: null,
         currency: 'PKR',
         imageFileId: null,
-        displayOrder: 1
+        displayOrder: 1,
+        isAvailable: true
       }
     );
 
