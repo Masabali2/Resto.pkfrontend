@@ -17,17 +17,60 @@
     @if (viewMode() === 'grid') {
       <div class="item-list__grid">
         @for (item of items(); track item.id; let i = $index) {
-          <app-menu-item-row
-            [item]="item"
-            [canManage]="canManage()"
-            [canDelete]="canDelete()"
-            [readOnly]="readOnly()"
-            [pending]="isPending(item.id)"
+          <article
+            class="item-list__grid-card"
             [style.--card-index]="i"
-            (edit)="edit.emit($event)"
-            (delete)="delete.emit($event)"
-            (toggleAvailability)="toggleAvailability.emit($event)"
-          />
+          >
+            <div class="item-list__grid-card-content">
+              <app-menu-item-row
+                [item]="item"
+                [canManage]="canManage()"
+                [canDelete]="canDelete()"
+                [readOnly]="readOnly()"
+                [pending]="isPending(item.id)"
+                (edit)="edit.emit($event)"
+                (delete)="delete.emit($event)"
+                (toggleAvailability)="toggleAvailability.emit($event)"
+              />
+            </div>
+
+            <div class="item-list__grid-actions">
+              <span
+                class="item-list__grid-status"
+                [class.item-list__grid-status--available]="item.isAvailable"
+                [class.item-list__grid-status--unavailable]="!item.isAvailable"
+              >
+                <span class="item-list__grid-status-dot"></span>
+                {{ item.isAvailable ? 'Available' : 'Sold out' }}
+              </span>
+
+              <div class="item-list__grid-action-buttons">
+                <button
+                  type="button"
+                  class="item-list__grid-action item-list__grid-action--edit"
+                  [disabled]="!canManage() || readOnly() || isPending(item.id)"
+                  [attr.aria-label]="'Edit ' + item.name"
+                  title="Edit item"
+                  (click)="edit.emit(item)"
+                >
+                  <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                  <span>Edit</span>
+                </button>
+
+                <button
+                  type="button"
+                  class="item-list__grid-action item-list__grid-action--delete"
+                  [disabled]="!canDelete() || readOnly() || isPending(item.id)"
+                  [attr.aria-label]="'Delete ' + item.name"
+                  title="Delete item"
+                  (click)="delete.emit(item)"
+                >
+                  <i class="bi bi-trash3" aria-hidden="true"></i>
+                  <span>Delete</span>
+                </button>
+              </div>
+            </div>
+          </article>
         }
       </div>
     }
@@ -106,8 +149,8 @@
                         </span>
 
                         <span class="item-list__review-count">
-                          {{ item.reviewCount ?? 0 }}
-                          {{ (item.reviewCount ?? 0) === 1 ? 'review' : 'reviews' }}
+                          {{ item.reviewCount }}
+                          {{ item.reviewCount === 1 ? 'review' : 'reviews' }}
                         </span>
                       </div>
                     } @else {
@@ -149,7 +192,7 @@
                       <button
                         type="button"
                         class="item-list__action"
-                        [disabled]="!canManage() || readOnly()"
+                        [disabled]="!canManage() || readOnly() || isPending(item.id)"
                         title="Edit item"
                         [attr.aria-label]="'Edit ' + item.name"
                         (click)="edit.emit(item)"
@@ -160,7 +203,7 @@
                       <button
                         type="button"
                         class="item-list__action item-list__action--delete"
-                        [disabled]="!canDelete() || readOnly()"
+                        [disabled]="!canDelete() || readOnly() || isPending(item.id)"
                         title="Delete item"
                         [attr.aria-label]="'Delete ' + item.name"
                         (click)="delete.emit(item)"

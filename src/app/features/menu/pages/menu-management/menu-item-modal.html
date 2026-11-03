@@ -1,186 +1,285 @@
+
 <div
   class="modal-overlay modal-backdrop-blur"
   [class.show]="open()"
   role="dialog"
   aria-modal="true"
-  aria-label="Item details"
+  aria-labelledby="menu-item-modal-title"
   (click)="onBackdropClick($event)"
 >
-  <div class="modal-dialog bg-white rounded-3xl shadow-2xl border border-subtle overflow-hidden" [class.show]="open()" (click)="$event.stopPropagation()">
-    
-    <!-- Modal Header -->
-    <div class="modal__header bg-surface-soft border-bottom border-subtle px-4 py-3 d-flex align-items-center justify-content-between">
+  <div
+    class="menu-item-modal__dialog bg-white rounded-3xl shadow-2xl border border-subtle overflow-hidden"
+    [class.show]="open()"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="modal__header px-4 py-3 d-flex align-items-center justify-content-between">
       <div class="modal__header-content">
-        <h3 class="modal__title text-base font-bold text-dark m-0">{{ pageTitle() }}</h3>
-        <p class="modal__subtitle text-xs text-muted m-0 mt-0.5">
-          @if (isEdit()) { Configure details, pricing, and image for {{ item()?.name }} }
-          @else { Create food item details, pricing, tags, and image. }
+        <div class="modal__eyebrow">
+          <span class="modal__eyebrow-dot"></span>
+          MENU MANAGEMENT
+        </div>
+
+        <h3
+          id="menu-item-modal-title"
+          class="modal__title text-base font-bold text-dark m-0"
+        >
+          {{ pageTitle() }}
+        </h3>
+
+        <p class="modal__subtitle text-xs text-muted m-0 mt-1">
+          @if (isEdit()) {
+            Update details, pricing and presentation of
+            {{ item()?.name }}.
+          } @else {
+            Create a food item and configure its menu information.
+          }
         </p>
       </div>
+
       <button
         type="button"
-        class="btn btn-sm btn-close-modal rounded-circle d-flex align-items-center justify-center bg-white border border-subtle text-muted hover:text-dark p-0"
-        style="width: 32px; height: 32px;"
+        class="btn btn-close-modal rounded-circle d-flex align-items-center justify-content-center"
         (click)="onCancel()"
-        aria-label="Close"
+        aria-label="Close modal"
       >
-        <i class="bi bi-x-lg" style="font-size: 0.85rem;"></i>
+        <i class="bi bi-x-lg"></i>
       </button>
     </div>
 
-    <!-- Modal Tabs -->
-    <div class="modal__tabs d-flex border-bottom border-subtle bg-white px-3">
+    <div
+      class="modal__tabs d-flex"
+      role="tablist"
+      aria-label="Food item configuration sections"
+    >
       <button
         type="button"
-        class="modal__tab btn text-xs font-bold py-2.5 px-3 border-bottom border-2 rounded-0 smooth-transition"
-        [class.border-orange]="activeTab() === 'basic'"
-        [class.text-orange]="activeTab() === 'basic'"
-        [class.border-transparent]="activeTab() !== 'basic'"
-        [class.text-muted]="activeTab() !== 'basic'"
+        id="tab-basic"
+        role="tab"
+        class="modal__tab"
+        [class.active]="activeTab() === 'basic'"
+        [attr.aria-selected]="activeTab() === 'basic'"
+        aria-controls="panel-basic"
+        [attr.tabindex]="activeTab() === 'basic' ? 0 : -1"
         (click)="switchTab('basic')"
       >
-        1. Basic Details
+        <span class="modal__tab-number">01</span>
+        <i class="bi bi-card-text"></i>
+        <span>Basic Details</span>
       </button>
+
       <button
         type="button"
-        class="modal__tab btn text-xs font-bold py-2.5 px-3 border-bottom border-2 rounded-0 smooth-transition"
-        [class.border-orange]="activeTab() === 'pricing'"
-        [class.text-orange]="activeTab() === 'pricing'"
-        [class.border-transparent]="activeTab() !== 'pricing'"
-        [class.text-muted]="activeTab() !== 'pricing'"
+        id="tab-pricing"
+        role="tab"
+        class="modal__tab"
+        [class.active]="activeTab() === 'pricing'"
+        [attr.aria-selected]="activeTab() === 'pricing'"
+        aria-controls="panel-pricing"
+        [attr.tabindex]="activeTab() === 'pricing' ? 0 : -1"
         (click)="switchTab('pricing')"
       >
-        2. Pricing &amp; Order
+        <span class="modal__tab-number">02</span>
+        <i class="bi bi-currency-rupee"></i>
+        <span>Pricing & Order</span>
       </button>
+
       <button
         type="button"
-        class="modal__tab btn text-xs font-bold py-2.5 px-3 border-bottom border-2 rounded-0 smooth-transition"
-        [class.border-orange]="activeTab() === 'addons'"
-        [class.text-orange]="activeTab() === 'addons'"
-        [class.border-transparent]="activeTab() !== 'addons'"
-        [class.text-muted]="activeTab() !== 'addons'"
+        id="tab-addons"
+        role="tab"
+        class="modal__tab"
+        [class.active]="activeTab() === 'addons'"
+        [attr.aria-selected]="activeTab() === 'addons'"
+        aria-controls="panel-addons"
+        [attr.tabindex]="activeTab() === 'addons' ? 0 : -1"
         (click)="switchTab('addons')"
       >
-        3. Stock &amp; Badges
+        <span class="modal__tab-number">03</span>
+        <i class="bi bi-box-seam"></i>
+        <span>Stock & Badges</span>
       </button>
     </div>
 
-    <!-- Modal Body / Form -->
-    <div class="modal__body p-4">
-      <form [formGroup]="form" (ngSubmit)="submit()" class="d-flex flex-column gap-3">
-
+    <div class="modal__body">
+      <form
+        [formGroup]="form"
+        (ngSubmit)="submit()"
+        class="modal__form"
+      >
         @if (loading()) {
-          <div class="d-flex flex-column align-items-center justify-content-center py-5">
+          <div class="modal__loading">
             <app-loading-spinner />
-            <span class="text-xs text-muted mt-2">Loading item details&hellip;</span>
+            <span>Loading item details...</span>
           </div>
         }
 
         @if (!loading()) {
 
-          <!-- TAB 1: BASIC DETAILS -->
-          <div [hidden]="activeTab() !== 'basic'" class="tab-pane d-flex flex-column gap-3">
+          <div
+            id="panel-basic"
+            role="tabpanel"
+            aria-labelledby="tab-basic"
+            [attr.aria-hidden]="activeTab() !== 'basic'"
+            [hidden]="activeTab() !== 'basic'"
+            class="tab-pane"
+          >
+            <div class="section-heading">
+              <div class="section-heading__icon">
+                <i class="bi bi-card-text"></i>
+              </div>
+
+              <div>
+                <h4>Basic Information</h4>
+                <p>Provide the essential details of your food item.</p>
+              </div>
+            </div>
+
             <div class="row g-3">
               <div class="col-12" [class.col-sm-6]="!isEdit()">
-                <label for="modal-name" class="form-label text-xs font-bold text-dark mb-1">
+                <label for="modal-name" class="form-label">
                   Food Item Name <span class="text-danger">*</span>
                 </label>
+
                 <input
                   id="modal-name"
                   type="text"
                   formControlName="name"
                   maxlength="150"
                   placeholder="e.g. Gourmet Smoked Beef Burger"
-                  class="form-control rounded-xl text-xs font-semibold px-3 py-2 border border-subtle bg-surface-soft"
+                  class="form-control modal-input"
                   [class.is-invalid]="showFieldError('name')"
                 />
+
                 @if (showFieldError('name')) {
-                  <div class="text-danger text-10px font-bold mt-1">{{ getFieldError('name') }}</div>
+                  <div class="field-error">
+                    {{ getFieldError('name') }}
+                  </div>
                 }
               </div>
 
               @if (!isEdit()) {
                 <div class="col-12 col-sm-6">
-                  <label for="modal-category" class="form-label text-xs font-bold text-dark mb-1">
+                  <label for="modal-category" class="form-label">
                     Category <span class="text-danger">*</span>
                   </label>
+
                   <select
                     id="modal-category"
                     formControlName="categoryId"
-                    class="form-select rounded-xl text-xs font-semibold px-3 py-2 border border-subtle bg-surface-soft"
+                    class="form-select modal-input"
                     [class.is-invalid]="showFieldError('categoryId')"
                   >
                     <option value="">Select a category</option>
+
                     @for (cat of categories(); track cat.id) {
-                      <option [value]="cat.id">{{ cat.name }}</option>
+                      <option [value]="cat.id">
+                        {{ cat.name }}
+                      </option>
                     }
                   </select>
+
                   @if (showFieldError('categoryId')) {
-                    <div class="text-danger text-10px font-bold mt-1">{{ getFieldError('categoryId') }}</div>
+                    <div class="field-error">
+                      {{ getFieldError('categoryId') }}
+                    </div>
                   }
                 </div>
               }
             </div>
 
-            <div>
-              <label for="modal-description" class="form-label text-xs font-bold text-dark mb-1">
+            <div class="form-section">
+              <label for="modal-description" class="form-label">
                 Description
+                <span class="optional-label">Optional</span>
               </label>
+
               <textarea
                 id="modal-description"
                 formControlName="description"
                 maxlength="1000"
                 rows="3"
                 placeholder="Describe ingredients, taste profile, and serving recommendation..."
-                class="form-control rounded-xl text-xs font-semibold px-3 py-2 border border-subtle bg-surface-soft"
+                class="form-control modal-input modal-textarea"
                 [class.is-invalid]="showFieldError('description')"
               ></textarea>
+
               @if (showFieldError('description')) {
-                <div class="text-danger text-10px font-bold mt-1">{{ getFieldError('description') }}</div>
+                <div class="field-error">
+                  {{ getFieldError('description') }}
+                </div>
               }
-              <div class="text-10px text-muted mt-1">Up to 1000 characters.</div>
+
+              <div class="field-hint">
+                <i class="bi bi-info-circle"></i>
+                Up to 1000 characters.
+              </div>
             </div>
 
-            <!-- Image Upload Box -->
-            <div class="p-3 bg-surface-soft rounded-2xl border border-subtle">
-              <label class="form-label text-xs font-bold text-dark mb-1 d-block">Item Photo</label>
+            <div class="image-upload-section">
+              <div class="image-upload-section__header">
+                <div class="section-heading__icon">
+                  <i class="bi bi-image"></i>
+                </div>
+
+                <div>
+                  <h4>Item Photography</h4>
+                  <p>Upload an image to make your food item stand out.</p>
+                </div>
+              </div>
+
               <app-image-upload
                 id="modal-image"
                 label="Upload food item photo"
                 hint="JPEG, PNG or WebP, up to 5 MiB."
                 [destination]="uploadDestination()"
-                [disabled]="!uploadDestination()"
+                [disabled]="!uploadDestination() || imageUploading()"
                 (uploaded)="onImageUploaded($event)"
               ></app-image-upload>
 
               @if (imageUploading()) {
-                <p class="text-10px text-orange mt-1"><i class="bi bi-hourglass-split"></i> Attaching image&hellip;</p>
+                <div class="upload-status">
+                  <app-loading-spinner [size]="14" />
+                  <span>Attaching image...</span>
+                </div>
               }
+
               @if (imageError()) {
-                <p class="text-10px text-danger mt-1">{{ imageError() }}</p>
+                <div class="image-error" role="alert">
+                  <i class="bi bi-exclamation-circle"></i>
+                  {{ imageError() }}
+                </div>
               }
 
               @if (itemImageFileId(); as assetId) {
-                <div class="d-flex align-items-center gap-3 mt-2 p-2 bg-white rounded-xl border border-subtle">
+                <div class="image-preview">
                   <img
-                    class="rounded-xl object-cover"
-                    style="width: 54px; height: 54px;"
+                    class="image-preview__image"
                     [src]="imagePreviewUrl()"
-                    [alt]="item()?.name + ' image'"
+                    [alt]="item()?.name || 'Food item image'"
                     loading="lazy"
                   />
-                  <div class="flex-grow-1">
-                    <span class="text-xs font-bold text-dark d-block">Photo attached</span>
-                    <span class="text-10px text-muted">Ready on live menu</span>
+
+                  <div class="image-preview__content">
+                    <span class="image-preview__title">
+                      <i class="bi bi-check-circle-fill"></i>
+                      Photo attached
+                    </span>
+
+                    <span class="image-preview__subtitle">
+                      Image successfully attached to this item.
+                    </span>
                   </div>
+
                   @if (isEdit()) {
                     <button
                       type="button"
-                      class="btn btn-sm btn-outline-danger text-xs font-bold px-2 py-1"
+                      class="btn-remove-image"
                       (click)="clearImage()"
                       [disabled]="imageUploading()"
+                      aria-label="Remove item image"
                     >
-                      <i class="bi bi-trash3"></i> Remove
+                      <i class="bi bi-trash3"></i>
+                      <span>Remove</span>
                     </button>
                   }
                 </div>
@@ -188,103 +287,183 @@
             </div>
           </div>
 
-          <!-- TAB 2: PRICING & ORDER -->
-          <div [hidden]="activeTab() !== 'pricing'" class="tab-pane d-flex flex-column gap-3">
+          <div
+            id="panel-pricing"
+            role="tabpanel"
+            aria-labelledby="tab-pricing"
+            [attr.aria-hidden]="activeTab() !== 'pricing'"
+            [hidden]="activeTab() !== 'pricing'"
+            class="tab-pane"
+          >
+            <div class="section-heading">
+              <div class="section-heading__icon">
+                <i class="bi bi-currency-rupee"></i>
+              </div>
+
+              <div>
+                <h4>Pricing & Display</h4>
+                <p>Configure the selling price and menu position.</p>
+              </div>
+            </div>
+
             <div class="row g-3">
               <div class="col-12 col-sm-6">
-                <label for="modal-price" class="form-label text-xs font-bold text-dark mb-1">
+                <label for="modal-price" class="form-label">
                   Base Price (PKR) <span class="text-danger">*</span>
                 </label>
-                <div class="input-group">
-                  <span class="input-group-text rounded-start-xl bg-white border border-end-0 border-subtle text-xs font-bold text-muted">Rs.</span>
+
+                <div class="input-group modal-price-group">
+                  <span class="input-group-text">Rs.</span>
+
                   <input
                     id="modal-price"
                     type="text"
                     inputmode="decimal"
                     formControlName="price"
                     placeholder="1290"
-                    class="form-control rounded-end-xl text-xs font-semibold px-3 py-2 border border-subtle bg-surface-soft"
+                    class="form-control modal-input"
                     [class.is-invalid]="showFieldError('price')"
                   />
                 </div>
+
                 @if (showFieldError('price')) {
-                  <div class="text-danger text-10px font-bold mt-1">{{ getFieldError('price') }}</div>
+                  <div class="field-error">
+                    {{ getFieldError('price') }}
+                  </div>
                 }
-                <div class="text-10px text-muted mt-1">Non-negative, up to 2 decimal places.</div>
+
+                <div class="field-hint">
+                  Non-negative, up to 2 decimal places.
+                </div>
               </div>
 
               <div class="col-12 col-sm-6">
-                <label for="modal-displayOrder" class="form-label text-xs font-bold text-dark mb-1">
+                <label for="modal-displayOrder" class="form-label">
                   Display Order
+                  <span class="optional-label">Optional</span>
                 </label>
+
                 <input
                   id="modal-displayOrder"
                   type="text"
                   inputmode="numeric"
                   formControlName="displayOrder"
                   placeholder="0, 1, 2..."
-                  class="form-control rounded-xl text-xs font-semibold px-3 py-2 border border-subtle bg-surface-soft"
+                  class="form-control modal-input"
                   [class.is-invalid]="showFieldError('displayOrder')"
                 />
+
                 @if (showFieldError('displayOrder')) {
-                  <div class="text-danger text-10px font-bold mt-1">{{ getFieldError('displayOrder') }}</div>
+                  <div class="field-error">
+                    {{ getFieldError('displayOrder') }}
+                  </div>
                 }
-                <div class="text-10px text-muted mt-1">Items appear in ascending display order on menu.</div>
+
+                <div class="field-hint">
+                  Items appear in ascending display order on the menu.
+                </div>
               </div>
             </div>
 
-            <!-- Portions / Serving Info Note -->
-            <div class="p-3 bg-surface-soft rounded-2xl border border-subtle">
-              <div class="d-flex align-items-center gap-2 mb-1">
-                <i class="bi bi-info-circle text-orange"></i>
-                <span class="text-xs font-bold text-dark">Portions &amp; Serving</span>
+            <div class="information-card">
+              <div class="information-card__icon">
+                <i class="bi bi-info-circle"></i>
               </div>
-              <p class="text-10px text-muted m-0">
-                Item pricing is configured per base portion. Modifiers and variants can be supplemented through add-ons.
-              </p>
+
+              <div>
+                <h4>Portions & Serving</h4>
+                <p>
+                  Item pricing is configured per base portion.
+                  Modifiers and variants can be supplemented through add-ons.
+                </p>
+              </div>
             </div>
           </div>
 
-          <!-- TAB 3: STOCK & BADGES -->
-          <div [hidden]="activeTab() !== 'addons'" class="tab-pane d-flex flex-column gap-3">
-            <div class="p-3 bg-surface-soft rounded-2xl border border-subtle d-flex align-items-center justify-content-between">
-              <div>
-                <span class="text-xs font-bold text-dark d-block">Available In Stock</span>
-                <span class="text-10px text-muted">When toggled off, customers cannot order this item.</span>
+          <div
+            id="panel-addons"
+            role="tabpanel"
+            aria-labelledby="tab-addons"
+            [attr.aria-hidden]="activeTab() !== 'addons'"
+            [hidden]="activeTab() !== 'addons'"
+            class="tab-pane"
+          >
+            <div class="section-heading">
+              <div class="section-heading__icon">
+                <i class="bi bi-box-seam"></i>
               </div>
-              <label class="toggle-switch m-0">
-                <input type="checkbox" formControlName="isAvailable" />
+
+              <div>
+                <h4>Availability & Attributes</h4>
+                <p>Manage item availability and its presentation.</p>
+              </div>
+            </div>
+
+            <div class="availability-card">
+              <div class="availability-card__content">
+                <div class="availability-card__icon">
+                  <i class="bi bi-shop"></i>
+                </div>
+
+                <div>
+                  <h4>Available In Stock</h4>
+                  <p>
+                    When disabled, customers cannot order this item.
+                  </p>
+                </div>
+              </div>
+
+              <label class="toggle-switch">
+                <input
+                  type="checkbox"
+                  formControlName="isAvailable"
+                  aria-label="Item availability"
+                />
                 <span class="toggle-slider"></span>
               </label>
             </div>
 
-            <div class="p-3 bg-white rounded-2xl border border-subtle">
-              <span class="text-xs font-bold text-dark d-block mb-2">Item Dietary Attributes</span>
+            <div class="attributes-card">
+              <div class="attributes-card__header">
+                <i class="bi bi-stars"></i>
+                <span>Item Dietary Attributes</span>
+              </div>
+
               <div class="d-flex flex-wrap gap-2">
-                <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1.5 rounded-pill text-xs font-semibold">
-                  <i class="bi bi-circle-fill text-success me-1" style="font-size: 0.5rem;"></i> Freshly Prepared
+                <span class="attribute-badge attribute-badge--success">
+                  <i class="bi bi-circle-fill"></i>
+                  Freshly Prepared
                 </span>
-                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2.5 py-1.5 rounded-pill text-xs font-semibold">
-                  <i class="bi bi-star-fill text-warning me-1"></i> Chef's Choice
+
+                <span class="attribute-badge attribute-badge--warning">
+                  <i class="bi bi-star-fill"></i>
+                  Chef's Choice
                 </span>
-                <span class="badge bg-light text-dark border px-2.5 py-1.5 rounded-pill text-xs font-semibold">
-                  <i class="bi bi-clock me-1"></i> Fast Prep (15m)
+
+                <span class="attribute-badge attribute-badge--neutral">
+                  <i class="bi bi-clock"></i>
+                  Fast Prep (15m)
                 </span>
               </div>
+
+              <p class="attributes-card__note">
+                <i class="bi bi-info-circle"></i>
+                These are currently display-only labels.
+              </p>
             </div>
           </div>
 
           @if (generalError()) {
-            <div class="alert alert-danger rounded-2xl text-xs py-2.5 px-3 mb-0" role="alert">
-              <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ generalError() }}
+            <div class="modal-error" role="alert">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              <span>{{ generalError() }}</span>
             </div>
           }
 
-          <!-- Footer Actions -->
-          <div class="modal__footer pt-3 border-top border-subtle d-flex align-items-center justify-content-between mt-2">
+          <div class="modal__footer">
             <button
               type="button"
-              class="btn btn-outline-secondary rounded-2xl text-xs font-bold px-4 py-2"
+              class="btn-cancel"
               (click)="onCancel()"
             >
               Cancel
@@ -292,22 +471,31 @@
 
             <button
               type="submit"
-              class="btn btn-save-modal rounded-2xl text-xs font-bold px-4 py-2.5 text-white d-flex align-items-center gap-1.5 shadow-sm smooth-transition active:scale-95"
-              [disabled]="submitting() || (!isEdit() && createdItemId() && imageUploading())"
+              class="btn-save-modal"
+              [disabled]="
+                submitting() ||
+                imageUploading() ||
+                (createdItemId() !== null && imageUploading())
+              "
             >
               @if (submitting()) {
                 <app-loading-spinner [size]="14" />
-                <span>Saving&hellip;</span>
+                <span>Saving...</span>
               } @else {
                 <i class="bi bi-check2-circle"></i>
-                <span>{{ isEdit() ? 'Save Changes' : (createdItemId() ? 'Done' : 'Save Food Item') }}</span>
+
+                <span>
+                  {{
+                    isEdit()
+                      ? 'Save Changes'
+                      : (createdItemId() ? 'Done' : 'Save Food Item')
+                  }}
+                </span>
               }
             </button>
           </div>
-
         }
       </form>
     </div>
-
   </div>
 </div>
