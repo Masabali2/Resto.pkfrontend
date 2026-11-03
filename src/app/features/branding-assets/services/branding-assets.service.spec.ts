@@ -40,7 +40,7 @@ describe('BrandingAssetsService', () => {
       fileId: 'file-abc',
       createdAt: '2026-01-01T00:00:00Z',
       updatedAt: '2026-01-01T00:00:00Z',
-      url: '/api/v1/files/file-abc?exp=3600'
+      url: '/api/v1/files/file-abc'
     };
 
     let result: unknown;
@@ -68,7 +68,7 @@ describe('BrandingAssetsService', () => {
       contentType: 'image/png',
       fileSize: 1234,
       storageKey: 'file-abc',
-      previewUrl: `${API_ORIGIN}/api/v1/files/file-abc?exp=3600`,
+      previewUrl: `${API_ORIGIN}/api/v1/files/file-abc`,
       created: '2026-01-01T00:00:00Z',
       isReferenced: false
     });
@@ -80,7 +80,7 @@ describe('BrandingAssetsService', () => {
       {
         id: 'a1', assetType: 'Logo', fileName: 'logo.png', contentType: 'image/png',
         fileSize: 100, fileId: 'f1', createdAt: '2026-01-01T00:00:00Z',
-        updatedAt: '2026-01-01T00:00:00Z', url: `${API_ORIGIN}/api/v1/files/f1?exp=3600`
+        updatedAt: '2026-01-01T00:00:00Z', url: '/api/v1/files/f1'
       }
     ];
 
@@ -99,7 +99,7 @@ describe('BrandingAssetsService', () => {
         contentType: 'image/png',
         fileSize: 100,
         storageKey: 'f1',
-        previewUrl: `${API_ORIGIN}/api/v1/files/f1?exp=3600`,
+        previewUrl: `${API_ORIGIN}/api/v1/files/f1`,
         created: '2026-01-01T00:00:00Z',
         isReferenced: false
       }
