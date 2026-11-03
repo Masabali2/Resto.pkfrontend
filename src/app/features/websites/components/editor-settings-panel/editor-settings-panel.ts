@@ -17,6 +17,7 @@ import type {
   UploadDestination,
   WebsiteSectionDestination
 } from '../../models/image-upload.model';
+import { environment } from '../../../../../environments/environment';
 
 export type ThemeChange =
   | { kind: 'color'; field: ThemeColorField; value: string }
@@ -68,6 +69,7 @@ interface AccordionSection {
   imports: [ImageUploadComponent]
 })
 export class EditorSettingsPanel {
+  protected readonly apiUrl = environment.apiUrl;
   readonly config = input.required<WebsiteConfig>();
   readonly restaurant = input<RestaurantDto | null>(null);
   /** Website id used to build the server-authorized upload destination. */
@@ -306,7 +308,7 @@ protected onLogoImageUploaded(result: AssetUploadResult): void {
 
   protected getTemplateImageUrl(template: WebsiteTemplateCatalogueItem): string | null {
     return template.template.previewImageFileId
-      ? `/api/v1/files/${template.template.previewImageFileId}`
+      ? `${this.apiUrl}/v1/files/${template.template.previewImageFileId}`
       : null;
   }
 

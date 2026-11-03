@@ -10,6 +10,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs';
 import { MenuService } from '../../services/menu.service';
+import { resolveAssetUrl } from '../../../../core/utils/asset-url.util';
 import { AuthorizationService } from '../../../../core/services/authorization.service';
 import { TenantContextService } from '../../../../core/services/tenant-context.service';
 import { HttpErrorHandlerService } from '../../../../core/services/http-error-handler.service';
@@ -881,7 +882,7 @@ export class MenuManagement {
   }
 
   protected imageUrlFor(item: MenuItemDto): string {
-    return item.imageUrl || 'https://placehold.co/400x300/f8fafc/64748b?text=Image';
+    return resolveAssetUrl(item.imageUrl) || 'https://placehold.co/400x300/f8fafc/64748b?text=Image';
   }
 
   protected categoryNameFor(item: MenuItemDto): string {
@@ -903,7 +904,7 @@ export class MenuManagement {
   }
 
   protected previewImageUrlFor(item: MenuItemDto): string {
-    return item.imageUrl || 'https://placehold.co/400x300/f8fafc/64748b?text=Image';
+    return resolveAssetUrl(item.imageUrl) || 'https://placehold.co/400x300/f8fafc/64748b?text=Image';
   }
 
   protected previewPriceFor(item: MenuItemDto): string {

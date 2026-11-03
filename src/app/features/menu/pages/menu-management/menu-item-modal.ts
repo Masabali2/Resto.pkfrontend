@@ -16,6 +16,7 @@ import {
 } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { MenuService } from '../../services/menu.service';
+import { resolveAssetUrl } from '../../../../core/utils/asset-url.util';
 import { HttpErrorHandlerService } from '../../../../core/services/http-error-handler.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
@@ -191,7 +192,7 @@ export class MenuItemModal {
           const data = response.data;
 
           this.itemImageFileId.set(data.imageFileId ?? null);
-          this.itemImageUrl.set(data.imageUrl ?? null);
+          this.itemImageUrl.set(resolveAssetUrl(data.imageUrl));
 
           this.form.patchValue({
             name: data.name,
@@ -384,12 +385,12 @@ export class MenuItemModal {
 
           if (this.isEdit()) {
             this.itemImageFileId.set(data.imageFileId ?? null);
-            this.itemImageUrl.set(data.imageUrl ?? null);
+            this.itemImageUrl.set(resolveAssetUrl(data.imageUrl));
             this.closeAndSave();
           } else {
             this.createdItemId.set(data.id);
             this.itemImageFileId.set(data.imageFileId ?? null);
-            this.itemImageUrl.set(data.imageUrl ?? null);
+            this.itemImageUrl.set(resolveAssetUrl(data.imageUrl));
           }
         },
         error: error => {
@@ -502,7 +503,7 @@ export class MenuItemModal {
             );
 
             this.itemImageUrl.set(
-              response.data.imageUrl ?? null
+              resolveAssetUrl(response.data.imageUrl)
             );
 
             this.imageError.set('');

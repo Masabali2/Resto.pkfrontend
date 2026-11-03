@@ -70,7 +70,7 @@
                       <div class="image-reference">
                         <img
                           class="image-reference__thumb"
-                          [src]="'/api/v1/files/' + assetId"
+                          [src]="apiUrl + '/v1/files/' + assetId"
                           [alt]="hero.settings?.['heading'] ?? 'Hero image'"
                           loading="lazy"
                         />
@@ -182,7 +182,7 @@
                     >
                       <div class="dish-image">
                         @if (item.imageFileId) {
-                          <img [src]="'/api/v1/files/' + item.imageFileId" [alt]="item.name" />
+                          <img [src]="apiUrl + '/v1/files/' + item.imageFileId" [alt]="item.name" />
                         } @else {
                           <span class="dish-placeholder">🍽️</span>
                         }
@@ -338,7 +338,7 @@
                     <div class="image-reference">
                       <img
                         class="image-reference__thumb"
-                        [src]="'/api/v1/files/' + assetId"
+                        [src]="apiUrl + '/v1/files/' + assetId"
                         [alt]="about.settings?.['heading'] ?? 'About image'"
                         loading="lazy"
                       />
@@ -374,7 +374,7 @@
                           <div class="image-reference">
                             <img
                               class="image-reference__thumb"
-                              [src]="'/api/v1/files/' + assetId"
+                              [src]="apiUrl + '/v1/files/' + assetId"
                               [alt]="'Gallery image ' + (assetIds.indexOf(assetId) + 1)"
                               loading="lazy"
                             />
@@ -410,7 +410,7 @@
                   <div class="image-reference">
                     <img
                       class="image-reference__thumb"
-                      [src]="'/api/v1/files/' + logoAssetId"
+                      [src]="apiUrl + '/v1/files/' + logoAssetId"
                       [alt]="restaurant()?.name ?? 'Restaurant logo'"
                       loading="lazy"
                     />

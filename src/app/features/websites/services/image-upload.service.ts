@@ -10,6 +10,14 @@ import type {
   UploadImageRequest
 } from '../models/image-upload.model';
 
+const API_ORIGIN = new URL(environment.apiUrl).origin;
+
+function resolvePreviewUrl(previewUrl: string | null | undefined): string | null {
+  if (!previewUrl) return null;
+  if (/^https?:\/\//i.test(previewUrl)) return previewUrl;
+  return API_ORIGIN + previewUrl;
+}
+
 /**
  * Context-aware image upload API. The destination (not a user-chosen role)
  * determines how the file is associated. Tenant id is never sent by the
@@ -40,7 +48,10 @@ export class ImageUploadService {
         if (!response.success || !response.data) {
           throw new Error(response.message ?? 'The image could not be uploaded.');
         }
-        return response.data;
+        return {
+          ...response.data,
+          previewUrl: resolvePreviewUrl(response.data.previewUrl)
+        };
       }),
       catchError(error => {
         const backendMessage = error instanceof HttpErrorResponse

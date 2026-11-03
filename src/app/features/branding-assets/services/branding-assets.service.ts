@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
+import { resolveAssetUrl } from '../../../core/utils/asset-url.util';
 import { WebsiteService } from '../../websites/services/website.service';
 import type { ApiResponse } from '../../../core/models/api-response.model';
 import type {
@@ -101,7 +102,7 @@ export class BrandingAssetsService {
             contentType: dto.contentType,
             fileSize: dto.fileSize,
             storageKey: dto.fileId,
-            previewUrl: this.assetUrl(dto.url),
+            previewUrl: resolveAssetUrl(dto.url),
             created: dto.createdAt,
             isReferenced: false
           } as BrandingAsset;
@@ -131,7 +132,7 @@ export class BrandingAssetsService {
             contentType: dto.contentType,
             fileSize: dto.fileSize,
             storageKey: dto.fileId,
-            previewUrl: this.assetUrl(dto.url),
+            previewUrl: resolveAssetUrl(dto.url),
             created: dto.createdAt,
             isReferenced: false
           }));

@@ -133,7 +133,7 @@
           <div class="image-reference" style="margin-top: 0.5rem;">
             <img
               class="image-reference__thumb"
-              [src]="'/api/v1/files/' + assetId"
+              [src]="apiUrl + '/v1/files/' + assetId"
               [alt]="form.controls.name.value + ' image'"
               loading="lazy"
             />
