@@ -21,7 +21,8 @@ export const BRANDING_ASSET_TYPES: readonly BrandingAssetType[] = [
 
 /**
  * A single stored asset returned by the backend.
- * `previewUrl` is the publicly accessible delivery URL for the asset.
+ * `fileId` is the immutable file metadata id used to build `previewUrl`.
+ * The storage key stays server-side and is never part of the public URL.
  */
 export interface BrandingAsset {
   id: string;
@@ -29,7 +30,7 @@ export interface BrandingAsset {
   fileName: string;
   contentType: string;
   fileSize: number;
-  storageKey: string;
+  fileId: string;
   previewUrl: string | null;
   created: string;
   isReferenced: boolean;

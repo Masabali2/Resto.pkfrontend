@@ -186,7 +186,7 @@ export class AssetManagement {
             fileName: result.fileName,
             contentType: result.contentType,
             fileSize: result.fileSize,
-            storageKey: result.storageKey,
+            fileId: result.fileId,
             previewUrl: result.previewUrl,
             created: result.created,
             isReferenced: result.isReferenced ?? false

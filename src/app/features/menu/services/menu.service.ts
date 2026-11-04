@@ -1,8 +1,9 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import type { ApiResponse } from '../../../core/models/api-response.model';
+import { resolveAssetUrl } from '../../../core/utils/asset-url.util';
 import type { PagedResult } from '../../websites/models/paged-result.model';
 import type {
   CreateMenuRequest,
@@ -75,7 +76,7 @@ export class MenuService {
   getDefaultMenu(): Observable<ApiResponse<DefaultMenuDetailsDto>> {
     return this.http.get<ApiResponse<DefaultMenuDetailsDto>>(
       `${this.menusUrl}/default`
-    );
+    ).pipe(map(response => this.normalizeDefaultMenuResponse(response)));
   }
 
   /**
@@ -200,7 +201,7 @@ export class MenuService {
     return this.http.get<ApiResponse<PagedResult<MenuItemDto>>>(
       `${this.categoriesUrl}/${categoryId}/items`,
       { params }
-    );
+    ).pipe(map(response => this.normalizePagedMenuItemsResponse(response)));
   }
 
   /** Row 14 — GET api/v1/menus/{menuId}/items?page=&pageSize= (optional). */
@@ -214,7 +215,7 @@ export class MenuService {
     return this.http.get<ApiResponse<PagedResult<MenuItemDto>>>(
       `${this.menusUrl}/${menuId}/items`,
       { params }
-    );
+    ).pipe(map(response => this.normalizePagedMenuItemsResponse(response)));
   }
 
   /** Row 14b — GET api/v1/menus/{menuId}/items with search, category, availability and sorting. */
@@ -245,7 +246,7 @@ export class MenuService {
     return this.http.get<ApiResponse<PagedResult<MenuItemDto>>>(
       `${this.menusUrl}/${menuId}/items`,
       { params }
-    );
+    ).pipe(map(response => this.normalizePagedMenuItemsResponse(response)));
   }
 
   /** Row 14c — GET api/v1/menus/{menuId}/items/summary (dashboard stat cards). */
@@ -265,12 +266,13 @@ export class MenuService {
     return this.http.post<ApiResponse<MenuItemDto>>(
       `${this.categoriesUrl}/${categoryId}/items`,
       request
-    );
+    ).pipe(map(response => this.normalizeMenuItemResponse(response)));
   }
 
   /** Row 16 — GET api/v1/menu-items/{itemId}. */
   getItem(itemId: string): Observable<ApiResponse<MenuItemDto>> {
-    return this.http.get<ApiResponse<MenuItemDto>>(`${this.itemsUrl}/${itemId}`);
+    return this.http.get<ApiResponse<MenuItemDto>>(`${this.itemsUrl}/${itemId}`)
+      .pipe(map(response => this.normalizeMenuItemResponse(response)));
   }
 
   /** Row 17 — PUT api/v1/menu-items/{itemId} (partial update). */
@@ -281,7 +283,7 @@ export class MenuService {
     return this.http.put<ApiResponse<MenuItemDto>>(
       `${this.itemsUrl}/${itemId}`,
       request
-    );
+    ).pipe(map(response => this.normalizeMenuItemResponse(response)));
   }
 
   /** Row 18 — PATCH api/v1/menu-items/{itemId}/availability. */
@@ -292,7 +294,7 @@ export class MenuService {
     return this.http.patch<ApiResponse<MenuItemDto>>(
       `${this.itemsUrl}/${itemId}/availability`,
       { isAvailable }
-    );
+    ).pipe(map(response => this.normalizeMenuItemResponse(response)));
   }
 
   /** Row 19 — PATCH api/v1/menu-items/{itemId}/status. */
@@ -303,11 +305,62 @@ export class MenuService {
     return this.http.patch<ApiResponse<MenuItemDto>>(
       `${this.itemsUrl}/${itemId}/status`,
       { isActive }
-    );
+    ).pipe(map(response => this.normalizeMenuItemResponse(response)));
   }
 
   /** Row 20 — DELETE api/v1/menu-items/{itemId} (soft delete, 204 NoContent). */
   deleteItem(itemId: string): Observable<void> {
     return this.http.delete<void>(`${this.itemsUrl}/${itemId}`);
+  }
+
+  /**
+   * Normalizes the image URL of a menu item response so every consumer receives
+   * an absolute URL pointing at the API origin, never the Angular origin.
+   * Absolute, blob:, data: and null URLs are preserved by resolveAssetUrl.
+   */
+  private normalizeMenuItem(item: MenuItemDto): MenuItemDto {
+    if (item.imageUrl == null) return item;
+
+    const imageUrl = resolveAssetUrl(item.imageUrl);
+    return imageUrl === item.imageUrl ? item : { ...item, imageUrl };
+  }
+
+  private normalizeMenuItemResponse(
+    response: ApiResponse<MenuItemDto>
+  ): ApiResponse<MenuItemDto> {
+    if (!response.data) return response;
+
+    return { ...response, data: this.normalizeMenuItem(response.data) };
+  }
+
+  private normalizePagedMenuItemsResponse(
+    response: ApiResponse<PagedResult<MenuItemDto>>
+  ): ApiResponse<PagedResult<MenuItemDto>> {
+    if (!response.data) return response;
+
+    return {
+      ...response,
+      data: {
+        ...response.data,
+        items: response.data.items.map(item => this.normalizeMenuItem(item))
+      }
+    };
+  }
+
+  private normalizeDefaultMenuResponse(
+    response: ApiResponse<DefaultMenuDetailsDto>
+  ): ApiResponse<DefaultMenuDetailsDto> {
+    if (!response.data) return response;
+
+    return {
+      ...response,
+      data: {
+        ...response.data,
+        categories: response.data.categories.map(category => ({
+          ...category,
+          items: category.items.map(item => this.normalizeMenuItem(item))
+        }))
+      }
+    };
   }
 }

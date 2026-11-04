@@ -13,6 +13,7 @@ import type {
 import { environment } from '../../../../environments/environment';
 
 const API_ROOT = `${environment.apiUrl}/v1`;
+const API_ORIGIN = new URL(environment.apiUrl).origin;
 
 describe('ImageUploadService', () => {
   let service: ImageUploadService;
@@ -52,7 +53,10 @@ describe('ImageUploadService', () => {
     const file = new File(['dummy'], 'photo.png', { type: 'image/png' });
 
     service.upload({ file, destination }).subscribe(result => {
-      expect(result).toEqual(uploadedResult);
+      expect(result).toEqual({
+        ...uploadedResult,
+        previewUrl: `${API_ORIGIN}/api/v1/files/key.png`
+      });
     });
 
     const req = httpMock.expectOne(`${API_ROOT}/assets/upload`);
@@ -67,6 +71,22 @@ describe('ImageUploadService', () => {
     expect(req.request.headers.get('Content-Type')).toBeNull(); // browser sets multipart boundary
 
     req.flush({ success: true, data: uploadedResult });
+  });
+
+  it('keeps an absolute preview URL unchanged', () => {
+    const file = new File(['dummy'], 'photo.png', { type: 'image/png' });
+    const absoluteUrl = 'https://cdn.example.com/photo.png';
+
+    let result: AssetUploadResult | undefined;
+    service.upload({ file, destination }).subscribe(value => (result = value));
+
+    const req = httpMock.expectOne(`${API_ROOT}/assets/upload`);
+    req.flush({
+      success: true,
+      data: { ...uploadedResult, previewUrl: absoluteUrl }
+    });
+
+    expect(result?.previewUrl).toBe(absoluteUrl);
   });
 
   it('emits an error when the backend reports failure', () => {
