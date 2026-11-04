@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
+import { resolveAssetUrl } from '../../../core/utils/asset-url.util';
 import { WebsiteService } from '../../websites/services/website.service';
 import type { ApiResponse } from '../../../core/models/api-response.model';
 import type {
@@ -29,7 +30,6 @@ import type {
  *   GET/PUT  v1/websites/{id}/draft                      website configuration
  */
 const API_URL = environment.apiUrl;
-const API_ORIGIN = new URL(API_URL).origin;
 
 type RestaurantAssetDto = {
   id: string;
@@ -55,18 +55,6 @@ export class BrandingAssetsService {
 
   private readonly storageUrl = (restaurantId: string) =>
     `${API_URL}/restaurants/${restaurantId}/storage`;
-
-  /**
-   * Resolves a backend delivery URL to an absolute, cross-origin usable URL.
-   * Backend presigned/storage URLs are relative (/api/v1/files/{key}); the
-   * Angular dev server runs on a different port, so the API origin must be
-   * prefixed for images to load.
-   */
-  private assetUrl(relativeOrAbsolute: string | null): string | null {
-    if (!relativeOrAbsolute) return null;
-    if (/^https?:\/\//i.test(relativeOrAbsolute)) return relativeOrAbsolute;
-    return API_ORIGIN + relativeOrAbsolute;
-  }
 
   /**
    * Uploads a single image asset for the active tenant's restaurant.
@@ -100,8 +88,8 @@ export class BrandingAssetsService {
             fileName: dto.fileName,
             contentType: dto.contentType,
             fileSize: dto.fileSize,
-            storageKey: dto.fileId,
-            previewUrl: this.assetUrl(dto.url),
+            fileId: dto.fileId,
+            previewUrl: resolveAssetUrl(dto.url),
             created: dto.createdAt,
             isReferenced: false
           } as BrandingAsset;
@@ -130,8 +118,8 @@ export class BrandingAssetsService {
             fileName: dto.fileName,
             contentType: dto.contentType,
             fileSize: dto.fileSize,
-            storageKey: dto.fileId,
-            previewUrl: this.assetUrl(dto.url),
+            fileId: dto.fileId,
+            previewUrl: resolveAssetUrl(dto.url),
             created: dto.createdAt,
             isReferenced: false
           }));

@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import type { ApiResponse } from '../../../core/models/api-response.model';
+import { resolveAssetUrl } from '../../../core/utils/asset-url.util';
 import type {
   AssetUploadResult,
   UploadDestination,
@@ -40,7 +41,10 @@ export class ImageUploadService {
         if (!response.success || !response.data) {
           throw new Error(response.message ?? 'The image could not be uploaded.');
         }
-        return response.data;
+        return {
+          ...response.data,
+          previewUrl: resolveAssetUrl(response.data.previewUrl) ?? ''
+        };
       }),
       catchError(error => {
         const backendMessage = error instanceof HttpErrorResponse

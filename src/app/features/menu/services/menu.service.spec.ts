@@ -8,8 +8,10 @@ import type { ApiResponse } from '../../../core/models/api-response.model';
 import type { PagedResult } from '../../../core/models/paged-result.model';
 import type { MenuDto } from '../models/menu.model';
 import type { MenuItemDto, MenuItemSummaryDto } from '../models/menu-item.model';
+import { environment } from '../../../../environments/environment';
 
 const API_ROOT = 'https://localhost:7182/api/v1';
+const API_ORIGIN = new URL(environment.apiUrl).origin;
 
 function expectRequest(
   httpMock: HttpTestingController,
@@ -342,5 +344,178 @@ describe('MenuService', () => {
       errors: null,
       traceId: null
     } as unknown as ApiResponse<MenuItemSummaryDto>);
+  });
+
+  it('normalizes the image URL of a single item response', () => {
+    let result: ApiResponse<MenuItemDto> | undefined;
+
+    service.getItem('item-1').subscribe(response => (result = response));
+
+    const req = expectRequest(httpMock, 'GET', `${API_ROOT}/menu-items/item-1`);
+    req.flush({
+      success: true,
+      data: {
+        id: 'item-1',
+        imageFileId: 'file-1',
+        imageUrl: '/api/v1/files/file-1'
+      },
+      message: null,
+      errorCode: null,
+      errors: null,
+      traceId: null
+    } as unknown as ApiResponse<MenuItemDto>);
+
+    expect(result?.data?.imageFileId).toBe('file-1');
+    expect(result?.data?.imageUrl).toBe(`${API_ORIGIN}/api/v1/files/file-1`);
+  });
+
+  it('normalizes every image URL in a paginated item response', () => {
+    let result: ApiResponse<PagedResult<MenuItemDto>> | undefined;
+
+    service.getMenuItems('menu-1', 1, 2).subscribe(response => (result = response));
+
+    const req = expectRequest(
+      httpMock,
+      'GET',
+      `${API_ROOT}/menus/menu-1/items?page=1&pageSize=2`
+    );
+    req.flush({
+      success: true,
+      data: {
+        items: [
+          { id: 'item-1', imageUrl: '/api/v1/files/one.png' },
+          { id: 'item-2', imageUrl: 'https://cdn.example.com/two.png' },
+          { id: 'item-3', imageUrl: null }
+        ],
+        totalCount: 3,
+        page: 1,
+        pageSize: 2,
+        totalPages: 2
+      },
+      message: null,
+      errorCode: null,
+      errors: null,
+      traceId: null
+    } as unknown as ApiResponse<PagedResult<MenuItemDto>>);
+
+    expect(result?.data?.items[0].imageUrl).toBe(`${API_ORIGIN}/api/v1/files/one.png`);
+    expect(result?.data?.items[1].imageUrl).toBe('https://cdn.example.com/two.png');
+    expect(result?.data?.items[2].imageUrl).toBeNull();
+  });
+
+  it('normalizes the image URL in create, update, availability and status responses', () => {
+    const createResult: MenuItemDto[] = [];
+    service.createItem('cat-1', {
+      name: 'Nihari',
+      price: 12.5,
+      description: null,
+      currency: 'PKR',
+      imageFileId: 'file-1',
+      displayOrder: 1,
+      isAvailable: true
+    }).subscribe(response => {
+      if (response.data) createResult.push(response.data);
+    });
+
+    const createReq = expectRequest(httpMock, 'POST', `${API_ROOT}/menu-categories/cat-1/items`);
+    createReq.flush({
+      success: true,
+      data: { id: 'item-1', imageUrl: '/api/v1/files/create.png' },
+      message: null,
+      errorCode: null,
+      errors: null,
+      traceId: null
+    } as unknown as ApiResponse<MenuItemDto>);
+
+    const updateResult: MenuItemDto[] = [];
+    service.updateItem('item-1', {
+      imageFileId: 'file-1',
+      clearImage: false,
+      displayOrder: null
+    }).subscribe(response => {
+      if (response.data) updateResult.push(response.data);
+    });
+
+    const updateReq = expectRequest(httpMock, 'PUT', `${API_ROOT}/menu-items/item-1`);
+    updateReq.flush({
+      success: true,
+      data: { id: 'item-1', imageUrl: '/api/v1/files/update.png' },
+      message: null,
+      errorCode: null,
+      errors: null,
+      traceId: null
+    } as unknown as ApiResponse<MenuItemDto>);
+
+    const availabilityResult: MenuItemDto[] = [];
+    service.setItemAvailability('item-1', false).subscribe(response => {
+      if (response.data) availabilityResult.push(response.data);
+    });
+
+    const availabilityReq = expectRequest(
+      httpMock,
+      'PATCH',
+      `${API_ROOT}/menu-items/item-1/availability`
+    );
+    availabilityReq.flush({
+      success: true,
+      data: { id: 'item-1', imageUrl: '/api/v1/files/availability.png' },
+      message: null,
+      errorCode: null,
+      errors: null,
+      traceId: null
+    } as unknown as ApiResponse<MenuItemDto>);
+
+    const statusResult: MenuItemDto[] = [];
+    service.setItemActive('item-1', false).subscribe(response => {
+      if (response.data) statusResult.push(response.data);
+    });
+
+    const statusReq = expectRequest(
+      httpMock,
+      'PATCH',
+      `${API_ROOT}/menu-items/item-1/status`
+    );
+    statusReq.flush({
+      success: true,
+      data: { id: 'item-1', imageUrl: '/api/v1/files/status.png' },
+      message: null,
+      errorCode: null,
+      errors: null,
+      traceId: null
+    } as unknown as ApiResponse<MenuItemDto>);
+
+    expect(createResult[0].imageUrl).toBe(`${API_ORIGIN}/api/v1/files/create.png`);
+    expect(updateResult[0].imageUrl).toBe(`${API_ORIGIN}/api/v1/files/update.png`);
+    expect(availabilityResult[0].imageUrl).toBe(
+      `${API_ORIGIN}/api/v1/files/availability.png`
+    );
+    expect(statusResult[0].imageUrl).toBe(`${API_ORIGIN}/api/v1/files/status.png`);
+  });
+
+  it('normalizes image URLs in default menu category items', () => {
+    let result: ApiResponse<{ categories: { items: MenuItemDto[] }[] }> | undefined;
+
+    service.getDefaultMenu().subscribe(response => {
+      result = response as unknown as ApiResponse<{ categories: { items: MenuItemDto[] }[] }>;
+    });
+
+    const req = expectRequest(httpMock, 'GET', `${API_ROOT}/menus/default`);
+    req.flush({
+      success: true,
+      data: {
+        id: 'default',
+        categories: [
+          { id: 'cat-1', items: [{ id: 'item-1', imageUrl: '/api/v1/files/default.png' }] }
+        ]
+      },
+      message: null,
+      errorCode: null,
+      errors: null,
+      traceId: null
+    } as unknown as ApiResponse<unknown>);
+
+    expect(result?.data?.categories[0].items[0].imageUrl).toBe(
+      `${API_ORIGIN}/api/v1/files/default.png`
+    );
   });
 });

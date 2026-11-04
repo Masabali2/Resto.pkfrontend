@@ -10,6 +10,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs';
 import { MenuService } from '../../services/menu.service';
+import { resolveAssetUrl } from '../../../../core/utils/asset-url.util';
 import { AuthorizationService } from '../../../../core/services/authorization.service';
 import { TenantContextService } from '../../../../core/services/tenant-context.service';
 import { HttpErrorHandlerService } from '../../../../core/services/http-error-handler.service';
@@ -73,6 +74,8 @@ export class MenuManagement {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
+  protected readonly previewSearch = signal('');
+  protected readonly selectedPreviewCategory = signal('all');
   protected readonly pageState = signal<PageState>('loading');
   protected readonly errorMessage = signal('');
   protected readonly menu = signal<MenuDetailsDto | null>(null);
@@ -229,8 +232,6 @@ export class MenuManagement {
     this.pendingCategoryIds.set(new Set());
     this.categoryReordering.set(false);
 
-    // Invalidate every in-flight request so a response from the previous
-    // tenant/menu can never overwrite the new context.
     this.menuRequestSequence++;
     this.summaryRequestSequence++;
     this.categoryRequestSequence++;
@@ -291,9 +292,7 @@ export class MenuManagement {
             this.summary.set(response.data);
           }
         },
-        error: () => {
-          // Summary is non-critical: the list remains usable without it.
-        }
+        error: () => {}
       });
   }
 
@@ -377,7 +376,6 @@ export class MenuManagement {
       this.tenantContext.activeTenantId() === tenantId;
   }
 
-  /** True when a mutation was started for the tenant/menu still on screen. */
   private isSameContext(contextKey: string | null): boolean {
     return contextKey !== null && contextKey === this.loadedContextKey;
   }
@@ -505,9 +503,6 @@ export class MenuManagement {
             )
           );
 
-          // A selected category that was just deactivated is no longer a
-          // valid active filter. Fall back to the first active category,
-          // otherwise to All Categories.
           if (this.filter().categoryId === updated.id && !updated.isActive) {
             this.onCategoryChange(this.fallbackCategoryId(this.categories()));
           }
@@ -698,7 +693,7 @@ export class MenuManagement {
   protected openEditModal(item: MenuItemDto): void {
     if (!this.canManageItems() || this.isReadOnly()) return;
     this.modalMode.set('edit');
-    this.modalItem.set(item);
+    this.modalItem.set({ ...item });
     this.modalOpen.set(true);
   }
 
@@ -820,11 +815,32 @@ export class MenuManagement {
   /* ---------- UI & Drawer Controls ---------- */
 
   protected togglePreviewDrawer(): void {
-    this.previewDrawerOpen.update(v => !v);
+    if (this.previewDrawerOpen()) {
+      this.closePreviewDrawer();
+      return;
+    }
+
+    this.previewSearch.set('');
+    this.selectedPreviewCategory.set('all');
+    this.previewDrawerOpen.set(true);
   }
 
   protected closePreviewDrawer(): void {
     this.previewDrawerOpen.set(false);
+    this.previewSearch.set('');
+    this.selectedPreviewCategory.set('all');
+  }
+
+  protected onPreviewSearchChange(value: string): void {
+    this.previewSearch.set(value);
+  }
+
+ protected onPreviewCategoryChange(categoryId: string): void {
+  this.selectedPreviewCategory.set(categoryId);
+}
+  protected clearPreviewFilters(): void {
+    this.previewSearch.set('');
+    this.selectedPreviewCategory.set('all');
   }
 
   protected onViewModeChange(mode: 'grid' | 'list'): void {
@@ -833,6 +849,7 @@ export class MenuManagement {
 
   protected onDietChange(diet: string): void {
     this.activeDiet.set(diet);
+
     if (diet === 'all') {
       this.onSearchChange('');
     } else {
@@ -841,7 +858,9 @@ export class MenuManagement {
   }
 
   protected publishMenuChanges(): void {
-    this.notificationService.success('🎉 Menu published successfully to Resto.pk live QR & Web channels!');
+    this.notificationService.success(
+      '🎉 Menu published successfully to Resto.pk live QR & Web channels!'
+    );
   }
 
   /* ---------- Helpers ---------- */
@@ -863,7 +882,7 @@ export class MenuManagement {
   }
 
   protected imageUrlFor(item: MenuItemDto): string {
-    return item.imageUrl || 'https://placehold.co/400x300/f8fafc/64748b?text=Image';
+    return resolveAssetUrl(item.imageUrl) || 'https://placehold.co/400x300/f8fafc/64748b?text=Image';
   }
 
   protected categoryNameFor(item: MenuItemDto): string {
@@ -880,9 +899,80 @@ export class MenuManagement {
     return v ? 'available' : 'unavailable';
   }
 
+  protected previewCategoryCountFor(category: MenuCategoryDto): number {
+    return category.itemCount ?? 0;
+  }
+
+  protected previewImageUrlFor(item: MenuItemDto): string {
+    return resolveAssetUrl(item.imageUrl) || 'https://placehold.co/400x300/f8fafc/64748b?text=Image';
+  }
+
+  protected previewPriceFor(item: MenuItemDto): string {
+    return this.formatMoney(item.price);
+  }
+
+  protected previewAvailabilityLabel(item: MenuItemDto): string {
+    return item.isAvailable ? 'Available' : 'Currently unavailable';
+  }
+
+  protected previewDescriptionFor(item: MenuItemDto): string {
+    return item.description?.trim() || 'No description available.';
+  }
+
+  protected previewCategoryLabelFor(item: MenuItemDto): string {
+    return item.categoryName || 'Uncategorized';
+  }
+
+  protected trackByPreviewItemId(_index: number, item: MenuItemDto): string {
+    return item.id;
+  }
+
+  protected trackByPreviewCategoryId(_index: number, category: MenuCategoryDto): string {
+    return category.id;
+  }
+
   protected onAvailabilityChangeFromKey(key: 'all' | 'available' | 'unavailable'): void {
     this.onAvailabilityChange(key === 'all' ? null : key === 'available');
   }
+
+  protected readonly previewCategories = computed(() =>
+    this.categories().filter(category => category.isActive)
+  );
+
+ protected readonly filteredPreviewItems = computed(() => {
+  const search = this.previewSearch().trim().toLowerCase();
+  const selectedCategoryId = this.selectedPreviewCategory();
+
+  return this.items().filter(item => {
+    const matchesSearch =
+      !search ||
+      item.name.toLowerCase().includes(search) ||
+      (item.description ?? '').toLowerCase().includes(search) ||
+      (item.categoryName ?? '').toLowerCase().includes(search);
+
+    const matchesCategory =
+      selectedCategoryId === 'all' ||
+      item.menuCategoryId === selectedCategoryId;
+
+    return matchesSearch && matchesCategory;
+  });
+});
+
+  protected readonly previewAvailableCount = computed(() =>
+    this.filteredPreviewItems().filter(item => item.isAvailable).length
+  );
+
+  protected readonly previewUnavailableCount = computed(() =>
+    this.filteredPreviewItems().filter(item => !item.isAvailable).length
+  );
+
+  protected readonly previewTotalCount = computed(() =>
+    this.filteredPreviewItems().length
+  );
+
+  protected readonly previewCategoryCount = computed(() =>
+    this.previewCategories().length
+  );
 
   protected retry(): void {
     const menuId = this.route.snapshot.paramMap.get('menuId');

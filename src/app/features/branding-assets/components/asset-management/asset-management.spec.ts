@@ -104,7 +104,7 @@ describe('AssetManagement', () => {
       fileName: 'logo.png',
       contentType: 'image/png',
       fileSize: 100,
-      storageKey: 'k1',
+      fileId: 'k1',
       previewUrl: 'http://x/logo.png',
       created: '2026-01-01T00:00:00Z',
       isReferenced: false

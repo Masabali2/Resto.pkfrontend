@@ -21,7 +21,7 @@ const makeAsset = (overrides: Partial<BrandingAsset> = {}): BrandingAsset => ({
   fileName: 'logo.png',
   contentType: 'image/png',
   fileSize: 1024,
-  storageKey: 'k1',
+  fileId: 'k1',
   previewUrl: 'http://x/logo.png',
   created: '2026-01-01T00:00:00Z',
   isReferenced: false,
