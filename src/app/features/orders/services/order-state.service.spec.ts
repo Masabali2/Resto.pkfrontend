@@ -115,6 +115,51 @@ describe('OrderStateService', () => {
     expect(state.updatingStatus()).toBe(false);
   });
 
+  it('prevents a second status mutation while the first transition is pending', async () => {
+    const pendingResponse = new Subject<{
+      success: boolean;
+      data: typeof order;
+      errorCode: null;
+      message: null;
+      errors: null;
+      traceId: null;
+    }>();
+    const confirmedOrder = { ...order, status: 'Confirmed' };
+    const orderApi = {
+      getStaffOrders: vi.fn(),
+      getStaffOrder: vi.fn().mockReturnValue(of({
+        success: true,
+        data: order,
+        errorCode: null,
+        message: null,
+        errors: null,
+        traceId: null
+      })),
+      updateStaffOrderStatus: vi.fn().mockReturnValue(pendingResponse)
+    };
+    const state = await createState(orderApi);
+
+    state.loadOrder('restaurant-1', 'order-1');
+    state.transitionStatus('restaurant-1', 'Confirmed');
+    state.transitionStatus('restaurant-1', 'Preparing');
+
+    expect(orderApi.updateStaffOrderStatus).toHaveBeenCalledTimes(1);
+    expect(state.updatingStatus()).toBe(true);
+
+    pendingResponse.next({
+      success: true,
+      data: confirmedOrder,
+      errorCode: null,
+      message: null,
+      errors: null,
+      traceId: null
+    });
+    pendingResponse.complete();
+
+    expect(state.selectedOrder()?.status).toBe('Confirmed');
+    expect(state.updatingStatus()).toBe(false);
+  });
+
   it('ignores a stale list response after switching restaurants', async () => {
     const staleResponse = new Subject<ReturnType<typeof pageResponse>>();
     const currentOrder = { ...order, id: 'order-2', orderNumber: 'RST-2026-002' };
