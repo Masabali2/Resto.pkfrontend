@@ -227,3 +227,40 @@
     min-height: 76px;
   }
 }
+
+
+.checkout-card {
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.checkout-card:focus-within {
+  border-color: var(--color-input-hover-border);
+  box-shadow: 0 0 0 3px var(--color-focus-ring), var(--shadow-sm);
+}
+
+.checkout-card fieldset:disabled { opacity: .72; }
+.checkout-card fieldset:disabled input,
+.checkout-card fieldset:disabled textarea { cursor: not-allowed; }
+
+.submit-button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page-heading,
+  .checkout-card,
+  .integration-banner,
+  .submit-button {
+    animation: checkout-content-enter 360ms ease-out both;
+  }
+
+  .checkout-card:nth-child(2) { animation-delay: 55ms; }
+  .checkout-card:nth-child(3) { animation-delay: 110ms; }
+  .integration-banner { animation-delay: 150ms; }
+}
+
+@keyframes checkout-content-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
