@@ -43,7 +43,7 @@ export class PublicCheckout {
   constructor() {
     effect(() => {
       const slug = this.slug();
-      if (slug) untracked(() => this.publicOrderState.loadCart(slug));
+      if (slug) untracked(() => this.publicOrderState.refreshCart(slug));
     });
   }
 
