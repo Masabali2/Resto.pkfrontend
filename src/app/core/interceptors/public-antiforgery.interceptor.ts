@@ -12,15 +12,27 @@ function isPublicMutation(url: string, method: string): boolean {
 
 export const publicAntiforgeryInterceptor: HttpInterceptorFn = (request, next) => {
   if (!isPublicMutation(request.url, request.method)) return next(request);
+
   const antiforgery = inject(AntiforgeryService);
+
+  const send = (token: string) =>
+    next(request.clone({
+      setHeaders: { 'X-XSRF-TOKEN': token },
+      credentials: 'include'
+    }));
+
   return antiforgery.getToken().pipe(
-    switchMap(token => next(request.clone({ setHeaders: { 'X-XSRF-TOKEN': token }, credentials: 'include' }))),
-    catchError((error: unknown) => {
-      if (!(error instanceof HttpErrorResponse) || error.status !== 400) return throwError(() => error);
-      antiforgery.invalidate();
-      return antiforgery.getToken(true).pipe(
-        switchMap(token => next(request.clone({ setHeaders: { 'X-XSRF-TOKEN': token }, credentials: 'include' })))
-      );
-    })
+    switchMap(token =>
+      send(token).pipe(
+        catchError((error: unknown) => {
+          if (!(error instanceof HttpErrorResponse) || error.status !== 400) {
+            return throwError(() => error);
+          }
+
+          antiforgery.invalidate();
+          return antiforgery.getToken(true).pipe(switchMap(send));
+        })
+      )
+    )
   );
 };
