@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
-import { HttpErrorHandlerService } from '../../../../core/services/http-error-handler.service';
+import { HttpErrorHandlerService } from '../../../../../core/services/http-error-handler.service';
 import { OrderApiService } from '../../../services/order-api.service';
 import { PublicCheckout } from './checkout';
 
