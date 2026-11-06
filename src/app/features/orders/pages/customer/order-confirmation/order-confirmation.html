@@ -1,12 +1,23 @@
-<app-public-order-frame step="confirmation">
+<app-public-order-frame step="confirmation" [trackingTokenOverride]="order()?.rawTrackingToken ?? null">
   <main class="confirmation-page" aria-labelledby="confirmation-title">
-    <section class="confirmation-card" role="status">
-      <span class="confirmation-icon" aria-hidden="true"><i class="bi bi-receipt"></i></span>
-      <p class="eyebrow">ORDER CONFIRMATION</p>
-      <h1 id="confirmation-title">Your order confirmation will appear here</h1>
-      <p>An order number and tracking link are shown only after the restaurant successfully accepts your checkout request.</p>
-      <div class="security-note"><i class="bi bi-lock" aria-hidden="true"></i><span>Your private tracking link is issued once when an order is created. It is not stored in this page preview.</span></div>
-      <a routerLink="../cart"><i class="bi bi-arrow-left" aria-hidden="true"></i> Return to cart</a>
-    </section>
+    @if (order(); as currentOrder) {
+      <section class="confirmation-card" role="status">
+        <span class="confirmation-icon" aria-hidden="true"><i class="bi bi-check2-circle"></i></span>
+        <p class="eyebrow">ORDER CONFIRMATION</p>
+        <h1 id="confirmation-title">Order received</h1>
+        <p>Your order <strong>{{ currentOrder.orderNumber }}</strong> was created successfully.</p>
+        <div class="confirmation-total"><span>Total</span><strong>{{ currentOrder.currency }} {{ currentOrder.totalAmount | number:'1.2-2' }}</strong></div>
+        <a class="submit-button" [routerLink]="['/r', slug(), 'order-tracking', currentOrder.rawTrackingToken]">Track your order <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+        <div class="security-note"><i class="bi bi-lock" aria-hidden="true"></i><span>This private tracking token was returned once by the server. Keep the tracking link safe.</span></div>
+      </section>
+    } @else {
+      <section class="confirmation-card" role="status">
+        <span class="confirmation-icon" aria-hidden="true"><i class="bi bi-receipt"></i></span>
+        <p class="eyebrow">ORDER CONFIRMATION</p>
+        <h1 id="confirmation-title">Order confirmation unavailable</h1>
+        <p>This page was opened without the one-time order creation response. Return to the cart and place the order again if needed.</p>
+        <a [routerLink]="['/r', slug(), 'cart']"><i class="bi bi-arrow-left" aria-hidden="true"></i> Return to cart</a>
+      </section>
+    }
   </main>
 </app-public-order-frame>

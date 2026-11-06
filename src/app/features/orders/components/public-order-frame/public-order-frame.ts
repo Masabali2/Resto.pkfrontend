@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { ActivatedRoute, RouterLink, RouterLinkActive } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-public-order-frame',
@@ -11,8 +12,9 @@ import { ActivatedRoute, RouterLink, RouterLinkActive } from '@angular/router';
 })
 export class PublicOrderFrame {
   private readonly route = inject(ActivatedRoute);
-
   readonly step = input.required<'cart' | 'checkout' | 'confirmation' | 'tracking'>();
-  protected readonly slug = this.route.snapshot.paramMap.get('slug') ?? '';
-  protected readonly trackingToken = this.route.snapshot.paramMap.get('trackingToken');
+  readonly trackingTokenOverride = input<string | null>(null);
+  protected readonly params = toSignal(this.route.paramMap, { initialValue: this.route.snapshot.paramMap });
+  protected readonly slug = () => this.params().get('slug') ?? '';
+  protected readonly trackingToken = () => this.trackingTokenOverride() ?? this.params().get('trackingToken');
 }

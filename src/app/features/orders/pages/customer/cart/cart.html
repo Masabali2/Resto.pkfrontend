@@ -1,11 +1,42 @@
 <app-public-order-frame step="cart">
   <main class="page-content" aria-labelledby="cart-title">
     <header class="page-heading"><p class="eyebrow">YOUR ORDER</p><h1 id="cart-title">Your cart</h1><p>Review your items before moving to checkout.</p></header>
-    <section class="empty-card" aria-labelledby="empty-cart-title">
-      <span class="empty-icon" aria-hidden="true"><i class="bi bi-basket3"></i></span>
-      <h2 id="empty-cart-title">Your cart is empty</h2>
-      <p>Items you add from the restaurant menu will appear here. Review quantities and totals before checkout.</p>
-      <span class="integration-note"><i class="bi bi-info-circle" aria-hidden="true"></i> Cart connection will be enabled during API integration.</span>
-    </section>
+
+    @if (loading()) {
+      <section class="empty-card" role="status"><i class="bi bi-arrow-repeat" aria-hidden="true"></i><h2>Loading your cart…</h2></section>
+    } @else if (error() && !cart()) {
+      <section class="empty-card" role="alert"><span class="empty-icon" aria-hidden="true"><i class="bi bi-exclamation-circle"></i></span><h2>Cart could not be loaded</h2><p>{{ error() }}</p><button type="button" class="submit-button" (click)="retry()">Try again</button></section>
+    } @else if (!cart() || cart()!.items.length === 0) {
+      <section class="empty-card" aria-labelledby="empty-cart-title">
+        <span class="empty-icon" aria-hidden="true"><i class="bi bi-basket3"></i></span>
+        <h2 id="empty-cart-title">Your cart is empty</h2>
+        <p>Add items from the restaurant menu and they will appear here with server-calculated prices and totals.</p>
+        <a class="submit-button" [routerLink]="['/r', slug()]">Return to restaurant</a>
+      </section>
+    } @else {
+      @if (error()) { <div class="integration-banner" role="alert"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ error() }}</div> }
+      <section class="cart-layout">
+        <div class="cart-items">
+          @for (item of cart()!.items; track item.id) {
+            <article class="cart-item">
+              <div class="item-information"><h2>{{ item.itemName }}</h2><p>{{ item.currency }} {{ item.unitPrice | number:'1.2-2' }} each</p></div>
+              <div class="quantity-control" aria-label="Quantity">
+                <button type="button" [disabled]="busyItem() === item.id || item.quantity <= 1" (click)="changeQuantity(item.id, item.quantity - 1)">−</button>
+                <strong>{{ item.quantity }}</strong>
+                <button type="button" [disabled]="busyItem() === item.id" (click)="changeQuantity(item.id, item.quantity + 1)">+</button>
+              </div>
+              <strong class="item-total">{{ item.currency }} {{ item.lineTotal | number:'1.2-2' }}</strong>
+              <button type="button" class="remove-button" [disabled]="busyItem() === item.id" (click)="removeItem(item.id)">Remove</button>
+            </article>
+          }
+          <button type="button" class="clear-button" [disabled]="busyItem() === 'cart'" (click)="clearCart()">Clear cart</button>
+        </div>
+        <aside class="summary-card">
+          <h2>Order summary</h2>
+          <div class="amount-row"><span>{{ cart()!.itemCount }} item{{ cart()!.itemCount === 1 ? '' : 's' }}</span><strong>{{ cart()!.currency }} {{ cart()!.totalAmount | number:'1.2-2' }}</strong></div>
+          <a class="submit-button" [routerLink]="['/r', slug(), 'checkout']">Continue to checkout <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+        </aside>
+      </section>
+    }
   </main>
 </app-public-order-frame>

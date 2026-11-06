@@ -338,3 +338,12 @@
 
   .retry-button:active { transform: none; }
 }
+
+.table-state { min-height: 180px; }
+.pagination-controls { display:flex; align-items:center; justify-content:flex-end; gap:12px; margin-top:14px; color:var(--color-text-muted); font-size:12px; }
+.pagination-controls button, .retry-button { min-height:36px; padding:8px 13px; border:1px solid var(--color-border); border-radius:var(--radius-control); background:var(--color-surface); color:var(--color-text); font-weight:700; }
+.pagination-controls button:not(:disabled):hover, .retry-button:hover { border-color:var(--color-primary); color:var(--color-primary); }
+.pagination-controls button:disabled { opacity:.5; cursor:not-allowed; }
+.orders-table td a { color:var(--color-primary); font-weight:750; text-decoration:none; }
+.orders-table td a:hover { text-decoration:underline; }
+@media (max-width:640px) { .pagination-controls { justify-content:space-between; } .orders-table-wrap { overflow-x:auto; } }

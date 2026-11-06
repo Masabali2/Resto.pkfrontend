@@ -7,14 +7,14 @@
     <span class="secure-label"><i class="bi bi-shield-check" aria-hidden="true"></i> Secure ordering</span>
   </header>
   <nav class="order-steps" aria-label="Order progress">
-    <a [routerLink]="['/r', slug, 'cart']" routerLinkActive="is-active" [routerLinkActiveOptions]="{exact:true}" [attr.aria-current]="step() === 'cart' ? 'step' : null"><span>1</span>Cart</a>
+    <a [routerLink]="['/r', slug(), 'cart']" routerLinkActive="is-active" [routerLinkActiveOptions]="{exact:true}" [attr.aria-current]="step === 'cart' ? 'step' : null"><span>1</span>Cart</a>
     <i aria-hidden="true"></i>
-    <a [routerLink]="['/r', slug, 'checkout']" routerLinkActive="is-active" [routerLinkActiveOptions]="{exact:true}" [attr.aria-current]="step() === 'checkout' ? 'step' : null"><span>2</span>Details</a>
+    <a [routerLink]="['/r', slug(), 'checkout']" routerLinkActive="is-active" [routerLinkActiveOptions]="{exact:true}" [attr.aria-current]="step === 'checkout' ? 'step' : null"><span>2</span>Details</a>
     <i aria-hidden="true"></i>
-    <a [routerLink]="['/r', slug, 'order-confirmation']" routerLinkActive="is-active" [routerLinkActiveOptions]="{exact:true}" [attr.aria-current]="step() === 'confirmation' ? 'step' : null"><span>3</span>Confirmation</a>
+    <a [routerLink]="['/r', slug(), 'order-confirmation']" routerLinkActive="is-active" [routerLinkActiveOptions]="{exact:true}" [attr.aria-current]="step === 'confirmation' ? 'step' : null"><span>3</span>Confirmation</a>
     <i aria-hidden="true"></i>
-    @if (trackingToken) {
-      <a [routerLink]="['/r', slug, 'order-tracking', trackingToken]" routerLinkActive="is-active" [attr.aria-current]="step() === 'tracking' ? 'step' : null"><span>4</span>Tracking</a>
+    @if (trackingToken()) {
+      <a [routerLink]="['/r', slug(), 'order-tracking', trackingToken()]" routerLinkActive="is-active" [attr.aria-current]="step === 'tracking' ? 'step' : null"><span>4</span>Tracking</a>
     } @else {
       <span class="step-disabled" aria-disabled="true"><span>4</span>Tracking</span>
     }

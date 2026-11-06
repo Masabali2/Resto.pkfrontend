@@ -11,5 +11,6 @@ import { getNextOrderStatuses } from '../../utils/order-status.util';
 })
 export class OrderWorkflowActions {
   readonly status = input.required<OrderStatus>();
+  readonly disabled = input(false);
   protected readonly availableTransitions = computed(() => getNextOrderStatuses(this.status()));
 }

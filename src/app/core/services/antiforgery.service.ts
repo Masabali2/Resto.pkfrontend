@@ -1,0 +1,23 @@
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { Observable, shareReplay, tap } from 'rxjs';
+import { environment } from '../../../environments/environment';
+
+interface AntiforgeryResponse { token: string; }
+
+@Injectable({ providedIn: 'root' })
+export class AntiforgeryService {
+  private readonly http = inject(HttpClient);
+  private tokenRequest$: Observable<string> | null = null;
+
+  getToken(forceRefresh = false): Observable<string> {
+    if (forceRefresh || !this.tokenRequest$) {
+      this.tokenRequest$ = this.http.get<AntiforgeryResponse>(environment.apiUrl + '/antiforgery-token').pipe(
+        tap(response => { if (!response.token) this.tokenRequest$ = null; }),
+        shareReplay({ bufferSize: 1, refCount: false })
+      );
+    }
+    return this.tokenRequest$;
+  }
+  invalidate(): void { this.tokenRequest$ = null; }
+}

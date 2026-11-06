@@ -90,3 +90,7 @@
   .content-card,
   .unavailable-state { animation: none; }
 }
+
+.inline-error { display:flex; align-items:center; gap:8px; margin-bottom:14px; padding:11px 13px; border:1px solid #fecaca; border-radius:var(--radius-control); background:#fef2f2; color:#991b1b; font-size:12px; }
+.updating-note { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:10px; color:var(--color-text-muted); font-size:11px; }
+.return-button { border:0; cursor:pointer; }
