@@ -99,13 +99,17 @@
           <div class="amount-row amount-total"><span>Total</span><strong>{{ currentOrder.currency }} {{ currentOrder.totalAmount | number:'1.2-2' }}</strong></div>
         </section>
 
-        <app-order-workflow-actions
-          [status]="currentOrder.status"
-          [disabled]="updating() || loading()"
-          (transition)="transitionStatus($event)"
-        />
-        @if (updating()) {
-          <p class="updating-note" role="status"><i class="bi bi-arrow-repeat" aria-hidden="true"></i>Updating order status…</p>
+        @if (canUpdateOrder()) {
+          <app-order-workflow-actions
+            [status]="currentOrder.status"
+            [disabled]="updating() || loading()"
+            (transition)="transitionStatus($event)"
+          />
+          @if (updating()) {
+            <p class="updating-note" role="status"><i class="bi bi-arrow-repeat" aria-hidden="true"></i>Updating order status…</p>
+          }
+        } @else {
+          <p class="muted-text" role="note">You have read-only access to this order. Contact a manager if you need to update its status.</p>
         }
       </aside>
     </div>
