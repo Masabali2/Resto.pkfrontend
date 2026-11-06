@@ -29,12 +29,22 @@ export class PublicCart {
   }
 
   protected changeQuantity(itemId: string, quantity: number): void {
-    if (quantity < 1 || this.busyItem()) return;
+    if (quantity < 1 || quantity > 99 || this.busyItem()) return;
     this.busyItem.set(itemId);
     this.error.set(null);
     this.orderApi.updateCartItem(this.slug(), itemId, quantity).subscribe({
-      next: () => { this.busyItem.set(null); this.loadCart(false); },
-      error: error => { this.busyItem.set(null); this.error.set(this.errors.handle(error, { fallbackMessage: 'Cart item could not be updated.' }).message); }
+      next: response => {
+        this.busyItem.set(null);
+        if (!response.success) {
+          this.error.set(response.message ?? 'Cart item could not be updated.');
+          return;
+        }
+        this.loadCart(false);
+      },
+      error: error => {
+        this.busyItem.set(null);
+        this.error.set(this.errors.handle(error, { fallbackMessage: 'Cart item could not be updated.' }).message);
+      }
     });
   }
 
@@ -43,17 +53,38 @@ export class PublicCart {
     this.busyItem.set(itemId);
     this.error.set(null);
     this.orderApi.removeCartItem(this.slug(), itemId).subscribe({
-      next: () => { this.busyItem.set(null); this.loadCart(false); },
-      error: error => { this.busyItem.set(null); this.error.set(this.errors.handle(error, { fallbackMessage: 'Cart item could not be removed.' }).message); }
+      next: response => {
+        this.busyItem.set(null);
+        if (!response.success) {
+          this.error.set(response.message ?? 'Cart item could not be removed.');
+          return;
+        }
+        this.loadCart(false);
+      },
+      error: error => {
+        this.busyItem.set(null);
+        this.error.set(this.errors.handle(error, { fallbackMessage: 'Cart item could not be removed.' }).message);
+      }
     });
   }
 
   protected clearCart(): void {
     if (!this.cart()?.items.length || this.busyItem()) return;
     this.busyItem.set('cart');
+    this.error.set(null);
     this.orderApi.clearCart(this.slug()).subscribe({
-      next: () => { this.busyItem.set(null); this.loadCart(false); },
-      error: error => { this.busyItem.set(null); this.error.set(this.errors.handle(error, { fallbackMessage: 'Cart could not be cleared.' }).message); }
+      next: response => {
+        this.busyItem.set(null);
+        if (!response.success) {
+          this.error.set(response.message ?? 'Cart could not be cleared.');
+          return;
+        }
+        this.loadCart(false);
+      },
+      error: error => {
+        this.busyItem.set(null);
+        this.error.set(this.errors.handle(error, { fallbackMessage: 'Cart could not be cleared.' }).message);
+      }
     });
   }
 
