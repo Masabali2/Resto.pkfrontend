@@ -58,10 +58,7 @@ describe('OrderStateService', () => {
 
   it('loads and exposes paged orders for the selected restaurant', async () => {
     const orderApi = {
-      getStaffOrders: vi.fn()
-        .mockReturnValueOnce(of(pageResponse([order])))
-        .mockReturnValueOnce(of(pageResponse([order])))
-        .mockReturnValue(of(pageResponse([]))),
+      getStaffOrders: vi.fn().mockReturnValue(of(pageResponse([order]))),
       getStaffOrder: vi.fn(),
       updateStaffOrderStatus: vi.fn()
     };
@@ -79,7 +76,10 @@ describe('OrderStateService', () => {
   it('synchronizes the selected order and filtered list after a server-confirmed transition', async () => {
     const confirmedOrder = { ...order, status: 'Confirmed' };
     const orderApi = {
-      getStaffOrders: vi.fn().mockReturnValue(of(pageResponse([order]))),
+      getStaffOrders: vi.fn()
+        .mockReturnValueOnce(of(pageResponse([order])))
+        .mockReturnValueOnce(of(pageResponse([order])))
+        .mockReturnValue(of(pageResponse([]))),
       getStaffOrder: vi.fn().mockReturnValue(of({
         success: true,
         data: order,
