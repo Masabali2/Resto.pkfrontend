@@ -14,6 +14,30 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'r/:slug/cart',
+    title: 'Your Cart — Resto.pk',
+    loadComponent: () =>
+      import('./features/orders/pages/customer/cart/cart').then(m => m.PublicCart)
+  },
+  {
+    path: 'r/:slug/checkout',
+    title: 'Checkout — Resto.pk',
+    loadComponent: () =>
+      import('./features/orders/pages/customer/checkout/checkout').then(m => m.PublicCheckout)
+  },
+  {
+    path: 'r/:slug/order-confirmation',
+    title: 'Order Confirmation — Resto.pk',
+    loadComponent: () =>
+      import('./features/orders/pages/customer/order-confirmation/order-confirmation').then(m => m.PublicOrderConfirmation)
+  },
+  {
+    path: 'r/:slug/order-tracking/:trackingToken',
+    title: 'Track Your Order — Resto.pk',
+    loadComponent: () =>
+      import('./features/orders/pages/customer/order-tracking/order-tracking').then(m => m.PublicOrderTracking)
+  },
+  {
     path: 'login',
     title: 'Login — Resto.pk',
     loadComponent: () =>
