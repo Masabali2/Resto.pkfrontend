@@ -101,6 +101,41 @@ describe('PublicOrderStateService', () => {
     expect(state.cartMutating()).toBe(false);
   });
 
+  it('prevents duplicate cart mutations while refreshing the shared cart', async () => {
+    const pendingMutation = new Subject<ReturnType<typeof cartResponse>>();
+    const updatedCart = {
+      ...cart,
+      itemCount: 2,
+      totalAmount: 1700,
+      items: [{ ...cart.items[0], quantity: 2, lineTotal: 1700 }]
+    };
+    const orderApi = {
+      getCart: vi.fn()
+        .mockReturnValueOnce(of(cartResponse(cart)))
+        .mockReturnValue(of(cartResponse(updatedCart))),
+      addCartItem: vi.fn(),
+      updateCartItem: vi.fn().mockReturnValue(pendingMutation),
+      removeCartItem: vi.fn(),
+      clearCart: vi.fn(),
+      createOrder: vi.fn(),
+      trackOrder: vi.fn()
+    };
+    const state = await createState(orderApi);
+
+    state.loadCart('sample-restaurant');
+    state.updateCartItem('sample-restaurant', 'cart-item-1', 2);
+    state.updateCartItem('sample-restaurant', 'cart-item-1', 3);
+
+    expect(orderApi.updateCartItem).toHaveBeenCalledTimes(1);
+    expect(state.cartMutating()).toBe(true);
+
+    pendingMutation.next(cartResponse(cart));
+    pendingMutation.complete();
+
+    expect(state.cart()?.items[0].quantity).toBe(2);
+    expect(state.cartMutating()).toBe(false);
+  });
+
   it('ignores a stale cart response after switching restaurant slugs', async () => {
     const staleResponse = new Subject<ReturnType<typeof cartResponse>>();
     const currentCart = { ...cart, id: 'cart-2', restaurantId: 'restaurant-2' };
