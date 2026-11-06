@@ -97,3 +97,21 @@ describe('staff order details route', () => {
     expect(typeof details.loadComponent).toBe('function');
   });
 });
+
+describe('public customer order routes', () => {
+  const expectedRoutes = [
+    ['r/:slug/cart', 'Your Cart — Resto.pk'],
+    ['r/:slug/checkout', 'Checkout — Resto.pk'],
+    ['r/:slug/order-confirmation', 'Order Confirmation — Resto.pk'],
+    ['r/:slug/order-tracking/:trackingToken', 'Track Your Order — Resto.pk']
+  ] as const;
+
+  it.each(expectedRoutes)('registers %s as a public route', (path, title) => {
+    const route = routes.find(candidate => candidate.path === path);
+
+    expect(route).toBeTruthy();
+    expect(route?.title).toBe(title);
+    expect(route?.canActivate).toBeUndefined();
+    expect(typeof route?.loadComponent).toBe('function');
+  });
+});
