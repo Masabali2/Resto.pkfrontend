@@ -29,17 +29,20 @@ describe('BrandingHeader', () => {
   });
 
   it('storagePercent should be 100 when used equals quota', () => {
-    fixture.componentRef.setInput('storage', { usedBytes: 1024 * 1024, quotaBytes: 1024 * 1024 } as StorageInfo);\n    fixture.detectChanges();
+    fixture.componentRef.setInput('storage', { usedBytes: 1024 * 1024, quotaBytes: 1024 * 1024 } as StorageInfo);
+    fixture.detectChanges();
     expect((component as any).storagePercent()).toBe(100);
   });
 
   it('storageUsedText should report used and quota', () => {
-    fixture.componentRef.setInput('storage', { usedBytes: 1024 * 1024, quotaBytes: 1024 * 1024 } as StorageInfo);\n    fixture.detectChanges();
+    fixture.componentRef.setInput('storage', { usedBytes: 1024 * 1024, quotaBytes: 1024 * 1024 } as StorageInfo);
+    fixture.detectChanges();
     expect((component as any).storageUsedText()).toBe('1 MB / 1 MB');
   });
 
   it('storageUsedText should return dash when no storage', () => {
-    fixture.componentRef.setInput('storage', null);\n    fixture.detectChanges();
+    fixture.componentRef.setInput('storage', null);
+    fixture.detectChanges();
     expect((component as any).storageUsedText()).toBe('—');
   });
 
