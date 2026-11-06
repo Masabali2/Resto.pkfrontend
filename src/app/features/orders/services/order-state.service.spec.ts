@@ -26,7 +26,9 @@ describe('OrderStateService', () => {
     items: []
   };
 
-  const pageResponse = (items: typeof order[]) => ({
+  type TestOrder = typeof order;
+
+  const pageResponse = (items: TestOrder[]) => ({
     success: true,
     data: {
       items,
