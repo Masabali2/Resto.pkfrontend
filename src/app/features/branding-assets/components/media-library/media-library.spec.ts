@@ -51,7 +51,8 @@ describe('MediaLibrary', () => {
   });
 
   it('should expose rows in reverse order', () => {
-    fixture.componentRef.setInput('assets', [makeAsset({ id: 'a1', fileName: 'first.png' }), makeAsset({ id: 'a2', fileName: 'second.png' })]);\n    fixture.detectChanges();
+    fixture.componentRef.setInput('assets', [makeAsset({ id: 'a1', fileName: 'first.png' }), makeAsset({ id: 'a2', fileName: 'second.png' })]);
+    fixture.detectChanges();
     const rows = (component as any).rows();
     expect(rows.map((r: BrandingAsset) => r.id)).toEqual(['a2', 'a1']);
   });
