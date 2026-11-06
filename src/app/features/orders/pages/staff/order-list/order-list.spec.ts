@@ -1,10 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { ActiveRestaurantStateService } from '../../../../../core/services/active-restaurant-state.service';
+import type { RestaurantDto } from '../../../../../core/models/restaurant.model';
 import { OrderList } from './order-list';
 
 describe('OrderList', () => {
-  const restaurant = signal({
+  const restaurant = signal<RestaurantDto | null>({
     id: 'restaurant-1',
     tenantId: 'tenant-1',
     name: 'Test Restaurant',
@@ -107,7 +108,7 @@ describe('OrderList', () => {
   });
 
   it('shows a selection state when the tenant has no restaurant', () => {
-    restaurant.set(null as never);
+    restaurant.set(null);
     state.set('empty');
 
     const fixture = TestBed.createComponent(OrderList);
