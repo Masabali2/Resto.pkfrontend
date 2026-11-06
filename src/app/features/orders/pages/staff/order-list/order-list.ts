@@ -1,15 +1,20 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, effect, inject, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ActiveRestaurantStateService } from '../../../../../core/services/active-restaurant-state.service';
-import { HttpErrorHandlerService } from '../../../../../core/services/http-error-handler.service';
 import { LoadingSpinner } from '../../../../../shared/components/loading-spinner/loading-spinner';
-import { OrderApiService } from '../../../services/order-api.service';
 import { OrderStatusBadge } from '../../../components/order-status-badge/order-status-badge';
-import type { OrderStatus, StaffOrderDetails } from '../../../models/order.models';
+import { OrderStateService, type OrderStatusFilter } from '../../../services/order-state.service';
 
-const ORDER_STATUSES = ['All orders', 'New', 'Confirmed', 'Preparing', 'Ready', 'Completed', 'Cancelled'] as const;
-type OrderStatusFilter = (typeof ORDER_STATUSES)[number];
+const ORDER_STATUSES: readonly OrderStatusFilter[] = [
+  'All orders',
+  'New',
+  'Confirmed',
+  'Preparing',
+  'Ready',
+  'Completed',
+  'Cancelled'
+];
 
 @Component({
   selector: 'app-order-list',
@@ -21,74 +26,51 @@ type OrderStatusFilter = (typeof ORDER_STATUSES)[number];
 })
 export class OrderList {
   private readonly activeRestaurantState = inject(ActiveRestaurantStateService);
-  private readonly orderApi = inject(OrderApiService);
-  private readonly errors = inject(HttpErrorHandlerService);
+  private readonly orderState = inject(OrderStateService);
 
   protected readonly statuses = ORDER_STATUSES;
-  protected readonly selectedStatus = signal<OrderStatusFilter>('All orders');
   protected readonly restaurant = this.activeRestaurantState.restaurant;
   protected readonly restaurantState = this.activeRestaurantState.state;
   protected readonly restaurantError = this.activeRestaurantState.errorMessage;
-  protected readonly orders = signal<StaffOrderDetails[]>([]);
-  protected readonly loading = signal(false);
-  protected readonly error = signal<string | null>(null);
-  protected readonly page = signal(1);
-  protected readonly pageSize = 20;
-  protected readonly totalPages = signal(1);
-  protected readonly totalCount = signal(0);
+  protected readonly orders = this.orderState.orders;
+  protected readonly selectedStatus = this.orderState.statusFilter;
+  protected readonly loading = this.orderState.listLoading;
+  protected readonly error = this.orderState.listError;
+  protected readonly page = this.orderState.page;
+  protected readonly pageSize = this.orderState.pageSize;
+  protected readonly totalPages = this.orderState.totalPages;
+  protected readonly totalCount = this.orderState.totalCount;
 
   constructor() {
     effect(() => {
-      if (this.restaurant()?.id) untracked(() => this.loadOrders());
+      const restaurantId = this.restaurant()?.id;
+      if (restaurantId) {
+        untracked(() => this.orderState.loadOrders(restaurantId));
+      }
     });
   }
 
   protected selectStatus(status: OrderStatusFilter): void {
-    this.selectedStatus.set(status);
-    this.page.set(1);
-    this.loadOrders();
+    const restaurantId = this.restaurant()?.id;
+    if (restaurantId) this.orderState.setStatusFilter(restaurantId, status);
   }
 
-  protected retryOrders(): void { this.loadOrders(); }
-  protected retryRestaurantLoad(): void { this.activeRestaurantState.refresh(); }
+  protected retryOrders(): void {
+    const restaurantId = this.restaurant()?.id;
+    if (restaurantId) this.orderState.loadOrders(restaurantId);
+  }
+
+  protected retryRestaurantLoad(): void {
+    this.activeRestaurantState.refresh();
+  }
 
   protected previousPage(): void {
-    if (this.page() <= 1) return;
-    this.page.update(value => value - 1);
-    this.loadOrders();
+    const restaurantId = this.restaurant()?.id;
+    if (restaurantId) this.orderState.previousPage(restaurantId);
   }
 
   protected nextPage(): void {
-    if (this.page() >= this.totalPages()) return;
-    this.page.update(value => value + 1);
-    this.loadOrders();
-  }
-
-  private loadOrders(): void {
-    const restaurant = this.restaurant();
-    if (!restaurant) return;
-
-    this.loading.set(true);
-    this.error.set(null);
-    const status = this.selectedStatus() === 'All orders' ? null : this.selectedStatus() as OrderStatus;
-
-    this.orderApi.getStaffOrders(restaurant.id, status, this.page(), this.pageSize).subscribe({
-      next: response => {
-        this.loading.set(false);
-        if (!response.success || !response.data) {
-          this.error.set(response.message ?? 'Orders could not be loaded.');
-          this.orders.set([]);
-          return;
-        }
-        this.orders.set(response.data.items);
-        this.totalPages.set(Math.max(1, response.data.totalPages));
-        this.totalCount.set(response.data.totalCount);
-      },
-      error: error => {
-        this.loading.set(false);
-        this.error.set(this.errors.handle(error, { fallbackMessage: 'Orders could not be loaded.' }).message);
-        this.orders.set([]);
-      }
-    });
+    const restaurantId = this.restaurant()?.id;
+    if (restaurantId) this.orderState.nextPage(restaurantId);
   }
 }
