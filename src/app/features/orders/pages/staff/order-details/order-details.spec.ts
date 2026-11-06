@@ -97,8 +97,8 @@ describe('OrderDetails', () => {
     expect(fixture.nativeElement.textContent).toContain('RST-2026-001');
 
     const confirmButton = Array.from(
-      fixture.nativeElement.querySelectorAll('.workflow-action')
-    ).find((button: Element) => button.textContent?.includes('Mark as Confirmed')) as HTMLButtonElement;
+      fixture.nativeElement.querySelectorAll('.workflow-action') as NodeListOf<Element>
+    ).find(button => button.textContent?.includes('Mark as Confirmed')) as HTMLButtonElement;
 
     expect(confirmButton).toBeTruthy();
     confirmButton.click();
