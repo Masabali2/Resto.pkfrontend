@@ -160,18 +160,7 @@ export const routes: Routes = [
         ]
       },
       {
-        path: 'orders/:orderId',
-        title: 'Order Details — Resto.pk',
-        canActivate: [permissionGuard],
-        data: { permission: 'Order.View' },
-        loadComponent: () =>
-          import('./features/orders/pages/staff/order-details/order-details').then(
-            m => m.OrderDetails
-          )
-      },
-      {
         path: 'orders',
-        pathMatch: 'full',
         title: 'Orders — Resto.pk',
         canActivate: [permissionGuard],
         data: { permission: 'Order.View' },
