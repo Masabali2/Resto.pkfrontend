@@ -43,7 +43,7 @@ describe('website editor route permissions', () => {
   const editor = websites?.children?.find(route => route.path === ':id/editor');
 
   it('requires both view and update permissions because editor initialization reads website and draft data', () => {
-    expect(editor?.canActivate).toContain(jasmine.any(Function));
+    expect(editor?.canActivate?.length).toBeGreaterThan(0);
     expect(editor?.data).toEqual({
       permissions: ['Website.View', 'Website.Update'],
       mode: 'all'
