@@ -42,13 +42,13 @@ describe('BrandingTabs', () => {
   });
 
   it('isActive should reflect the active tab', () => {
-    (component as any).activeTab.set('hero');
+    fixture.componentRef.setInput('activeTab', 'hero');
     expect((component as any).isActive('hero')).toBe(true);
     expect((component as any).isActive('assets')).toBe(false);
   });
 
   it('tabClass should mark active tab with active classes', () => {
-    (component as any).activeTab.set('colors');
+    fixture.componentRef.setInput('activeTab', 'colors');
     expect((component as any).tabClass('colors')).toContain('branding-tab-active');
     expect((component as any).tabClass('assets')).not.toContain('branding-tab-active');
     expect((component as any).tabClass('assets')).toContain('text-muted');
