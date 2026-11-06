@@ -47,12 +47,12 @@ describe('WebsitePreviewModal', () => {
   });
 
   it('restaurantSlug should derive a slug from the restaurant name', () => {
-    (component as any).restaurant.set({ id: 'r1', name: 'My Restaurant' });
+    fixture.componentRef.setInput('restaurant', { id: 'r1', name: 'My Restaurant' });
     expect(component.restaurantSlug()).toBe('my-restaurant');
   });
 
   it('restaurantSlug should fall back to restaurant when no name', () => {
-    (component as any).restaurant.set({ id: 'r1', name: '' });
+    fixture.componentRef.setInput('restaurant', { id: 'r1', name: '' });
     expect(component.restaurantSlug()).toBe('restaurant');
   });
 
