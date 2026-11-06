@@ -97,6 +97,7 @@ function createFixture(params: Record<string, string>): Fixture {
   });
 
   const fixture = TestBed.createComponent(MenuForm);
+  fixture.detectChanges();
   httpMock = TestBed.inject(HttpTestingController);
 
   return { component: fixture.componentInstance as any, fixture, httpMock, navigateCalls };
@@ -269,6 +270,7 @@ describe('MenuForm (edit route)', () => {
     flushLoad(f);
 
     f.component.form.controls.name.setValue('Renamed');
+    f.component.form.controls.name.markAsDirty();
     expect(f.component.form.dirty).toBe(true);
 
     f.component.submit();
@@ -310,6 +312,7 @@ describe('MenuForm (edit route)', () => {
     flushLoad(f);
 
     f.component.form.controls.name.setValue('Dirty value');
+    f.component.form.controls.name.markAsDirty();
     expect(f.component.form.dirty).toBe(true);
 
     f.component.cancel();
