@@ -1,0 +1,27 @@
+<app-public-order-frame step="tracking">
+  <main class="tracking-page" aria-labelledby="tracking-title">
+    <header class="page-heading"><p class="eyebrow">ORDER STATUS</p><h1 id="tracking-title">Track your order</h1><p>Latest status reported by the restaurant.</p></header>
+    @if (loading()) {
+      <section class="tracking-card" role="status"><p>Loading order status…</p></section>
+    } @else if (error()) {
+      <section class="tracking-card" role="alert"><span class="tracking-icon" aria-hidden="true"><i class="bi bi-exclamation-circle"></i></span><h2>Order could not be loaded</h2><p>{{ error() }}</p><button type="button" class="submit-button" (click)="retry()">Try again</button></section>
+    } @else if (order(); as currentOrder) {
+      <section class="tracking-card" role="status">
+        <span class="tracking-icon" aria-hidden="true"><i class="bi bi-clock-history"></i></span>
+        <p class="eyebrow">ORDER {{ currentOrder.orderNumber }}</p>
+        <h2>{{ currentOrder.status }}</h2>
+        <div class="status-preview" aria-label="Order status stages">
+          @for (status of ['New','Confirmed','Preparing','Ready','Completed']; track status) {
+            <span [class.is-active]="status === currentOrder.status">{{ status }}</span>
+          }
+        </div>
+        <div class="tracking-summary"><span>Total</span><strong>{{ currentOrder.currency }} {{ currentOrder.totalAmount | number:'1.2-2' }}</strong></div>
+        <p>Placed {{ currentOrder.createdAt | date:'medium' }}</p>
+        @if (currentOrder.completedAt) { <p>Completed {{ currentOrder.completedAt | date:'medium' }}</p> }
+        <div class="tracking-items">
+          @for (item of currentOrder.items; track $index) { <div><span>{{ item.quantity }}× {{ item.itemName }}</span></div> }
+        </div>
+      </section>
+    }
+  </main>
+</app-public-order-frame>

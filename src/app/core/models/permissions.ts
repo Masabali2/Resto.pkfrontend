@@ -22,9 +22,16 @@ export const PERMISSIONS = {
     View: 'Website.View',
     Update: 'Website.Update',
     Publish: 'Website.Publish'
+  } as const,
+  Order: {
+    View: 'Order.View',
+    Create: 'Order.Create',
+    Update: 'Order.Update',
+    Cancel: 'Order.Cancel'
   } as const
 } as const;
 
 export type MenuPermission = typeof PERMISSIONS.Menu[keyof typeof PERMISSIONS.Menu];
 export type MenuCategoryPermission = typeof PERMISSIONS.MenuCategory[keyof typeof PERMISSIONS.MenuCategory];
 export type MenuItemPermission = typeof PERMISSIONS.MenuItem[keyof typeof PERMISSIONS.MenuItem];
+export type OrderPermission = typeof PERMISSIONS.Order[keyof typeof PERMISSIONS.Order];

@@ -1,25 +1,44 @@
-<div class="row g-3 g-lg-4 mb-4">
+
+<div class="row g-3 g-lg-4 mb-4 summary-grid">
   @for (card of cards(); track card.label) {
     <div class="col-6 col-lg-3">
-      <div class="summary-card card-hover bg-white rounded-3xl border border-subtle p-3 p-lg-4 shadow-soft d-flex align-items-center justify-content-between h-100 position-relative overflow-hidden">
-        <div class="summary-card__body">
-          <span class="summary-card__label text-10px font-bold text-uppercase text-muted d-block mb-1">
-            {{ card.label }}
-          </span>
-          <div class="summary-card__value text-2xl font-black text-dark leading-none">
-            {{ card.value }}
+      <article
+        class="summary-card card h-100"
+        [attr.data-variant]="card.variant"
+      >
+        <div class="card-body summary-card__content">
+
+          <div class="summary-card__top">
+            <div class="summary-card__heading">
+              <span class="summary-card__label">
+                {{ card.label }}
+              </span>
+
+              <span class="summary-card__subtitle">
+                {{ card.subtitle }}
+              </span>
+            </div>
+
+            <div class="summary-card__icon">
+              <i class="bi" [class]="card.icon" aria-hidden="true"></i>
+            </div>
           </div>
-          <span class="summary-card__subtitle text-10px text-muted font-medium d-block mt-1">
-            {{ card.subtitle }}
-          </span>
+
+          <div class="summary-card__bottom">
+            <h3 class="summary-card__value">
+              {{ card.value }}
+            </h3>
+
+            <span class="summary-card__indicator">
+              <i class="bi bi-graph-up-arrow"></i>
+              <span>Overview</span>
+            </span>
+          </div>
+
+          <div class="summary-card__accent"></div>
+
         </div>
-        <div
-          class="summary-card__icon rounded-2xl d-flex align-items-center justify-center flex-shrink-0"
-          [style.color]="card.color"
-        >
-          <i class="bi" [class]="card.icon" style="font-size: 1.25rem;"></i>
-        </div>
-      </div>
+      </article>
     </div>
   }
 </div>

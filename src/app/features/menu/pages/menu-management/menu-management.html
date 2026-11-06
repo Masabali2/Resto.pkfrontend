@@ -1,72 +1,86 @@
-<div class="menu-management d-flex flex-column gap-4 w-100 pb-5">
 
-  <!-- HEADER SECTION WITH METRICS & PRIMARY ACTIONS -->
-  <header class="menu-management__header bg-white p-4 p-lg-5 rounded-3xl border border-subtle shadow-soft d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-4">
+<div class="menu-management d-flex flex-column w-100 pb-5">
+
+  <header class="menu-management__header d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-4">
+
     <div class="menu-management__heading">
       <div class="d-flex align-items-center gap-3 flex-wrap">
-        <h1 class="menu-management__title text-2xl font-black text-dark m-0">Menu Management</h1>
-        <span class="badge rounded-pill bg-surface-soft text-dark border border-subtle px-3 py-1.5 text-xs font-bold d-inline-flex align-items-center gap-1.5 shadow-2xs">
-          <i class="bi bi-egg-fried text-orange"></i>
-          <span>{{ summary()?.totalItems ?? totalCount() ?? 0 }} Items Active</span>
+        <h1 class="menu-management__title m-0">Menu Management</h1>
+
+        <span class="menu-management__item-badge">
+          <i class="bi bi-egg-fried"></i>
+          {{ totalCount() ?? 0 }} Items
         </span>
       </div>
-      <p class="menu-management__subtitle text-xs text-muted m-0 mt-1 max-w-2xl">
+
+      <p class="menu-management__subtitle">
         Organize your digital food menu, set pricing, add-ons, and real-time stock status across all ordering channels.
-        @if (menu(); as m) { <span class="fw-bold text-dark">&bull; {{ m.name }}</span> }
+        @if (menu(); as m) {
+          <span class="fw-bold text-dark"> · {{ m.name }}</span>
+        }
       </p>
     </div>
 
-    <!-- Action Buttons -->
-    <div class="menu-management__actions d-flex flex-wrap align-items-center gap-2.5">
-      <!-- Preview Public Menu Drawer Button -->
+    <div class="menu-management__actions">
+
       <button
         type="button"
-        class="btn btn-preview-drawer bg-white border border-subtle rounded-2xl text-xs font-bold text-dark px-3.5 py-2.5 d-inline-flex align-items-center gap-2 shadow-2xs smooth-transition"
+        class="btn btn-preview-drawer"
         (click)="togglePreviewDrawer()"
+        [attr.aria-expanded]="previewDrawerOpen()"
+        aria-controls="menu-preview-drawer"
+        aria-label="Preview customer menu"
       >
-        <i class="bi bi-eye text-orange"></i>
-        <span>Preview Menu</span>
+        <span class="btn-preview-drawer__icon">
+          <i class="bi bi-eye"></i>
+        </span>
+
+        <span class="btn-preview-drawer__content">
+          <span class="btn-preview-drawer__title">Preview Menu</span>
+          <span class="btn-preview-drawer__subtitle">Customer view</span>
+        </span>
+
+        <i class="bi bi-arrow-up-right btn-preview-drawer__arrow"></i>
       </button>
 
-      <!-- Add Category Button -->
       @if (canCreateCategory() && !isReadOnly()) {
         <button
           type="button"
-          class="btn btn-new-category bg-white border border-subtle rounded-2xl text-xs font-bold text-dark px-3.5 py-2.5 d-inline-flex align-items-center gap-2 shadow-2xs smooth-transition"
+          class="btn btn-new-category"
           (click)="createCategory()"
         >
-          <i class="bi bi-folder-plus text-muted"></i>
-          <span>+ New Category</span>
+          <i class="bi bi-folder-plus"></i>
+          <span>New Category</span>
         </button>
       }
 
-      <!-- Add Food Item Button -->
       <button
         type="button"
-        class="btn btn-add-item rounded-2xl text-xs font-bold text-white px-4 py-2.5 d-inline-flex align-items-center gap-2 shadow-glow smooth-transition active:scale-95"
+        class="btn btn-add-item"
         (click)="openCreateModal()"
         [disabled]="!canCreateItem() || isReadOnly()"
       >
         <i class="bi bi-plus-lg"></i>
-        <span>+ Add Food Item</span>
+        <span>Add Food Item</span>
       </button>
 
-      <!-- Save/Publish Menu Button -->
       <button
         type="button"
-        class="btn btn-publish rounded-2xl text-xs font-bold text-white bg-dark px-4 py-2.5 d-inline-flex align-items-center gap-2 shadow-sm smooth-transition active:scale-95"
+        class="btn btn-publish"
         (click)="publishMenuChanges()"
       >
-        <i class="bi bi-cloud-arrow-up text-orange"></i>
+        <i class="bi bi-cloud-arrow-up"></i>
         <span>Publish Changes</span>
       </button>
+
     </div>
   </header>
 
-  <!-- SUMMARY CARDS METRICS STRIP -->
-  <app-menu-management-summary [summary]="summary()" [totalCount]="totalCount()" />
+  <app-menu-management-summary
+    [summary]="summary()"
+    [totalCount]="totalCount()"
+  />
 
-  <!-- CATEGORIES & FILTERS & VIEW MODE CONTROLS BAR -->
   <app-menu-management-toolbar
     [categories]="categories()"
     [selectedCategory]="filteredCategory()"
@@ -78,7 +92,6 @@
     [readOnly]="isReadOnly()"
     [viewMode]="viewMode()"
     [activeDiet]="activeDiet()"
-    [reorderMode]="reorderMode()"
     (searchChange)="onSearchChange($event)"
     (categoryChange)="onCategoryChange($event)"
     (availabilityChange)="onAvailabilityChangeFromKey($event)"
@@ -86,76 +99,114 @@
     (create)="openCreateModal()"
     (viewModeChange)="onViewModeChange($event)"
     (dietChange)="onDietChange($event)"
-    (toggleReorder)="toggleReorderMode()"
   />
 
-  <!-- MAIN LIST / STATES SECTION -->
+  @if (canViewCategory()) {
+    <app-menu-category-manager
+      [categories]="categories()"
+      [selectedCategoryId]="filter().categoryId"
+      [loading]="categoriesLoading()"
+      [readOnly]="isReadOnly()"
+      [canCreate]="canCreateCategory()"
+      [canUpdate]="canUpdateCategory()"
+      [canDelete]="canDeleteCategory()"
+      [canReorder]="canUpdateCategory()"
+      [pendingIds]="pendingCategoryIds()"
+      [reordering]="categoryReordering()"
+      [error]="categoryError()"
+      (create)="createCategory()"
+      (edit)="editCategory($event)"
+      (select)="onCategorySelectedFromManager($event)"
+      (toggleActive)="toggleCategoryActive($event)"
+      (delete)="openDeleteCategoryDialog($event)"
+      (moveUp)="moveCategory($event, 'up')"
+      (moveDown)="moveCategory($event, 'down')"
+    />
+  }
+
   <section class="menu-management__states">
+
     @if (pageState() === 'loading' || itemsLoading() || summaryLoading() || categoriesLoading()) {
-      <div class="menu-management__loading bg-white rounded-3xl border border-subtle p-5 text-center shadow-soft d-flex flex-column align-items-center justify-content-center">
+      <div class="menu-management__loading">
         <app-loading-spinner />
-        <span class="menu-management__loading-label text-xs text-muted mt-2">Loading menu items&hellip;</span>
+        <span>Loading menu items...</span>
       </div>
     }
 
     @if (pageState() === 'error') {
-      <div class="menu-management__empty menu-management__error bg-white rounded-3xl border border-dashed border-danger p-5 text-center shadow-soft" role="alert">
-        <i class="bi bi-exclamation-triangle-fill text-danger mb-2" style="font-size: 2rem;"></i>
-        <p class="text-xs font-semibold text-danger mb-3">{{ errorMessage() }}</p>
-        <button type="button" class="btn btn-sm btn-outline-secondary rounded-xl text-xs font-bold px-3 py-2" (click)="retry()">
+      <div class="menu-management__empty menu-management__error" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <p>{{ errorMessage() }}</p>
+
+        <button type="button" class="btn btn-outline-secondary" (click)="retry()">
           Retry
         </button>
       </div>
     }
 
     @if (pageState() === 'not-found') {
-      <div class="menu-management__empty bg-white rounded-3xl border border-dashed border-subtle p-5 text-center shadow-soft" role="alert">
-        <p class="text-xs text-muted m-0">Menu not found.</p>
+      <div class="menu-management__empty" role="alert">
+        <p>Menu not found.</p>
       </div>
     }
 
     @if (pageState() === 'forbidden') {
-      <div class="menu-management__empty bg-white rounded-3xl border border-dashed border-subtle p-5 text-center shadow-soft" role="alert">
-        <p class="text-xs text-muted m-0">You do not have permission to view this menu.</p>
+      <div class="menu-management__empty" role="alert">
+        <p>You do not have permission to view this menu.</p>
       </div>
     }
 
     @if (pageState() === 'no-workspace') {
-      <div class="menu-management__empty bg-white rounded-3xl border border-dashed border-subtle p-5 text-center shadow-soft" role="alert">
-        <p class="text-xs text-muted m-0">No active workspace.</p>
+      <div class="menu-management__empty" role="alert">
+        <p>No active workspace.</p>
       </div>
     }
 
     @if (pageState() === 'empty' && !itemsLoading()) {
-      <div class="menu-management__empty bg-white rounded-3xl border border-dashed border-subtle p-5 text-center shadow-soft">
-        <div class="rounded-circle bg-orange-soft text-orange mx-auto d-flex align-items-center justify-center mb-3" style="width: 4rem; height: 4rem;">
-          <i class="bi bi-egg-fried" style="font-size: 2rem;"></i>
+      <div class="menu-management__empty">
+
+        <div class="menu-management__empty-icon">
+          <i class="bi bi-egg-fried"></i>
         </div>
-        <h3 class="text-base font-bold text-dark mb-1">No food items found</h3>
-        <p class="text-xs text-muted max-w-md mx-auto mb-3">
+
+        <h3>No food items found</h3>
+
+        <p>
           @if (filter().search || filter().categoryId || filter().isAvailable !== null) {
-            No items match your selected filter or search terms. Try clearing filters or add a new food item.
+            No items match your selected filter or search terms. Try clearing filters or add a new item.
           } @else {
             No menu items yet. Add your first item to build your digital menu.
           }
         </p>
+
         @if (filter().search || filter().categoryId || filter().isAvailable !== null) {
-          <button type="button" class="btn btn-sm btn-outline-secondary rounded-xl text-xs font-bold px-3 py-2" (click)="clearFilters()">
+          <button
+            type="button"
+            class="btn btn-new-category"
+            (click)="clearFilters()"
+          >
             Clear Filters
           </button>
         } @else if (canCreateItem() && !isReadOnly()) {
-          <button type="button" class="btn btn-sm btn-add-item text-white rounded-xl text-xs font-bold px-4 py-2" (click)="openCreateModal()">
-            + Add First Food Item
+          <button
+            type="button"
+            class="btn btn-add-item"
+            (click)="openCreateModal()"
+          >
+            <i class="bi bi-plus-lg"></i>
+            Add First Food Item
           </button>
         }
+
       </div>
     }
 
-    @if (pageState() === 'list' && menu(); as currentMenu) {
+    @if (pageState() === 'list' && !itemsLoading() && menu(); as currentMenu) {
+
       @if (isArchived()) {
-        <div class="alert alert-warning rounded-2xl border border-warning-subtle text-xs d-flex align-items-center gap-2 mb-3 shadow-2xs" role="alert">
-          <i class="bi bi-info-circle-fill text-warning"></i>
-          <span>This menu is archived &mdash; item management is read-only.</span>
+        <div class="alert alert-warning rounded-3 border mb-3" role="alert">
+          <i class="bi bi-info-circle-fill me-2"></i>
+          This menu is archived — item management is read-only.
         </div>
       }
 
@@ -184,100 +235,342 @@
         </div>
       }
     }
+
   </section>
 
-  <!-- ADD / EDIT ITEM MODAL -->
   <app-menu-item-modal
     [open]="modalOpen()"
     [mode]="modalMode()"
     [item]="modalItem()"
     [categories]="categories()"
+    [defaultCategoryId]="filter().categoryId"
     (saved)="onItemSaved()"
     (cancelled)="closeModal()"
   />
 
-  <!-- CONFIRM DELETE DIALOG -->
   <app-confirmation-dialog
     [open]="deleteOpen()"
-    [title]="'Delete item'"
-    [message]="deleteTarget() ? `Are you sure you want to delete &ldquo;${deleteTarget()!.name}&rdquo;?` : ''"
+    [title]="deleteDialogTitle()"
+    [message]="deleteDialogMessage()"
     [confirmLabel]="'Delete'"
     (confirmed)="confirmDelete()"
     (cancelled)="cancelDelete()"
-  ></app-confirmation-dialog>
+  />
 
-  <!-- PUBLIC MENU PREVIEW DRAWER (SLIDE-OVER) -->
   @if (previewDrawerOpen()) {
+
     <div
-      class="preview-drawer-backdrop position-fixed inset-0 z-1060 modal-backdrop-blur d-flex justify-content-end"
+      class="preview-drawer-backdrop"
       (click)="closePreviewDrawer()"
+      (keydown.escape)="closePreviewDrawer()"
     >
-      <div
-        class="preview-drawer bg-white shadow-2xl border-start border-subtle d-flex flex-column h-100"
-        style="width: 100%; max-width: 440px;"
+
+      <aside
+        id="menu-preview-drawer"
+        class="preview-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Customer menu preview"
         (click)="$event.stopPropagation()"
       >
-        <!-- Drawer Header -->
-        <div class="p-3 bg-dark text-white d-flex align-items-center justify-content-between flex-shrink-0">
-          <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-phone text-orange"></i>
-            <span class="text-xs font-bold">Live QR Menu Preview</span>
+
+        <header class="preview-drawer__header">
+
+          <div class="preview-drawer__identity">
+
+            <div class="preview-drawer__brand-icon">
+              <i class="bi bi-qr-code-scan"></i>
+            </div>
+
+            <div>
+              <h2>Customer Preview</h2>
+              <p>Preview your digital restaurant menu</p>
+            </div>
+
           </div>
+
+          <span class="preview-live-indicator">Preview</span>
+
           <button
             type="button"
-            class="btn btn-sm btn-icon-round text-white p-1"
+            class="btn-icon-round"
             (click)="closePreviewDrawer()"
-            aria-label="Close"
+            aria-label="Close preview"
           >
             <i class="bi bi-x-lg"></i>
           </button>
-        </div>
 
-        <!-- Simulated Smartphone Frame -->
-        <div class="preview-drawer__body flex-grow-1 overflow-y-auto p-3 bg-surface-soft d-flex flex-column align-items-center">
-          <div class="phone-frame bg-white rounded-3xl shadow-xl overflow-hidden border border-subtle w-100" style="max-width: 320px;">
-            <!-- Simulated Restaurant Mobile Banner -->
-            <div class="phone-banner position-relative p-3 bg-dark text-white d-flex flex-column justify-content-end" style="height: 120px; background: linear-gradient(135deg, #1e293b, #0f172a);">
-              <div class="position-relative z-2">
-                <span class="badge bg-orange text-white rounded-pill px-2 py-0.5 text-10px font-bold mb-1 d-inline-block">Open Now</span>
-                <h4 class="text-sm font-black m-0 text-white">{{ menu()?.name ?? 'Restaurant Menu' }}</h4>
-                <p class="text-10px text-muted m-0">Live Customer QR Ordering</p>
+        </header>
+
+        <div class="preview-drawer__body">
+
+          <div class="preview-toolbar">
+            <span class="preview-toolbar__label">
+              <i class="bi bi-phone"></i>
+              Mobile QR Experience
+            </span>
+
+            <span class="preview-toolbar__hint">
+              {{ totalCount() ?? 0 }} Menu Items
+            </span>
+          </div>
+
+          <div class="phone-frame">
+
+            <div class="preview-phone-status">
+              <span>9:41</span>
+
+              <div class="preview-phone-status__icons">
+                <i class="bi bi-reception-4"></i>
+                <i class="bi bi-wifi"></i>
+                <i class="bi bi-battery-full"></i>
               </div>
             </div>
 
-            <!-- Simulated Menu Items inside Frame -->
-            <div class="p-3 d-flex flex-column gap-2">
-              @for (item of items().slice(0, 6); track item.id) {
-                <div class="d-flex align-items-center gap-2 p-2 bg-surface-soft rounded-2xl border border-subtle">
-                  <div class="rounded-xl overflow-hidden bg-white border border-subtle flex-shrink-0" style="width: 40px; height: 40px;">
-                    @if (item.imageUrl) {
-                      <img [src]="item.imageUrl" [alt]="item.name" class="w-100 h-100 object-cover" />
-                    } @else {
-                      <div class="w-100 h-100 d-flex align-items-center justify-center text-muted">
-                        <i class="bi bi-egg-fried"></i>
-                      </div>
-                    }
-                  </div>
-                  <div class="flex-grow-1 min-w-0">
-                    <div class="text-xs font-bold text-dark text-truncate">{{ item.name }}</div>
-                    <div class="text-10px text-orange font-bold">{{ item.currency }} {{ formatMoney(item.price) }}</div>
-                  </div>
-                  @if (item.isAvailable) {
-                    <span class="badge bg-success-subtle text-success text-10px px-1.5 py-0.5 rounded-pill font-bold">In Stock</span>
-                  } @else {
-                    <span class="badge bg-danger-subtle text-danger text-10px px-1.5 py-0.5 rounded-pill font-bold">Sold Out</span>
-                  }
+            <section class="phone-banner">
+
+              <div class="preview-restaurant-logo">
+                <i class="bi bi-shop"></i>
+              </div>
+
+              <span class="phone-banner__eyebrow">
+                <i class="bi bi-circle-fill"></i>
+                DIGITAL RESTAURANT MENU
+              </span>
+
+              <h2>{{ menu()?.name ?? 'Restaurant Menu' }}</h2>
+
+              <p>Explore our delicious menu</p>
+
+              <div class="phone-banner__meta">
+                <span>
+                  <i class="bi bi-grid"></i>
+                  {{ categories().length }} Categories
+                </span>
+
+                <span>
+                  <i class="bi bi-egg-fried"></i>
+                  {{ totalCount() ?? 0 }} Items
+                </span>
+              </div>
+
+            </section>
+
+            <section class="preview-menu-info">
+
+              <div class="preview-menu-info__heading">
+                <span class="preview-menu-eyebrow">OUR COLLECTION</span>
+                <h3>Explore Menu</h3>
+                <p>Find something delicious today.</p>
+              </div>
+
+              <div class="preview-menu-stats">
+
+                <div class="preview-menu-stat">
+                  <strong>{{ totalCount() ?? 0 }}</strong>
+                  <span>Total Items</span>
                 </div>
+
+                <div class="preview-menu-stat">
+                  <strong>{{ categories().length }}</strong>
+                  <span>Categories</span>
+                </div>
+
+                <div class="preview-menu-stat">
+                  <strong>{{ items().length }}</strong>
+                  <span>Loaded</span>
+                </div>
+
+              </div>
+
+              <div class="preview-search">
+                <i class="bi bi-search"></i>
+
+                <input
+                  type="text"
+                  placeholder="Search menu items..."
+                  [value]="previewSearch()"
+                  (input)="previewSearch.set($any($event.target).value)"
+                  aria-label="Search menu items"
+                />
+
+                @if (previewSearch()) {
+                  <button
+                    type="button"
+                    (click)="previewSearch.set('')"
+                    aria-label="Clear search"
+                  >
+                    <i class="bi bi-x-circle"></i>
+                  </button>
+                }
+              </div>
+
+              <div class="preview-categories">
+
+                <button
+                  type="button"
+                  class="preview-category-chip"
+                  [class.active]="selectedPreviewCategory() === 'all'"
+                  (click)="selectedPreviewCategory.set('all')"
+                >
+                  All Items
+                </button>
+
+                @for (category of categories(); track category.id) {
+                  <button
+                    type="button"
+                    class="preview-category-chip"
+                    [class.active]="selectedPreviewCategory() === category.id"
+                    (click)="selectedPreviewCategory.set(category.id)"
+                  >
+                    {{ category.name }}
+                    <span>{{ category.itemCount }}</span>
+                  </button>
+                }
+
+              </div>
+
+            </section>
+
+            <section class="preview-menu-collection">
+
+              <div class="preview-section-heading">
+                <div>
+                  <span class="preview-menu-eyebrow">FRESHLY PREPARED</span>
+                  <h3>Our Menu</h3>
+                </div>
+
+                <span>{{ filteredPreviewItems().length }} Results</span>
+              </div>
+
+              @if (filteredPreviewItems().length > 0) {
+
+                <div class="preview-item-list">
+
+                  @for (item of filteredPreviewItems(); track item.id) {
+
+                    <article class="preview-food-card">
+
+                      @if (item.imageUrl) {
+                        <img
+                          [src]="item.imageUrl"
+                          [alt]="item.name"
+                          loading="lazy"
+                        />
+                      } @else {
+                        <div class="preview-food-placeholder">
+                          <i class="bi bi-egg-fried"></i>
+                        </div>
+                      }
+
+                      <div class="preview-food-card__content">
+
+                        <span class="preview-food-card__category">
+                          {{ item.categoryName || 'Uncategorized' }}
+                        </span>
+
+                        <h3>{{ item.name }}</h3>
+
+                        <p>
+                          {{ item.description || 'Deliciously prepared for you.' }}
+                        </p>
+
+                        <div class="preview-food-card__footer">
+
+                          <strong>
+                            {{ item.currency }}
+                            {{ formatMoney(item.price) }}
+                          </strong>
+
+                          <span
+                            class="preview-food-card__availability"
+                            [class.available]="item.isAvailable"
+                            [class.unavailable]="!item.isAvailable"
+                          >
+                            @if (item.isAvailable) {
+                              <i class="bi bi-check-circle-fill"></i>
+                              Available
+                            } @else {
+                              <i class="bi bi-x-circle-fill"></i>
+                              Sold Out
+                            }
+                          </span>
+
+                        </div>
+
+                      </div>
+
+                    </article>
+
+                  }
+
+                </div>
+
+              } @else {
+
+                <div class="preview-empty-state">
+
+                  <div class="preview-empty-state__icon">
+                    <i class="bi bi-search"></i>
+                  </div>
+
+                  <h3>No menu items found</h3>
+                  <p>Try another search or category.</p>
+
+                  <button
+                    type="button"
+                    (click)="previewSearch.set(''); selectedPreviewCategory.set('all')"
+                  >
+                    Clear Filters
+                  </button>
+
+                </div>
+
               }
-            </div>
+
+            </section>
+
+            <footer class="customer-menu-footer">
+
+              <div class="customer-menu-footer__brand">
+                <i class="bi bi-qr-code"></i>
+                <span>Powered by Resto.pk</span>
+              </div>
+
+              <span>Digital Restaurant Experience</span>
+
+            </footer>
+
           </div>
+
         </div>
 
-        <div class="p-3 border-top border-subtle bg-white text-center flex-shrink-0">
-          <span class="text-10px text-muted">Customer view automatically updates when changes are saved</span>
-        </div>
-      </div>
+        <footer class="preview-drawer__footer">
+
+          <div class="preview-drawer__footer-info">
+            <i class="bi bi-eye"></i>
+
+            <div>
+              <strong>Customer view</strong>
+              <span>Preview your actual menu presentation</span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="preview-done-btn"
+            (click)="closePreviewDrawer()"
+          >
+            Done
+            <i class="bi bi-check2"></i>
+          </button>
+
+        </footer>
+
+      </aside>
+
     </div>
+
   }
 
 </div>

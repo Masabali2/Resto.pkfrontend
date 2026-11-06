@@ -3,7 +3,7 @@ import {
   Component,
   computed,
   input,
-  output
+  output,signal
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import type { MenuCategoryDto } from '../../models/menu-category.model';
@@ -31,7 +31,6 @@ export class MenuManagementToolbar {
   readonly readOnly = input<boolean>(false);
   readonly viewMode = input<'grid' | 'list'>('grid');
   readonly activeDiet = input<string>('all');
-  readonly reorderMode = input<boolean>(false);
 
   readonly searchChange = output<string>();
   readonly categoryChange = output<string | null>();
@@ -40,7 +39,6 @@ export class MenuManagementToolbar {
   readonly create = output<void>();
   readonly viewModeChange = output<'grid' | 'list'>();
   readonly dietChange = output<string>();
-  readonly toggleReorder = output<void>();
 
   protected readonly availabilityOptions: { value: Availability; label: string }[] = [
     { value: 'all', label: 'All statuses' },
@@ -77,10 +75,6 @@ export class MenuManagementToolbar {
     this.viewModeChange.emit(mode);
   }
 
-  protected onToggleReorder(): void {
-    this.toggleReorder.emit();
-  }
-
   protected getCategoryIcon(index: number): string {
     const icons = ['bi-fire', 'bi-egg-fried', 'bi-cup-straw', 'bi-cake2', 'bi-basket2', 'bi-cup-hot'];
     return icons[index % icons.length];
@@ -94,4 +88,38 @@ export class MenuManagementToolbar {
     const cat = this.selectedCategory();
     return cat ? cat.name : 'All categories';
   }
+  readonly isCategoryModalOpen = signal(false);
+readonly categorySearch = signal('');
+
+readonly filteredCategories = computed(() => {
+  const searchTerm = this.categorySearch().trim().toLowerCase();
+
+  if (!searchTerm) {
+    return this.categories();
+  }
+
+  return this.categories().filter(category =>
+    category.name.toLowerCase().includes(searchTerm)
+  );
+});
+
+protected openCategoryModal(): void {
+  this.categorySearch.set('');
+  this.isCategoryModalOpen.set(true);
+}
+
+protected closeCategoryModal(): void {
+  this.isCategoryModalOpen.set(false);
+  this.categorySearch.set('');
+}
+
+protected onCategorySearch(event: Event): void {
+  const value = (event.target as HTMLInputElement).value;
+  this.categorySearch.set(value);
+}
+
+protected onModalCategorySelect(categoryId: string | null): void {
+  this.categoryChange.emit(categoryId);
+  this.closeCategoryModal();
+}
 }

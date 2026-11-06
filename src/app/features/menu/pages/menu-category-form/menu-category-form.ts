@@ -73,6 +73,15 @@ export class MenuCategoryForm {
   protected readonly categoryId = this.route.snapshot.paramMap.get('categoryId') ?? null;
   protected readonly isEdit = this.categoryId !== null;
 
+  /**
+   * Only two explicit, internal destinations are supported. This avoids
+   * accepting arbitrary redirect URLs from query parameters.
+   */
+  private readonly returnTo =
+    this.route.snapshot.queryParamMap.get('returnTo') === 'manage'
+      ? 'manage'
+      : 'detail';
+
   protected readonly pageTitle = computed(() =>
     this.isEdit ? 'Edit Category' : 'Create Category'
   );
@@ -199,10 +208,7 @@ export class MenuCategoryForm {
           );
           this.form.markAsPristine();
           this.submitted.set(false);
-          void this.router.navigate(['/menus', this.menuId], {
-            queryParams: { restaurantId: this.route.snapshot.queryParamMap.get('restaurantId') },
-            queryParamsHandling: 'merge'
-          });
+          this.navigateBack();
         },
         error: error => {
           const details = this.httpErrorHandler.handle(error, {
@@ -266,9 +272,17 @@ export class MenuCategoryForm {
   protected cancel(): void {
     this.form.markAsPristine();
     this.submitted.set(false);
-    void this.router.navigate(['/menus', this.menuId], {
-      queryParams: { restaurantId: this.route.snapshot.queryParamMap.get('restaurantId') },
-      queryParamsHandling: 'merge'
-    });
+    this.navigateBack();
+  }
+
+  private navigateBack(): void {
+    const destination = this.returnTo === 'manage'
+      ? ['/menus', this.menuId, 'manage']
+      : ['/menus', this.menuId];
+
+    const restaurantId = this.route.snapshot.queryParamMap.get('restaurantId');
+    const queryParams = restaurantId ? { restaurantId } : {};
+
+    void this.router.navigate(destination, { queryParams });
   }
 }

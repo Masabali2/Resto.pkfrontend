@@ -56,39 +56,24 @@
     <div class="organizer__grid">
       <aside class="panel panel--rail" aria-label="Menu categories">
         <div class="panel__head">
-          <div><h2 class="panel__title">Menu Categories</h2><p class="panel__hint">Select to manage · arrows re-order the sequence</p></div>
+          <div><h2 class="panel__title">Menu Categories</h2><p class="panel__hint">Select a category to browse its items. Category management lives in Menu Management.</p></div>
           <span class="panel__count">{{ categories().length }} total</span>
         </div>
 
         <ul class="rail">
-          @for (category of categories(); track category.id; let idx = $index) {
+          @for (category of categories(); track category.id) {
             <li class="rail__item" [class.rail__item--active]="activeCategory()?.id === category.id" [class.rail__item--inactive]="!category.isActive">
               <button type="button" class="rail__select" (click)="selectCategory(category.id)" [attr.aria-pressed]="activeCategory()?.id === category.id">
-                <i class="bi bi-grip-vertical rail__grip" aria-hidden="true"></i>
                 <span class="rail__name">{{ category.name }}</span>
                 <span class="rail__meta">({{ categoryPage(category.id)?.totalCount ?? '…' }})</span>
               </button>
-              <div class="rail__controls">
-                <button type="button" class="icon-btn" title="Move up" aria-label="Move category up" [disabled]="!canManageCategories() || isReadOnly() || isFirstCategory(idx)" (click)="moveCategory(idx, 'up')"><i class="bi bi-arrow-up" aria-hidden="true"></i></button>
-                <button type="button" class="icon-btn" title="Move down" aria-label="Move category down" [disabled]="!canManageCategories() || isReadOnly() || isLastCategory(idx)" (click)="moveCategory(idx, 'down')"><i class="bi bi-arrow-down" aria-hidden="true"></i></button>
-              </div>
             </li>
           }
         </ul>
 
-        @if (categories().length === 0 && !isAddingCategory()) { <p class="rail__empty">No categories yet — add the first section below.</p> }
-        @if (canCreateCategory() && !isReadOnly()) {
-          @if (!isAddingCategory()) {
-            <button type="button" class="rail__add" (click)="startAddCategory()"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add new category</button>
-          } @else {
-            <form class="rail__form" (submit)="$event.preventDefault(); submitAddCategory()">
-              <input type="text" class="rail__input" placeholder="e.g. Sizzling Skillets" maxlength="100" [value]="newCategoryName()" (input)="onNewCategoryNameChange($any($event.target).value)" aria-label="New category name" />
-              <div class="rail__form-actions">
-                <button type="button" class="btn btn--ghost" (click)="cancelAddCategory()">Cancel</button>
-                <button type="submit" class="btn btn--primary" [disabled]="newCategoryName().trim().length === 0 || addingCategory()">{{ addingCategory() ? 'Saving…' : 'Save' }}</button>
-              </div>
-            </form>
-          }
+        @if (categories().length === 0) { <p class="rail__empty">No categories yet — create the first section in Menu Management.</p> }
+        @if (canManageMenu()) {
+          <button type="button" class="rail__add" (click)="manageMenu()"><i class="bi bi-gear" aria-hidden="true"></i> Manage categories &amp; items</button>
         }
       </aside>
 
@@ -195,5 +180,5 @@
     <app-bulk-price-dialog [open]="bulkPriceOpen()" [items]="filteredItems()" [categoryName]="activeCategory()?.name ?? ''" (closed)="closeBulkPriceDialog()" (applied)="onBulkPricesApplied()" />
   }
 
-  <app-confirmation-dialog [open]="dialogOpen()" [title]="dialogKind() === 'category' ? 'Delete category' : 'Delete item'" [message]="dialogConfirmMessage()" [confirmLabel]="'Delete'" (confirmed)="confirmDialog()" (cancelled)="cancelDialog()"></app-confirmation-dialog>
+  <app-confirmation-dialog [open]="dialogOpen()" [title]="'Delete item'" [message]="dialogConfirmMessage()" [confirmLabel]="'Delete'" (confirmed)="confirmDialog()" (cancelled)="cancelDialog()"></app-confirmation-dialog>
 </div>

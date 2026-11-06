@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { permissionGuard } from './core/guards/permission.guard';
 import { unsavedChangesGuard } from './core/guards/unsaved-changes.guard';
+import { PERMISSIONS } from './core/models/permissions';
 
 export const routes: Routes = [
   {
@@ -12,6 +13,30 @@ export const routes: Routes = [
       import('./features/public-website/pages/home/home').then(
         m => m.PublicHome
       )
+  },
+  {
+    path: 'r/:slug/cart',
+    title: 'Your Cart — Resto.pk',
+    loadComponent: () =>
+      import('./features/orders/pages/customer/cart/cart').then(m => m.PublicCart)
+  },
+  {
+    path: 'r/:slug/checkout',
+    title: 'Checkout — Resto.pk',
+    loadComponent: () =>
+      import('./features/orders/pages/customer/checkout/checkout').then(m => m.PublicCheckout)
+  },
+  {
+    path: 'r/:slug/order-confirmation',
+    title: 'Order Confirmation — Resto.pk',
+    loadComponent: () =>
+      import('./features/orders/pages/customer/order-confirmation/order-confirmation').then(m => m.PublicOrderConfirmation)
+  },
+  {
+    path: 'r/:slug/order-tracking/:trackingToken',
+    title: 'Track Your Order — Resto.pk',
+    loadComponent: () =>
+      import('./features/orders/pages/customer/order-tracking/order-tracking').then(m => m.PublicOrderTracking)
   },
   {
     path: 'login',
@@ -160,6 +185,27 @@ export const routes: Routes = [
         ]
       },
       {
+        path: 'orders/:orderId',
+        title: 'Order Details — Resto.pk',
+        canActivate: [permissionGuard],
+        data: { permission: PERMISSIONS.Order.View },
+        loadComponent: () =>
+          import('./features/orders/pages/staff/order-details/order-details').then(
+            m => m.OrderDetails
+          )
+      },
+      {
+        path: 'orders',
+        pathMatch: 'full',
+        title: 'Orders — Resto.pk',
+        canActivate: [permissionGuard],
+        data: { permission: PERMISSIONS.Order.View },
+        loadComponent: () =>
+          import('./features/orders/pages/staff/order-list/order-list').then(
+            m => m.OrderList
+          )
+      },
+      {
         path: 'branding-assets',
         title: 'Branding & Assets — Resto.pk',
         canActivate: [permissionGuard],
@@ -267,16 +313,6 @@ export const routes: Routes = [
             loadComponent: () =>
               import('./features/menu/pages/menu-management/menu-management').then(
                 m => m.MenuManagement
-              )
-          },
-          {
-            path: ':menuId',
-            title: 'Menu — Resto.pk',
-            canActivate: [permissionGuard],
-            data: { permission: 'Menu.View' },
-            loadComponent: () =>
-              import('./features/menu/pages/menu-detail/menu-detail').then(
-                m => m.MenuDetail
               )
           },
         ],

@@ -21,7 +21,7 @@ const makeAsset = (overrides: Partial<BrandingAsset> = {}): BrandingAsset => ({
   fileName: 'logo.png',
   contentType: 'image/png',
   fileSize: 1024,
-  storageKey: 'k1',
+  fileId: 'k1',
   previewUrl: 'http://x/logo.png',
   created: '2026-01-01T00:00:00Z',
   isReferenced: false,
@@ -51,7 +51,8 @@ describe('MediaLibrary', () => {
   });
 
   it('should expose rows in reverse order', () => {
-    (component as any).assets.set([makeAsset({ id: 'a1', fileName: 'first.png' }), makeAsset({ id: 'a2', fileName: 'second.png' })]);
+    fixture.componentRef.setInput('assets', [makeAsset({ id: 'a1', fileName: 'first.png' }), makeAsset({ id: 'a2', fileName: 'second.png' })]);
+    fixture.detectChanges();
     const rows = (component as any).rows();
     expect(rows.map((r: BrandingAsset) => r.id)).toEqual(['a2', 'a1']);
   });
@@ -68,7 +69,7 @@ describe('MediaLibrary', () => {
   });
 
   it('handleDelete with no restaurant should notify error and not call delete', () => {
-    (component as any).restaurant.set(null);
+    fixture.componentRef.setInput('restaurant', null);
     (component as any).handleDelete(makeAsset());
     expect(mockNotificationService.error).toHaveBeenCalled();
     expect(mockBrandingAssetsService.deleteAsset).not.toHaveBeenCalled();

@@ -69,6 +69,132 @@ describe('MenuItemModal interaction & update', () => {
     fixture.detectChanges();
   }
 
+  it('preselects the provided default category when creating an item', () => {
+    const fixture = TestBed.createComponent(MenuItemModal);
+    fixture.componentRef.setInput('mode', 'create');
+    fixture.componentRef.setInput('open', true);
+    fixture.componentRef.setInput('categories', [
+      category,
+      {
+        ...category,
+        id: 'cat-2',
+        name: 'Drinks',
+        displayOrder: 1
+      }
+    ]);
+    fixture.componentRef.setInput('defaultCategoryId', 'cat-2');
+    fixture.detectChanges();
+
+    const categorySelect = fixture.nativeElement.querySelector(
+      '#modal-category'
+    ) as HTMLSelectElement;
+
+    expect(categorySelect.value).toBe('cat-2');
+  });
+
+  it('posts the create request to the preselected default category', () => {
+    const fixture = TestBed.createComponent(MenuItemModal);
+    fixture.componentRef.setInput('mode', 'create');
+    fixture.componentRef.setInput('open', true);
+    fixture.componentRef.setInput('categories', [
+      category,
+      {
+        ...category,
+        id: 'cat-2',
+        name: 'Drinks',
+        displayOrder: 1
+      }
+    ]);
+    fixture.componentRef.setInput('defaultCategoryId', 'cat-2');
+    fixture.detectChanges();
+
+    const nameInput = fixture.nativeElement.querySelector('#modal-name') as HTMLInputElement;
+    nameInput.value = 'Cola';
+    nameInput.dispatchEvent(new Event('input'));
+    const priceInput = fixture.nativeElement.querySelector('#modal-price') as HTMLInputElement;
+    priceInput.value = '2.50';
+    priceInput.dispatchEvent(new Event('input'));
+
+    const form = fixture.nativeElement.querySelector('form');
+    form.dispatchEvent(new Event('ngSubmit'));
+
+    const request = httpMock.expectOne({
+      method: 'POST',
+      url: `${API_ROOT}/menu-categories/cat-2/items`
+    });
+    expect(request.request.body).toEqual({
+      name: 'Cola',
+      price: 2.5,
+      description: null,
+      currency: 'PKR',
+      imageFileId: null,
+      displayOrder: null,
+      isAvailable: true
+    });
+
+    request.flush({
+      success: true,
+      data: { ...item, id: 'item-2', menuCategoryId: 'cat-2', name: 'Cola' }
+    } as ApiResponse<MenuItemDto>);
+  });
+
+  it('uses a newly selected category when retrying after a failed submit', () => {
+    const fixture = TestBed.createComponent(MenuItemModal);
+    fixture.componentRef.setInput('mode', 'create');
+    fixture.componentRef.setInput('open', true);
+    fixture.componentRef.setInput('categories', [
+      category,
+      {
+        ...category,
+        id: 'cat-2',
+        name: 'Drinks',
+        displayOrder: 1
+      }
+    ]);
+    fixture.componentRef.setInput('defaultCategoryId', 'cat-2');
+    fixture.detectChanges();
+
+    const nameInput = fixture.nativeElement.querySelector('#modal-name') as HTMLInputElement;
+    nameInput.value = 'Cola';
+    nameInput.dispatchEvent(new Event('input'));
+    const priceInput = fixture.nativeElement.querySelector('#modal-price') as HTMLInputElement;
+    priceInput.value = '2.50';
+    priceInput.dispatchEvent(new Event('input'));
+
+    const form = fixture.nativeElement.querySelector('form');
+    form.dispatchEvent(new Event('ngSubmit'));
+
+    httpMock
+      .expectOne({
+        method: 'POST',
+        url: `${API_ROOT}/menu-categories/cat-2/items`
+      })
+      .flush(
+        { message: 'Temporary failure.' },
+        { status: 500, statusText: 'Server Error' }
+      );
+
+    const categorySelect = fixture.nativeElement.querySelector(
+      '#modal-category'
+    ) as HTMLSelectElement;
+    categorySelect.value = 'cat-1';
+    categorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+    fixture.detectChanges();
+
+    form.dispatchEvent(new Event('ngSubmit'));
+
+    const retry = httpMock.expectOne({
+      method: 'POST',
+      url: `${API_ROOT}/menu-categories/cat-1/items`
+    });
+    expect(retry.request.body.name).toBe('Cola');
+
+    retry.flush({
+      success: true,
+      data: { ...item, id: 'item-2', name: 'Cola' }
+    } as ApiResponse<MenuItemDto>);
+  });
+
   it('does not close the form when clicking inside on an input', () => {
     const fixture = TestBed.createComponent(MenuItemModal);
     const component = fixture.componentInstance;

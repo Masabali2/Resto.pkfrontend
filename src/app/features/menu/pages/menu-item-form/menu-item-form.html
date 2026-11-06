@@ -14,7 +14,7 @@
   }
 
   @if (!loading()) {
-    <form class="menu-form__form" (ngSubmit)="submit()">
+    <form class="menu-form__form" [formGroup]="form" (ngSubmit)="submit()">
       <div class="menu-form__field">
         <label for="name">
           Item name <span class="menu-form__required">*</span>
@@ -133,7 +133,7 @@
           <div class="image-reference" style="margin-top: 0.5rem;">
             <img
               class="image-reference__thumb"
-              [src]="'/api/v1/files/' + assetId"
+              [src]="apiUrl + '/v1/files/' + assetId"
               [alt]="form.controls.name.value + ' image'"
               loading="lazy"
             />

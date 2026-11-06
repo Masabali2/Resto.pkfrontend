@@ -22,6 +22,7 @@ import type { ApiResponse } from '../../../../core/models/api-response.model';
 import type { MenuItemDto, UpdateMenuItemRequest } from '../../models/menu-item.model';
 import { parsePrice, DEFAULT_CURRENCY } from '../../models/menu-price.util';
 import type { MenuItemDestination } from '../../../websites/models/image-upload.model';
+import { environment } from '../../../../../environments/environment';
 
 function orNull(value: string | null): string | null {
   const trimmed = (value ?? '').trim();
@@ -52,6 +53,7 @@ export class MenuItemForm {
   private readonly notificationService = inject(NotificationService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  protected readonly apiUrl = environment.apiUrl;
 
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(150)]],

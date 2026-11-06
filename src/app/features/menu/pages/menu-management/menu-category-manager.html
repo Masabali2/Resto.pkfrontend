@@ -1,0 +1,217 @@
+<section class="category-manager" aria-labelledby="category-manager-title">
+  <header class="category-manager__header">
+    <div class="category-manager__heading">
+      <span class="category-manager__icon" aria-hidden="true">
+        <i class="bi bi-folder2-open"></i>
+      </span>
+
+      <div>
+        <h2 id="category-manager-title" class="category-manager__title">
+          Manage Categories
+        </h2>
+        <p class="category-manager__subtitle">
+          Create, edit, reorder, and control the visibility of each menu section.
+        </p>
+      </div>
+    </div>
+
+    <div class="category-manager__header-actions">
+      <span class="category-manager__count">
+        <strong>{{ categories().length }}</strong> categories &middot;
+        <strong>{{ activeCount() }}</strong> active
+        @if (reordering()) {
+          <span class="category-manager__saving" role="status">
+            <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+            Saving order&hellip;
+          </span>
+        }
+      </span>
+
+      @if (canCreate() && !readOnly()) {
+        <button
+          type="button"
+          class="category-manager__add"
+          (click)="create.emit()"
+        >
+          <i class="bi bi-plus-lg" aria-hidden="true"></i>
+          <span>Add Category</span>
+        </button>
+      }
+    </div>
+  </header>
+
+  @if (error()) {
+    <div class="category-manager__error" role="alert">
+      <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+      <span>{{ error() }}</span>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="category-manager__loading">
+      <app-loading-spinner [size]="20" />
+      <span>Loading categories&hellip;</span>
+    </div>
+  } @else if (categories().length === 0) {
+    <div class="category-manager__empty">
+      <span class="category-manager__empty-icon" aria-hidden="true">
+        <i class="bi bi-folder-plus"></i>
+      </span>
+      <h3>No categories yet</h3>
+      <p>
+        Create your first category to start organizing the digital menu.
+        @if (readOnly()) {
+          This menu is read-only.
+        }
+      </p>
+
+      @if (canCreate() && !readOnly()) {
+        <button
+          type="button"
+          class="category-manager__add"
+          (click)="create.emit()"
+        >
+          <i class="bi bi-plus-lg" aria-hidden="true"></i>
+          <span>Create First Category</span>
+        </button>
+      }
+    </div>
+  } @else {
+    <ul class="category-manager__list">
+      @for (category of categories(); track category.id; let i = $index) {
+        <li
+          class="category-row"
+          [class.category-row--selected]="isSelected(category)"
+          [class.category-row--inactive]="!category.isActive"
+        >
+          <span
+            class="category-row__order"
+            [attr.title]="'Display order ' + category.displayOrder"
+          >
+            #{{ category.displayOrder }}
+          </span>
+
+          <div class="category-row__body">
+            <div class="category-row__title-line">
+              <span class="category-row__name">{{ category.name }}</span>
+
+              <span
+                class="category-row__status"
+                [class.category-row__status--active]="category.isActive"
+                [class.category-row__status--inactive]="!category.isActive"
+              >
+                <span class="category-row__status-dot" aria-hidden="true"></span>
+                {{ category.isActive ? 'Active' : 'Inactive' }}
+              </span>
+
+              @if (isSelected(category)) {
+                <span class="category-row__selected-badge">
+                  <i class="bi bi-funnel-fill" aria-hidden="true"></i>
+                  Filtering
+                </span>
+              }
+
+              @if (isPending(category)) {
+                <span class="category-row__pending" role="status">
+                  <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                  Saving&hellip;
+                </span>
+              }
+            </div>
+
+            @if (category.description) {
+              <p class="category-row__description">{{ category.description }}</p>
+            }
+
+            <div class="category-row__meta">
+              <span>
+                <i class="bi bi-list-ol" aria-hidden="true"></i>
+                Order {{ category.displayOrder }}
+              </span>
+              <span>
+                <i class="bi bi-egg-fried" aria-hidden="true"></i>
+                {{ itemCountLabel(category) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="category-row__actions">
+            <button
+              type="button"
+              class="category-action category-action--filter"
+              [class.category-action--active]="isSelected(category)"
+              [attr.aria-pressed]="isSelected(category)"
+              [attr.aria-label]="'Filter menu items by ' + category.name"
+              title="Filter items by this category"
+              (click)="select.emit(category)"
+            >
+              <i class="bi bi-funnel" aria-hidden="true"></i>
+            </button>
+
+            <button
+              type="button"
+              class="category-action"
+              [disabled]="!canMoveUp(i)"
+              [attr.aria-label]="'Move ' + category.name + ' up'"
+              title="Move category up"
+              (click)="moveUp.emit(category)"
+            >
+              <i class="bi bi-arrow-up" aria-hidden="true"></i>
+            </button>
+
+            <button
+              type="button"
+              class="category-action"
+              [disabled]="!canMoveDown(i)"
+              [attr.aria-label]="'Move ' + category.name + ' down'"
+              title="Move category down"
+              (click)="moveDown.emit(category)"
+            >
+              <i class="bi bi-arrow-down" aria-hidden="true"></i>
+            </button>
+
+            <button
+              type="button"
+              class="category-action"
+              [disabled]="!canUpdate() || isActionDisabled(category)"
+              [attr.aria-label]="'Edit ' + category.name"
+              title="Edit category"
+              (click)="edit.emit(category)"
+            >
+              <i class="bi bi-pencil" aria-hidden="true"></i>
+            </button>
+
+            <button
+              type="button"
+              class="category-action"
+              [class.category-action--warning]="category.isActive"
+              [class.category-action--success]="!category.isActive"
+              [disabled]="!canUpdate() || isActionDisabled(category)"
+              [attr.aria-label]="(category.isActive ? 'Deactivate ' : 'Activate ') + category.name"
+              [title]="category.isActive ? 'Deactivate category' : 'Activate category'"
+              (click)="toggleActive.emit(category)"
+            >
+              <i
+                class="bi"
+                [class.bi-toggle-on]="category.isActive"
+                [class.bi-toggle-off]="!category.isActive"
+                aria-hidden="true"
+              ></i>
+            </button>
+
+            <button
+              type="button"
+              class="category-action category-action--danger"
+              [disabled]="!canDelete() || isActionDisabled(category)"
+              [attr.aria-label]="'Delete ' + category.name"
+              title="Delete category"
+              (click)="delete.emit(category)"
+            >
+              <i class="bi bi-trash3" aria-hidden="true"></i>
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>

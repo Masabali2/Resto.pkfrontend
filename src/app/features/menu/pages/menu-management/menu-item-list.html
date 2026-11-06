@@ -1,122 +1,214 @@
+
 <div class="item-list">
   @if (empty()) {
-    <div class="item-list__empty bg-white rounded-3xl border border-dashed border-subtle p-5 p-md-5 text-center shadow-soft">
-      <div class="item-list__empty-icon mx-auto rounded-circle bg-orange-soft text-orange d-flex align-items-center justify-center mb-3" style="width: 4rem; height: 4rem;">
-        <i class="bi bi-egg-fried" style="font-size: 2rem;"></i>
+    <div class="item-list__empty">
+      <div class="item-list__empty-icon">
+        <i class="bi bi-egg-fried" aria-hidden="true"></i>
       </div>
-      <h3 class="text-base font-bold text-dark mb-1">No food items found</h3>
-      <p class="text-xs text-muted mb-0 max-w-md mx-auto">
-        We couldn't find any items matching your selected filter or category. Try clearing filters or add a new food item.
+
+      <h3>No food items found</h3>
+
+      <p>
+        We couldn't find any items matching your selected filter or category.
+        Try clearing filters or add a new food item.
       </p>
     </div>
   } @else {
-    <!-- GRID VIEW -->
     @if (viewMode() === 'grid') {
       <div class="item-list__grid">
-        @for (item of items(); track item.id) {
-          <app-menu-item-row
-            [item]="item"
-            [canManage]="canManage()"
-            [canDelete]="canDelete()"
-            [readOnly]="readOnly()"
-            [pending]="isPending(item.id)"
-            (edit)="edit.emit($event)"
-            (delete)="delete.emit($event)"
-            (toggleAvailability)="toggleAvailability.emit($event)"
-          />
+        @for (item of items(); track item.id; let i = $index) {
+          <article
+            class="item-list__grid-card"
+            [style.--card-index]="i"
+          >
+            <div class="item-list__grid-card-content">
+              <app-menu-item-row
+                [item]="item"
+                [canManage]="canManage()"
+                [canDelete]="canDelete()"
+                [readOnly]="readOnly()"
+                [pending]="isPending(item.id)"
+                (edit)="edit.emit($event)"
+                (delete)="delete.emit($event)"
+                (toggleAvailability)="toggleAvailability.emit($event)"
+              />
+            </div>
+
+            <div class="item-list__grid-actions">
+              <span
+                class="item-list__grid-status"
+                [class.item-list__grid-status--available]="item.isAvailable"
+                [class.item-list__grid-status--unavailable]="!item.isAvailable"
+              >
+                <span class="item-list__grid-status-dot"></span>
+                {{ item.isAvailable ? 'Available' : 'Sold out' }}
+              </span>
+
+              <div class="item-list__grid-action-buttons">
+                <button
+                  type="button"
+                  class="item-list__grid-action item-list__grid-action--edit"
+                  [disabled]="!canManage() || readOnly() || isPending(item.id)"
+                  [attr.aria-label]="'Edit ' + item.name"
+                  title="Edit item"
+                  (click)="edit.emit(item)"
+                >
+                  <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                  <span>Edit</span>
+                </button>
+
+                <button
+                  type="button"
+                  class="item-list__grid-action item-list__grid-action--delete"
+                  [disabled]="!canDelete() || readOnly() || isPending(item.id)"
+                  [attr.aria-label]="'Delete ' + item.name"
+                  title="Delete item"
+                  (click)="delete.emit(item)"
+                >
+                  <i class="bi bi-trash3" aria-hidden="true"></i>
+                  <span>Delete</span>
+                </button>
+              </div>
+            </div>
+          </article>
         }
       </div>
     }
 
-    <!-- TABLE / LIST VIEW -->
     @if (viewMode() === 'list') {
-      <div class="item-list__table-card bg-white rounded-3xl border border-subtle shadow-soft overflow-hidden">
+      <div class="item-list__table-card">
         <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
+          <table class="table align-middle mb-0">
             <thead>
-              <tr class="bg-surface-soft border-bottom border-subtle text-10px font-bold text-uppercase text-muted">
-                <th class="py-3 px-4">Item Details</th>
-                <th class="py-3 px-4">Category</th>
-                <th class="py-3 px-4">Price</th>
-                <th class="py-3 px-4">Prep Time</th>
-                <th class="py-3 px-4">Status</th>
-                <th class="py-3 px-4 text-center">In Stock</th>
-                <th class="py-3 px-4 text-end">Actions</th>
+              <tr>
+                <th>Item details</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Customer reviews</th>
+                <th>Status</th>
+                <th class="text-center">In stock</th>
+                <th class="text-end">Actions</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-subtle text-xs font-medium">
-              @for (item of items(); track item.id) {
-                <tr class="smooth-transition">
-                  <td class="py-3 px-4">
-                    <div class="d-flex align-items-center gap-3">
-                      <div class="item-table__thumbnail rounded-2xl overflow-hidden bg-surface-soft flex-shrink-0 border border-subtle" style="width: 48px; height: 48px;">
+
+            <tbody>
+              @for (item of items(); track item.id; let i = $index) {
+                <tr
+                  class="item-list__table-row"
+                  [style.--row-index]="i"
+                >
+                  <td>
+                    <div class="item-list__item-info">
+                      <div class="item-list__thumbnail">
                         @if (item.imageUrl) {
-                          <img [src]="item.imageUrl" [alt]="item.name" class="w-100 h-100 object-cover" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('d-none');" />
-                          <div class="w-100 h-100 d-none d-flex align-items-center justify-center text-muted">
-                            <i class="bi bi-egg-fried"></i>
-                          </div>
+                          <img
+                            [src]="item.imageUrl"
+                            [alt]="item.name"
+                            loading="lazy"
+                            (error)="itemListImageFallback($event)"
+                          />
                         } @else {
-                          <div class="w-100 h-100 d-flex align-items-center justify-center text-muted">
-                            <i class="bi bi-egg-fried"></i>
+                          <div class="item-list__thumbnail-placeholder">
+                            <i class="bi bi-egg-fried" aria-hidden="true"></i>
                           </div>
                         }
                       </div>
-                      <div>
-                        <div class="font-bold text-dark text-xs">{{ item.name }}</div>
+
+                      <div class="item-list__item-copy">
+                        <span class="item-list__item-name">
+                          {{ item.name }}
+                        </span>
+
                         @if (item.description) {
-                          <div class="text-10px text-muted line-clamp-1" style="max-width: 280px;">{{ item.description }}</div>
+                          <span class="item-list__item-description">
+                            {{ item.description }}
+                          </span>
                         }
                       </div>
                     </div>
                   </td>
-                  <td class="py-3 px-4 font-semibold text-muted">
-                    <span class="badge bg-surface-soft text-dark border px-2.5 py-1 rounded-pill">
+
+                  <td>
+                    <span class="item-list__category">
                       {{ item.categoryName || 'Food Item' }}
                     </span>
                   </td>
-                  <td class="py-3 px-4 font-black text-dark">
-                    {{ item.currency }} {{ formatMoney(item.price) }}
+
+                  <td>
+                    <span class="item-list__price">
+                      {{ item.currency }} {{ formatMoney(item.price) }}
+                    </span>
                   </td>
-                  <td class="py-3 px-4 text-muted">
-                    <i class="bi bi-clock me-1 text-muted"></i>15-20 min
-                  </td>
-                  <td class="py-3 px-4">
-                    @if (!item.isAvailable) {
-                      <span class="badge bg-danger text-white rounded-pill px-2.5 py-1 text-10px font-bold">Sold Out</span>
+
+                  <td>
+                    @if (item.averageRating != null && (item.reviewCount ?? 0) > 0) {
+                      <div class="item-list__review">
+                        <span class="item-list__review-rating">
+                          <i class="bi bi-star-fill" aria-hidden="true"></i>
+                          {{ item.averageRating | number:'1.1-1' }}
+                        </span>
+
+                        <span class="item-list__review-count">
+                          {{ item.reviewCount }}
+                          {{ item.reviewCount === 1 ? 'review' : 'reviews' }}
+                        </span>
+                      </div>
                     } @else {
-                      <span class="badge bg-success text-white rounded-pill px-2.5 py-1 text-10px font-bold">Available</span>
+                      <span class="item-list__no-reviews">
+                        No reviews yet
+                      </span>
                     }
                   </td>
-                  <td class="py-3 px-4 text-center">
-                    <label class="toggle-switch m-0" [title]="item.isAvailable ? 'Mark Sold Out' : 'Mark Available'">
+
+                  <td>
+                    <span
+                      class="item-list__status"
+                      [class.item-list__status--available]="item.isAvailable"
+                      [class.item-list__status--unavailable]="!item.isAvailable"
+                    >
+                      <span class="item-list__status-dot"></span>
+                      {{ item.isAvailable ? 'Available' : 'Sold out' }}
+                    </span>
+                  </td>
+
+                  <td class="text-center">
+                    <label
+                      class="item-list__toggle"
+                      [title]="item.isAvailable ? 'Mark sold out' : 'Mark available'"
+                    >
                       <input
                         type="checkbox"
                         [checked]="item.isAvailable"
                         [disabled]="readOnly() || isPending(item.id) || !canManage()"
+                        [attr.aria-label]="'Availability for ' + item.name"
                         (change)="toggleAvailability.emit(item)"
                       />
-                      <span class="toggle-slider"></span>
+                      <span class="item-list__toggle-slider"></span>
                     </label>
                   </td>
-                  <td class="py-3 px-4 text-end">
-                    <div class="d-inline-flex align-items-center gap-1">
+
+                  <td>
+                    <div class="item-list__actions">
                       <button
                         type="button"
-                        class="btn btn-sm btn-icon-round text-muted hover:text-dark p-1.5"
-                        [disabled]="!canManage() || readOnly()"
+                        class="item-list__action"
+                        [disabled]="!canManage() || readOnly() || isPending(item.id)"
                         title="Edit item"
+                        [attr.aria-label]="'Edit ' + item.name"
                         (click)="edit.emit(item)"
                       >
-                        <i class="bi bi-pencil-fill" style="font-size: 0.8rem;"></i>
+                        <i class="bi bi-pencil" aria-hidden="true"></i>
                       </button>
+
                       <button
                         type="button"
-                        class="btn btn-sm btn-icon-round text-danger p-1.5"
-                        [disabled]="!canDelete() || readOnly()"
+                        class="item-list__action item-list__action--delete"
+                        [disabled]="!canDelete() || readOnly() || isPending(item.id)"
                         title="Delete item"
+                        [attr.aria-label]="'Delete ' + item.name"
                         (click)="delete.emit(item)"
                       >
-                        <i class="bi bi-trash3-fill" style="font-size: 0.8rem;"></i>
+                        <i class="bi bi-trash3" aria-hidden="true"></i>
                       </button>
                     </div>
                   </td>

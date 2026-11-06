@@ -1,0 +1,147 @@
+:host {
+  display: block;
+}
+
+.tracking-page {
+  width: min(100%, 900px);
+  min-height: 430px;
+  margin: 0 auto;
+  padding: 12px 0 42px;
+}
+
+.page-heading {
+  margin-bottom: 22px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--color-primary);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 1.3px;
+}
+
+.page-heading h1 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(26px, 4vw, 34px);
+  font-weight: 850;
+  letter-spacing: -1px;
+}
+
+.page-heading > p:last-child {
+  max-width: 600px;
+  margin: 7px 0 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.tracking-card {
+  display: grid;
+  justify-items: center;
+  padding: clamp(28px, 5vw, 45px) 22px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+
+.tracking-icon {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  margin-bottom: 16px;
+  border-radius: 18px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 24px;
+}
+
+.tracking-card h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 17px;
+  font-weight: 850;
+}
+
+.tracking-card > p {
+  max-width: 480px;
+  margin: 9px 0 0;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.status-preview {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 25px;
+}
+
+.status-preview span {
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-secondary);
+  color: var(--color-text-secondary);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.tracking-card small {
+  margin-top: 13px;
+  color: var(--color-text-muted);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+@media (max-width: 560px) {
+  .tracking-page {
+    min-height: 390px;
+    padding-top: 5px;
+  }
+
+  .status-preview {
+    gap: 6px;
+  }
+
+  .status-preview span {
+    padding: 7px 9px;
+  }
+}
+
+
+.status-preview span {
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page-heading,
+  .tracking-card { animation: tracking-content-enter 380ms ease-out both; }
+
+  .tracking-card { animation-delay: 70ms; }
+  .status-preview span { animation: tracking-stage-enter 300ms ease-out both; }
+  .status-preview span:nth-child(2) { animation-delay: 35ms; }
+  .status-preview span:nth-child(3) { animation-delay: 70ms; }
+  .status-preview span:nth-child(4) { animation-delay: 105ms; }
+  .status-preview span:nth-child(5) { animation-delay: 140ms; }
+}
+
+@keyframes tracking-content-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes tracking-stage-enter {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.tracking-summary { display:flex; justify-content:space-between; gap:12px; margin:18px 0 0; padding:13px; border-radius:var(--radius-control); background:var(--color-page); font-size:12px; }
+.status-preview span.is-active { border-color:var(--color-primary); background:var(--color-primary-soft); color:var(--color-primary); font-weight:800; }
+.tracking-items { display:grid; gap:7px; margin-top:16px; text-align:left; color:var(--color-text); font-size:12px; }

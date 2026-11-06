@@ -1,4 +1,3 @@
-
 import {
   ApplicationConfig,
   inject,
@@ -16,6 +15,7 @@ import { routes } from './app.routes';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { credentialsInterceptor } from './core/interceptors/credentials.interceptor';
 import { tenantInterceptor } from './core/interceptors/tenant.interceptor';
+import { publicAntiforgeryInterceptor } from './core/interceptors/public-antiforgery.interceptor';
 import { AuthStateService } from './core/services/auth-state.service';
 
 export const appConfig: ApplicationConfig = {
@@ -28,6 +28,7 @@ export const appConfig: ApplicationConfig = {
       withInterceptors([
         credentialsInterceptor,
         tenantInterceptor,
+        publicAntiforgeryInterceptor,
         errorInterceptor
       ])
     ),

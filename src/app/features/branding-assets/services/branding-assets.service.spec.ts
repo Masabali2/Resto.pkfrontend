@@ -27,7 +27,7 @@ describe('BrandingAssetsService', () => {
     httpMock.verify();
   });
 
-  it('POSTs a single file field to the restaurant-asset upload endpoint and maps the restaurant asset id', () => {
+  it('POSTs a single file field to the restaurant-asset upload endpoint and exposes the file-id preview immediately', () => {
     const file = new File(['dummy'], 'logo.png', { type: 'image/png' });
     const restaurantId = 'r1';
     const assetType: BrandingAssetType = 'DarkLogo';
@@ -67,14 +67,14 @@ describe('BrandingAssetsService', () => {
       fileName: 'logo.png',
       contentType: 'image/png',
       fileSize: 1234,
-      storageKey: 'file-abc',
+      fileId: 'file-abc',
       previewUrl: `${API_ORIGIN}/api/v1/files/file-abc`,
       created: '2026-01-01T00:00:00Z',
       isReferenced: false
     });
   });
 
-  it('loads restaurant assets and maps each dto to a BrandingAsset', () => {
+  it('loads restaurant assets and maps saved file-id previews after a refresh', () => {
     const restaurantId = 'r1';
     const dtos = [
       {
@@ -98,12 +98,72 @@ describe('BrandingAssetsService', () => {
         fileName: 'logo.png',
         contentType: 'image/png',
         fileSize: 100,
-        storageKey: 'f1',
+        fileId: 'f1',
         previewUrl: `${API_ORIGIN}/api/v1/files/f1`,
         created: '2026-01-01T00:00:00Z',
         isReferenced: false
       }
     ]);
+  });
+
+  it('leaves absolute branding asset URLs unchanged for upload and list responses', () => {
+    const restaurantId = 'r1';
+    const absoluteUrl = 'https://cdn.example.com/branding/logo.png';
+    const file = new File(['dummy'], 'logo.png', { type: 'image/png' });
+
+    let uploadResult: { previewUrl: string | null } | undefined;
+    service.uploadAsset(file, restaurantId, 'Logo').subscribe(value => (uploadResult = value));
+    httpMock
+      .expectOne(`${API_URL}/restaurants/${restaurantId}/assets/Logo`)
+      .flush({
+        success: true,
+        data: {
+          id: 'a1', assetType: 'Logo', fileName: 'logo.png', contentType: 'image/png',
+          fileSize: 100, fileId: 'f1', createdAt: '2026-01-01T00:00:00Z',
+          updatedAt: '2026-01-01T00:00:00Z', url: absoluteUrl
+        }
+      });
+
+    expect(uploadResult?.previewUrl).toBe(absoluteUrl);
+
+    let listResult: { previewUrl: string | null }[] | undefined;
+    service.loadAssets(restaurantId).subscribe(value => (listResult = value));
+    httpMock
+      .expectOne(`${API_URL}/restaurants/${restaurantId}/assets`)
+      .flush({
+        success: true,
+        data: [
+          {
+            id: 'a1', assetType: 'Logo', fileName: 'logo.png', contentType: 'image/png',
+            fileSize: 100, fileId: 'f1', createdAt: '2026-01-01T00:00:00Z',
+            updatedAt: '2026-01-01T00:00:00Z', url: absoluteUrl
+          }
+        ]
+      });
+
+    expect(listResult?.[0].previewUrl).toBe(absoluteUrl);
+  });
+
+  it('does not append a legacy exp parameter to branding asset URLs', () => {
+    const restaurantId = 'r1';
+
+    let result: { previewUrl: string | null }[] | undefined;
+    service.loadAssets(restaurantId).subscribe(value => (result = value));
+    httpMock
+      .expectOne(`${API_URL}/restaurants/${restaurantId}/assets`)
+      .flush({
+        success: true,
+        data: [
+          {
+            id: 'a1', assetType: 'Logo', fileName: 'logo.png', contentType: 'image/png',
+            fileSize: 100, fileId: 'f1', createdAt: '2026-01-01T00:00:00Z',
+            updatedAt: '2026-01-01T00:00:00Z', url: '/api/v1/files/f1'
+          }
+        ]
+      });
+
+    expect(result?.[0].previewUrl).toBe(`${API_ORIGIN}/api/v1/files/f1`);
+    expect(result?.[0].previewUrl).not.toContain('exp=');
   });
 
   it('deletes by restaurant asset id and throws AssetReferencedError on 409', () => {
