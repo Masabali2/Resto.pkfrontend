@@ -20,3 +20,17 @@
   .workflow-heading { flex-direction: column; }
   .workflow-note { text-align: left; }
 }
+
+
+.workflow-panel {
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.workflow-action:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workflow-panel { transition: none; }
+}
