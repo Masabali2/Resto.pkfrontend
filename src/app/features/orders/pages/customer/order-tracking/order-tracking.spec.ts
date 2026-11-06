@@ -1,9 +1,14 @@
+import { provideRouter } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
 import { PublicOrderTracking } from './order-tracking';
 
 describe('PublicOrderTracking', () => {
   it('labels lifecycle stages without claiming a live order status', async () => {
-    await TestBed.configureTestingModule({ imports: [PublicOrderTracking] }).compileComponents();
+    await TestBed.configureTestingModule({
+      imports: [PublicOrderTracking],
+      providers: [provideRouter([])]
+    }).compileComponents();
+
     const fixture = TestBed.createComponent(PublicOrderTracking);
     fixture.detectChanges();
 

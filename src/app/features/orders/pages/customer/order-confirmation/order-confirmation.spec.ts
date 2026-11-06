@@ -1,9 +1,14 @@
+import { provideRouter } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
 import { PublicOrderConfirmation } from './order-confirmation';
 
 describe('PublicOrderConfirmation', () => {
   it('does not invent an order number or expose a tracking token', async () => {
-    await TestBed.configureTestingModule({ imports: [PublicOrderConfirmation] }).compileComponents();
+    await TestBed.configureTestingModule({
+      imports: [PublicOrderConfirmation],
+      providers: [provideRouter([])]
+    }).compileComponents();
+
     const fixture = TestBed.createComponent(PublicOrderConfirmation);
     fixture.detectChanges();
 

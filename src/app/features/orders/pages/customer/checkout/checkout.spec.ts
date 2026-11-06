@@ -1,9 +1,14 @@
+import { provideRouter } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
 import { PublicCheckout } from './checkout';
 
 describe('PublicCheckout', () => {
   it('shows supported checkout fields without enabling submission before integration', async () => {
-    await TestBed.configureTestingModule({ imports: [PublicCheckout] }).compileComponents();
+    await TestBed.configureTestingModule({
+      imports: [PublicCheckout],
+      providers: [provideRouter([])]
+    }).compileComponents();
+
     const fixture = TestBed.createComponent(PublicCheckout);
     fixture.detectChanges();
 
