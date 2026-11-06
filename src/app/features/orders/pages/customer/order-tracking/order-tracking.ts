@@ -1,10 +1,9 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, untracked } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { PublicOrderFrame } from '../../../components/public-order-frame/public-order-frame';
-import { OrderApiService } from '../../../services/order-api.service';
-import { HttpErrorHandlerService } from '../../../../core/services/http-error-handler.service';
-import type { PublicOrderTracking } from '../../../models/order.models';
+import { PublicOrderStateService } from '../../../services/public-order-state.service';
 
 @Component({
   selector: 'app-public-order-tracking',
@@ -16,45 +15,33 @@ import type { PublicOrderTracking } from '../../../models/order.models';
 })
 export class PublicOrderTracking {
   private readonly route = inject(ActivatedRoute);
-  private readonly orderApi = inject(OrderApiService);
-  private readonly errors = inject(HttpErrorHandlerService);
-  protected readonly trackingToken = signal(this.route.snapshot.paramMap.get('trackingToken'));
-  protected readonly slug = signal(this.route.snapshot.paramMap.get('slug') ?? '');
-  protected readonly order = signal<PublicOrderTracking | null>(null);
-  protected readonly loading = signal(true);
-  protected readonly error = signal<string | null>(null);
+  private readonly publicOrderState = inject(PublicOrderStateService);
+  private readonly routeParams = toSignal(this.route.paramMap, {
+    initialValue: this.route.snapshot.paramMap
+  });
+
+  protected readonly trackingToken = computed(() => this.routeParams().get('trackingToken'));
+  protected readonly slug = computed(() => this.routeParams().get('slug') ?? '');
+  protected readonly order = this.publicOrderState.trackingOrder;
+  protected readonly loading = this.publicOrderState.trackingLoading;
+  protected readonly error = this.publicOrderState.trackingError;
 
   constructor() {
-    const token = this.trackingToken();
-    if (token) this.load(token);
-    else {
-      this.loading.set(false);
-      this.error.set('A tracking token is required.');
-    }
+    effect(() => {
+      const slug = this.slug();
+      const token = this.trackingToken();
+
+      if (slug && token) {
+        untracked(() => this.publicOrderState.loadTracking(slug, token));
+      } else {
+        untracked(() => this.publicOrderState.setTrackingError('A tracking token is required.'));
+      }
+    });
   }
 
   protected retry(): void {
+    const slug = this.slug();
     const token = this.trackingToken();
-    if (token) this.load(token);
-  }
-
-  private load(token: string): void {
-    this.loading.set(true);
-    this.error.set(null);
-    this.orderApi.trackOrder(this.slug(), token).subscribe({
-      next: response => {
-        this.loading.set(false);
-        if (!response.success || !response.data) {
-          this.error.set(response.message ?? 'Order could not be found.');
-          this.order.set(null);
-          return;
-        }
-        this.order.set(response.data);
-      },
-      error: error => {
-        this.loading.set(false);
-        this.error.set(this.errors.handle(error, { fallbackMessage: 'Order could not be found.' }).message);
-      }
-    });
+    if (slug && token) this.publicOrderState.loadTracking(slug, token);
   }
 }
