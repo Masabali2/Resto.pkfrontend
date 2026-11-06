@@ -1,4 +1,5 @@
 import { routes } from './app.routes';
+import { permissionGuard } from './core/guards/permission.guard';
 
 /**
  * Guards the routes that the subscription journey depends on.
@@ -77,5 +78,22 @@ describe('staff order routes', () => {
     expect(orders?.canActivate?.length).toBe(1);
     expect(orders?.data).toEqual({ permission: 'Order.View' });
     expect(typeof orders?.loadComponent).toBe('function');
+  });
+});
+
+describe('staff order details route', () => {
+  const authenticatedLayout = routes.find(route => route.children);
+
+  it('registers order details before the exact-match order list route', () => {
+    const children = authenticatedLayout?.children ?? [];
+    const detailsIndex = children.findIndex(route => route.path === 'orders/:orderId');
+    const listIndex = children.findIndex(route => route.path === 'orders');
+    const details = children[detailsIndex];
+
+    expect(detailsIndex).toBeGreaterThanOrEqual(0);
+    expect(listIndex).toBeGreaterThan(detailsIndex);
+    expect(details.canActivate).toEqual([permissionGuard]);
+    expect(details.data).toEqual({ permission: 'Order.View' });
+    expect(typeof details.loadComponent).toBe('function');
   });
 });
