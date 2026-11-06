@@ -12,6 +12,11 @@ import { getNextOrderStatuses } from '../../utils/order-status.util';
 export class OrderWorkflowActions {
   readonly status = input.required<OrderStatus>();
   readonly disabled = input(false);
+  readonly allowCancellation = input(true);
   readonly transition = output<OrderStatus>();
-  protected readonly availableTransitions = computed(() => getNextOrderStatuses(this.status()));
+  protected readonly availableTransitions = computed(() =>
+    getNextOrderStatuses(this.status()).filter(
+      status => status !== 'Cancelled' || this.allowCancellation()
+    )
+  );
 }
