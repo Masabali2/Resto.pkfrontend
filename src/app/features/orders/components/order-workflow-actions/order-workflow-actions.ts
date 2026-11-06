@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import type { OrderStatus } from '../../models/order.models';
 import { getNextOrderStatuses } from '../../utils/order-status.util';
 
@@ -12,5 +12,6 @@ import { getNextOrderStatuses } from '../../utils/order-status.util';
 export class OrderWorkflowActions {
   readonly status = input.required<OrderStatus>();
   readonly disabled = input(false);
+  readonly transition = output<OrderStatus>();
   protected readonly availableTransitions = computed(() => getNextOrderStatuses(this.status()));
 }
