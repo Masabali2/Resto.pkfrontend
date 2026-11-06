@@ -58,7 +58,10 @@ describe('OrderStateService', () => {
 
   it('loads and exposes paged orders for the selected restaurant', async () => {
     const orderApi = {
-      getStaffOrders: vi.fn().mockReturnValue(of(pageResponse([order]))),
+      getStaffOrders: vi.fn()
+        .mockReturnValueOnce(of(pageResponse([order])))
+        .mockReturnValueOnce(of(pageResponse([order])))
+        .mockReturnValue(of(pageResponse([]))),
       getStaffOrder: vi.fn(),
       updateStaffOrderStatus: vi.fn()
     };
