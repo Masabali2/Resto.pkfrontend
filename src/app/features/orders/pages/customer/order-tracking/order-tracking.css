@@ -114,3 +114,30 @@
     padding: 7px 9px;
   }
 }
+
+
+.status-preview span {
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page-heading,
+  .tracking-card { animation: tracking-content-enter 380ms ease-out both; }
+
+  .tracking-card { animation-delay: 70ms; }
+  .status-preview span { animation: tracking-stage-enter 300ms ease-out both; }
+  .status-preview span:nth-child(2) { animation-delay: 35ms; }
+  .status-preview span:nth-child(3) { animation-delay: 70ms; }
+  .status-preview span:nth-child(4) { animation-delay: 105ms; }
+  .status-preview span:nth-child(5) { animation-delay: 140ms; }
+}
+
+@keyframes tracking-content-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes tracking-stage-enter {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
