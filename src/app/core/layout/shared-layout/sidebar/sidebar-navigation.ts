@@ -1,4 +1,6 @@
 
+import { PERMISSIONS } from '../../../models/permissions';
+
 export type SidebarNavStatus = 'available' | 'planned';
 
 export interface SidebarNavItem {
@@ -53,7 +55,7 @@ export const SIDEBAR_NAVIGATION: readonly SidebarNavGroup[] = [
         icon: 'M7 8h14l-1.2 12.2a1 1 0 0 1-1 .8H9.2a1 1 0 0 1-1-.8L7 8Zm3 0a4 4 0 1 1 8 0',
         status: 'available',
         route: ['/orders'],
-        requiredPermissions: ['Order.View']
+        requiredPermissions: [PERMISSIONS.Order.View]
       },
       {
         label: 'Staff & Members',
