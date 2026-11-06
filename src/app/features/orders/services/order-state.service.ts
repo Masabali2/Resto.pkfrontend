@@ -122,6 +122,9 @@ export class OrderStateService {
   loadOrder(restaurantId: string, orderId: string): void {
     this.ensureRestaurantScope(restaurantId);
 
+    this.updateRequestId++;
+    this.updatingStatusState.set(false);
+
     const requestId = ++this.detailRequestId;
     this.detailLoadingState.set(true);
     this.detailErrorState.set(null);
@@ -162,7 +165,11 @@ export class OrderStateService {
   transitionStatus(restaurantId: string, status: OrderStatus): void {
     const order = this.selectedOrderState();
 
-    if (!order || this.updatingStatusState()) return;
+    if (
+      !order ||
+      this.restaurantIdState() !== restaurantId ||
+      this.updatingStatusState()
+    ) return;
 
     const requestId = ++this.updateRequestId;
     this.updatingStatusState.set(true);
@@ -187,6 +194,8 @@ export class OrderStateService {
           return;
         }
 
+        this.listRequestId++;
+        this.listLoadingState.set(false);
         this.selectedOrderState.set(response.data);
         this.syncOrderList(response.data, restaurantId);
       },
