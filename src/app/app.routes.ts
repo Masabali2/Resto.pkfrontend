@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { permissionGuard } from './core/guards/permission.guard';
 import { unsavedChangesGuard } from './core/guards/unsaved-changes.guard';
+import { PERMISSIONS } from './core/models/permissions';
 
 export const routes: Routes = [
   {
@@ -187,7 +188,7 @@ export const routes: Routes = [
         path: 'orders/:orderId',
         title: 'Order Details — Resto.pk',
         canActivate: [permissionGuard],
-        data: { permission: 'Order.View' },
+        data: { permission: PERMISSIONS.Order.View },
         loadComponent: () =>
           import('./features/orders/pages/staff/order-details/order-details').then(
             m => m.OrderDetails
@@ -198,7 +199,7 @@ export const routes: Routes = [
         pathMatch: 'full',
         title: 'Orders — Resto.pk',
         canActivate: [permissionGuard],
-        data: { permission: 'Order.View' },
+        data: { permission: PERMISSIONS.Order.View },
         loadComponent: () =>
           import('./features/orders/pages/staff/order-list/order-list').then(
             m => m.OrderList
