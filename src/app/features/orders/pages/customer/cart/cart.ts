@@ -22,7 +22,7 @@ export class PublicCart {
 
   protected readonly slug = computed(() => this.routeParams().get('slug') ?? '');
   protected readonly cart = this.publicOrderState.cart;
-  protected readonly loading = this.publicOrderState.cartLoading;
+  protected readonly loading = computed(() => this.publicOrderState.cartLoading() || (!this.publicOrderState.cart() && !this.publicOrderState.cartError()));
   protected readonly busy = this.publicOrderState.cartMutating;
   protected readonly error = this.publicOrderState.cartError;
 
