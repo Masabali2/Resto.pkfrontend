@@ -11,7 +11,6 @@
         <span class="empty-icon" aria-hidden="true"><i class="bi bi-basket3"></i></span>
         <h2 id="empty-cart-title">Your cart is empty</h2>
         <p>Add items from the restaurant menu and they will appear here with server-calculated prices and totals.</p>
-        <a class="submit-button" [routerLink]="['/r', slug()]">Return to restaurant</a>
       </section>
     } @else {
       @if (error()) { <div class="integration-banner" role="alert"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ error() }}</div> }
