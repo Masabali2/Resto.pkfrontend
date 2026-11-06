@@ -100,3 +100,22 @@
     line-height: 1.5;
   }
 }
+
+
+.empty-card {
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page-heading,
+  .empty-card {
+    animation: customer-content-enter 380ms ease-out both;
+  }
+
+  .empty-card { animation-delay: 70ms; }
+}
+
+@keyframes customer-content-enter {
+  from { opacity: 0; transform: translateY(9px); }
+  to { opacity: 1; transform: translateY(0); }
+}
