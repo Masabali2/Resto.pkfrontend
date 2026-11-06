@@ -38,6 +38,9 @@ export class OrderDetails {
   protected readonly canUpdateOrder = computed(() =>
     this.authorization.hasPermission(PERMISSIONS.Order.Update)
   );
+  protected readonly canCancelOrder = computed(() =>
+    this.authorization.hasPermission(PERMISSIONS.Order.Cancel)
+  );
   protected readonly orderId = computed(() => this.routeParams().get('orderId'));
 
   constructor() {
@@ -60,7 +63,11 @@ export class OrderDetails {
 
   protected transitionStatus(status: OrderStatus): void {
     const restaurantId = this.restaurant()?.id;
-    if (restaurantId && this.canUpdateOrder()) {
+    if (
+      restaurantId &&
+      this.canUpdateOrder() &&
+      (status !== 'Cancelled' || this.canCancelOrder())
+    ) {
       this.orderState.transitionStatus(restaurantId, status);
     }
   }
