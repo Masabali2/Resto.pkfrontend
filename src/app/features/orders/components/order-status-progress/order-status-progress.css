@@ -80,3 +80,19 @@
     width: calc(100% - 23px);
   }
 }
+
+
+.progress-step:not(:last-child)::after {
+  transition: background-color 240ms ease;
+}
+
+.step-marker {
+  transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+}
+
+.is-current .step-marker { box-shadow: 0 0 0 4px var(--color-primary-soft); }
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-step:not(:last-child)::after,
+  .step-marker { transition: none; }
+}
