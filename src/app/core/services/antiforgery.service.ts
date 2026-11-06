@@ -11,16 +11,18 @@ export class AntiforgeryService {
   private tokenRequest$: Observable<string> | null = null;
 
   getToken(forceRefresh = false): Observable<string> {
-    if (forceRefresh || !this.tokenRequest$) {
-      const request$ = this.http.get<AntiforgeryResponse>(environment.apiUrl + '/antiforgery-token').pipe(
-        map(response => response.token),
-        tap(token => { if (!token) this.tokenRequest$ = null; }),
-        shareReplay({ bufferSize: 1, refCount: false })
-      );
-      this.tokenRequest$ = request$;
-      return request$;
+    if (!forceRefresh && this.tokenRequest$) {
+      return this.tokenRequest$;
     }
-    return this.tokenRequest$;
+
+    const request$ = this.http.get<AntiforgeryResponse>(environment.apiUrl + '/antiforgery-token').pipe(
+      map(response => response.token),
+      tap(token => { if (!token) this.tokenRequest$ = null; }),
+      shareReplay({ bufferSize: 1, refCount: false })
+    );
+
+    this.tokenRequest$ = request$;
+    return request$;
   }
   invalidate(): void { this.tokenRequest$ = null; }
 }
