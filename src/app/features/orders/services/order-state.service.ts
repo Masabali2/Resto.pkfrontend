@@ -277,10 +277,8 @@ export class OrderStateService {
 
     if (this.pageState() > nextTotalPages) {
       this.pageState.set(nextTotalPages);
-      this.loadOrders(restaurantId);
-    } else if (nextOrders.length === 0 && this.pageState() > 1) {
-      this.pageState.update(page => page - 1);
-      this.loadOrders(restaurantId);
     }
+
+    this.loadOrders(restaurantId);
   }
 }
