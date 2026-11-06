@@ -20,15 +20,15 @@
             <article class="cart-item">
               <div class="item-information"><h2>{{ item.itemName }}</h2><p>{{ item.currency }} {{ item.unitPrice | number:'1.2-2' }} each</p></div>
               <div class="quantity-control" aria-label="Quantity">
-                <button type="button" [disabled]="busyItem() === item.id || item.quantity <= 1" (click)="changeQuantity(item.id, item.quantity - 1)">−</button>
+                <button type="button" [disabled]="busy() || item.quantity <= 1" (click)="changeQuantity(item.id, item.quantity - 1)">−</button>
                 <strong>{{ item.quantity }}</strong>
-                <button type="button" [disabled]="busyItem() === item.id || item.quantity >= 99" (click)="changeQuantity(item.id, item.quantity + 1)">+</button>
+                <button type="button" [disabled]="busy() || item.quantity >= 99" (click)="changeQuantity(item.id, item.quantity + 1)">+</button>
               </div>
               <strong class="item-total">{{ item.currency }} {{ item.lineTotal | number:'1.2-2' }}</strong>
-              <button type="button" class="remove-button" [disabled]="busyItem() === item.id" (click)="removeItem(item.id)">Remove</button>
+              <button type="button" class="remove-button" [disabled]="busy()" (click)="removeItem(item.id)">Remove</button>
             </article>
           }
-          <button type="button" class="clear-button" [disabled]="busyItem() === 'cart'" (click)="clearCart()">Clear cart</button>
+          <button type="button" class="clear-button" [disabled]="busy()" (click)="clearCart()">Clear cart</button>
         </div>
         <aside class="summary-card">
           <h2>Order summary</h2>
