@@ -29,17 +29,17 @@ describe('BrandingHeader', () => {
   });
 
   it('storagePercent should be 100 when used equals quota', () => {
-    (component as any).storage.set({ usedBytes: 1024 * 1024, quotaBytes: 1024 * 1024 } as StorageInfo);
+    fixture.componentRef.setInput('storage', { usedBytes: 1024 * 1024, quotaBytes: 1024 * 1024 } as StorageInfo);\n    fixture.detectChanges();
     expect((component as any).storagePercent()).toBe(100);
   });
 
   it('storageUsedText should report used and quota', () => {
-    (component as any).storage.set({ usedBytes: 1024 * 1024, quotaBytes: 1024 * 1024 } as StorageInfo);
+    fixture.componentRef.setInput('storage', { usedBytes: 1024 * 1024, quotaBytes: 1024 * 1024 } as StorageInfo);\n    fixture.detectChanges();
     expect((component as any).storageUsedText()).toBe('1 MB / 1 MB');
   });
 
   it('storageUsedText should return dash when no storage', () => {
-    (component as any).storage.set(null);
+    fixture.componentRef.setInput('storage', null);\n    fixture.detectChanges();
     expect((component as any).storageUsedText()).toBe('—');
   });
 
@@ -60,7 +60,7 @@ describe('BrandingHeader', () => {
   });
 
   it('should disable save button when saving', () => {
-    (component as any).saving.set(true);
+    fixture.componentRef.setInput('saving', true);
     fixture.detectChanges();
     const btn = fixture.nativeElement.querySelector('.brand-btn-save') as HTMLButtonElement | null;
     expect(btn?.disabled).toBe(true);
