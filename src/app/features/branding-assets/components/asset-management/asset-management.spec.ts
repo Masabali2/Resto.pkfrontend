@@ -74,17 +74,20 @@ describe('AssetManagement', () => {
   });
 
   it('previewUrlFor should return placeholder when no asset exists', () => {
-    fixture.componentRef.setInput('assets', []);\n    fixture.detectChanges();
+    fixture.componentRef.setInput('assets', []);
+    fixture.detectChanges();
     expect((component as any).previewUrlFor('Logo')).toBe((component as any).slotPlaceholder('Logo'));
   });
 
   it('fileNameFor should return default file name when no asset exists', () => {
-    fixture.componentRef.setInput('assets', []);\n    fixture.detectChanges();
+    fixture.componentRef.setInput('assets', []);
+    fixture.detectChanges();
     expect((component as any).fileNameFor('Logo')).toBe((component as any).defaultFileName('Logo'));
   });
 
   it('sizeTextFor should return em dash when no asset exists', () => {
-    fixture.componentRef.setInput('assets', []);\n    fixture.detectChanges();
+    fixture.componentRef.setInput('assets', []);
+    fixture.detectChanges();
     expect((component as any).sizeTextFor('Logo')).toBe('—');
   });
 
@@ -109,7 +112,8 @@ describe('AssetManagement', () => {
       created: '2026-01-01T00:00:00Z',
       isReferenced: false
     };
-    fixture.componentRef.setInput('assets', [asset]);\n    fixture.detectChanges();
+    fixture.componentRef.setInput('assets', [asset]);
+    fixture.detectChanges();
     expect((component as any).assetByType()['Logo']?.id).toBe('a1');
     expect((component as any).assetByType()['Favicon']).toBeNull();
   });
