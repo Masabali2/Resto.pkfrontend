@@ -97,6 +97,25 @@ describe('OrderList', () => {
     expect(fixture.nativeElement.textContent).toContain('Loading your restaurant');
   });
 
+  it('shows a permission state when the selected restaurant is forbidden', () => {
+    state.set('forbidden');
+
+    const fixture = TestBed.createComponent(OrderList);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Restaurant access unavailable');
+  });
+
+  it('shows a selection state when the tenant has no restaurant', () => {
+    restaurant.set(null as never);
+    state.set('empty');
+
+    const fixture = TestBed.createComponent(OrderList);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Select a restaurant');
+  });
+
   it('offers retry when restaurant context fails to load', () => {
     state.set('error');
     errorMessage.set('Unable to load restaurant.');
