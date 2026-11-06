@@ -1,5 +1,6 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, effect, inject, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, untracked } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ActiveRestaurantStateService } from '../../../../../core/services/active-restaurant-state.service';
 import { LoadingSpinner } from '../../../../../shared/components/loading-spinner/loading-spinner';
@@ -22,14 +23,16 @@ export class OrderDetails {
   private readonly route = inject(ActivatedRoute);
   private readonly activeRestaurantState = inject(ActiveRestaurantStateService);
   private readonly orderState = inject(OrderStateService);
+  private readonly routeParams = toSignal(this.route.paramMap, {
+    initialValue: this.route.snapshot.paramMap
+  });
 
   protected readonly restaurant = this.activeRestaurantState.restaurant;
   protected readonly order = this.orderState.selectedOrder;
   protected readonly loading = this.orderState.detailLoading;
   protected readonly error = this.orderState.detailMessage;
   protected readonly updating = this.orderState.updatingStatus;
-
-  protected readonly orderId = signal<string | null>(this.route.snapshot.paramMap.get('orderId'));
+  protected readonly orderId = computed(() => this.routeParams().get('orderId'));
 
   constructor() {
     effect(() => {
