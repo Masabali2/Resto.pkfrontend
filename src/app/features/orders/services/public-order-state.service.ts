@@ -6,6 +6,7 @@ import {
   catchError,
   defer,
   finalize,
+  tap,
   throwError
 } from 'rxjs';
 import type { ApiResponse } from '../../../core/models/api-response.model';
@@ -145,26 +146,27 @@ export class PublicOrderStateService {
     return defer(() => {
       this.ensureCartScope(slug);
 
-      if (this.creatingOrderState()) return EMPTY;
+      if (this.creatingOrderState() || this.cartMutatingState()) return EMPTY;
 
       const requestId = ++this.checkoutRequestId;
       this.creatingOrderState.set(true);
       this.checkoutErrorState.set(null);
 
       return this.orderApi.createOrder(slug, request).pipe(
-        tapResponse => {
+        tap(response => {
           if (requestId !== this.checkoutRequestId) return;
 
-          if (tapResponse.success && tapResponse.data) {
+          if (response.success && response.data) {
+            this.cartRequestId++;
             this.cartState.set(null);
             this.cartLoadingState.set(false);
             this.cartErrorState.set(null);
           } else {
             this.checkoutErrorState.set(
-              tapResponse.message ?? 'Order could not be created.'
+              response.message ?? 'Order could not be created.'
             );
           }
-        },
+        }),
         catchError(error => {
           if (requestId === this.checkoutRequestId) {
             this.checkoutErrorState.set(
