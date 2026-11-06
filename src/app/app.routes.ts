@@ -176,7 +176,7 @@ export const routes: Routes = [
             path: ':id/editor',
             title: 'Website Editor — Resto.pk',
             canActivate: [permissionGuard],
-            data: { permission: 'Website.Update' },
+            data: { permissions: ['Website.View', 'Website.Update'], mode: 'all' },
             loadComponent: () =>
               import('./features/websites/pages/website-editor/website-editor').then(
                 m => m.WebsiteEditor

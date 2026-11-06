@@ -39,6 +39,20 @@ describe('app routes', () => {
   });
 });
 
+describe('website editor route permissions', () => {
+  const authenticatedLayout = routes.find(route => route.children);
+  const websites = authenticatedLayout?.children?.find(route => route.path === 'websites');
+  const editor = websites?.children?.find(route => route.path === ':id/editor');
+
+  it('requires both view and update permissions because editor initialization reads website and draft data', () => {
+    expect(editor?.canActivate?.length).toBeGreaterThan(0);
+    expect(editor?.data).toEqual({
+      permissions: ['Website.View', 'Website.Update'],
+      mode: 'all'
+    });
+  });
+});
+
 describe('template catalogue routes', () => {
   const authenticatedLayout = routes.find(route => route.children);
 
