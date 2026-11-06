@@ -50,6 +50,25 @@ export class OrderStateService {
     () => this.workflowErrorState() ?? this.detailErrorState()
   );
 
+  clear(): void {
+    this.restaurantIdState.set(null);
+    this.listRequestId++;
+    this.detailRequestId++;
+    this.updateRequestId++;
+    this.ordersState.set([]);
+    this.selectedOrderState.set(null);
+    this.statusFilterState.set('All orders');
+    this.pageState.set(1);
+    this.totalPagesState.set(1);
+    this.totalCountState.set(0);
+    this.listLoadingState.set(false);
+    this.detailLoadingState.set(false);
+    this.updatingStatusState.set(false);
+    this.listErrorState.set(null);
+    this.detailErrorState.set(null);
+    this.workflowErrorState.set(null);
+  }
+
   loadOrders(restaurantId: string): void {
     this.ensureRestaurantScope(restaurantId);
 
