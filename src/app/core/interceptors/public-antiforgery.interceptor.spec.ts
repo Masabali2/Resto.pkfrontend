@@ -1,5 +1,4 @@
 import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
-import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { environment } from '../../../environments/environment';
