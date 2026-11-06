@@ -83,7 +83,7 @@ describe('CreateWebsite template selection', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
-        provideRouter([{ path: 'websites/:id', children: [] }]),
+        provideRouter([{ path: 'websites/:id', children: [] }, { path: 'websites/:id/editor', children: [] }]),
         { provide: NotificationService, useValue: notification },
         {
           provide: RestaurantService,
@@ -354,7 +354,7 @@ describe('CreateWebsite template selection', () => {
         providers: [
           provideHttpClient(),
           provideHttpClientTesting(),
-          provideRouter([{ path: 'websites/:id', children: [] }]),
+          provideRouter([{ path: 'websites/:id', children: [] }, { path: 'websites/:id/editor', children: [] }]),
           { provide: NotificationService, useValue: notification },
           {
             provide: ActivatedRoute,

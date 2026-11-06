@@ -1,4 +1,6 @@
 import { routes } from './app.routes';
+import { permissionGuard } from './core/guards/permission.guard';
+import { PERMISSIONS } from './core/models/permissions';
 
 /**
  * Guards the routes that the subscription journey depends on.
@@ -63,5 +65,54 @@ describe('template catalogue routes', () => {
     const nestedPreview = templates?.children?.find(route => route.path === ':id/preview');
 
     expect(nestedPreview).toBeUndefined();
+  });
+});
+
+describe('staff order routes', () => {
+  const authenticatedLayout = routes.find(route => route.children);
+
+  it('registers Orders inside the authenticated layout with Order.View', () => {
+    const orders = authenticatedLayout?.children?.find(route => route.path === 'orders');
+
+    expect(orders).toBeTruthy();
+    expect(orders?.title).toBe('Orders — Resto.pk');
+    expect(orders?.canActivate?.length).toBe(1);
+    expect(orders?.data).toEqual({ permission: PERMISSIONS.Order.View });
+    expect(typeof orders?.loadComponent).toBe('function');
+  });
+});
+
+describe('staff order details route', () => {
+  const authenticatedLayout = routes.find(route => route.children);
+
+  it('registers order details before the exact-match order list route', () => {
+    const children = authenticatedLayout?.children ?? [];
+    const detailsIndex = children.findIndex(route => route.path === 'orders/:orderId');
+    const listIndex = children.findIndex(route => route.path === 'orders');
+    const details = children[detailsIndex];
+
+    expect(detailsIndex).toBeGreaterThanOrEqual(0);
+    expect(listIndex).toBeGreaterThan(detailsIndex);
+    expect(details.canActivate).toEqual([permissionGuard]);
+    expect(details.data).toEqual({ permission: PERMISSIONS.Order.View });
+    expect(typeof details.loadComponent).toBe('function');
+  });
+});
+
+describe('public customer order routes', () => {
+  const expectedRoutes = [
+    ['r/:slug/cart', 'Your Cart — Resto.pk'],
+    ['r/:slug/checkout', 'Checkout — Resto.pk'],
+    ['r/:slug/order-confirmation', 'Order Confirmation — Resto.pk'],
+    ['r/:slug/order-tracking/:trackingToken', 'Track Your Order — Resto.pk']
+  ] as const;
+
+  it.each(expectedRoutes)('registers %s as a public route', (path, title) => {
+    const route = routes.find(candidate => candidate.path === path);
+
+    expect(route).toBeTruthy();
+    expect(route?.title).toBe(title);
+    expect(route?.canActivate).toBeUndefined();
+    expect(typeof route?.loadComponent).toBe('function');
   });
 });

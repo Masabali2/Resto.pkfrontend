@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { AuthorizationService } from './authorization.service';
 import { AuthStateService } from './auth-state.service';
 import type { AuthResult } from '../models/auth.model';
+import { PERMISSIONS } from '../models/permissions';
 
 function buildAuthResult(overrides: Partial<AuthResult> = {}): AuthResult {
   return {
@@ -53,6 +54,53 @@ describe('AuthorizationService', () => {
 
     expect(service.hasPermission('Menu.View')).toBe(true);
     expect(service.hasPermission('Staff.Manage')).toBe(false);
+  });
+
+  it('matches the backend waiter permissions without granting workflow updates', () => {
+    authState.setAuthResult(
+      buildAuthResult({
+        memberships: [{
+          tenantId: 'tenant-1',
+          name: 'Resto One',
+          slug: 'resto-one',
+          roleName: 'Waiter'
+        }],
+        activeTenant: {
+          tenantId: 'tenant-1',
+          name: 'Resto One',
+          slug: 'resto-one',
+          roleName: 'Waiter'
+        },
+        permissions: [PERMISSIONS.Order.View, PERMISSIONS.Order.Create]
+      })
+    );
+
+    expect(service.hasPermission(PERMISSIONS.Order.View)).toBe(true);
+    expect(service.hasPermission(PERMISSIONS.Order.Update)).toBe(false);
+    expect(service.hasPermission(PERMISSIONS.Order.Cancel)).toBe(false);
+  });
+
+  it('matches the backend kitchen permissions for order workflow updates', () => {
+    authState.setAuthResult(
+      buildAuthResult({
+        memberships: [{
+          tenantId: 'tenant-1',
+          name: 'Resto One',
+          slug: 'resto-one',
+          roleName: 'Kitchen'
+        }],
+        activeTenant: {
+          tenantId: 'tenant-1',
+          name: 'Resto One',
+          slug: 'resto-one',
+          roleName: 'Kitchen'
+        },
+        permissions: [PERMISSIONS.Order.View, PERMISSIONS.Order.Update]
+      })
+    );
+
+    expect(service.hasPermission(PERMISSIONS.Order.View)).toBe(true);
+    expect(service.hasPermission(PERMISSIONS.Order.Update)).toBe(true);
   });
 
   it('never infers permissions from role names', () => {
