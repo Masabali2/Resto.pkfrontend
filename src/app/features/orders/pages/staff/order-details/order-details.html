@@ -15,7 +15,23 @@
     }
   </header>
 
-  @if (order(); as currentOrder) {
+  @if (loading() && !order()) {
+    <section class="unavailable-state" role="status">
+      <app-loading-spinner [size]="28" />
+      <h2>Loading order details</h2>
+      <p>Retrieving the latest order information.</p>
+    </section>
+  } @else if (error() && !order()) {
+    <section class="unavailable-state" role="alert">
+      <span class="unavailable-icon" aria-hidden="true"><i class="bi bi-exclamation-circle"></i></span>
+      <h2>Order details could not be loaded</h2>
+      <p>{{ error() }}</p>
+      <button type="button" class="return-button" (click)="retry()">Try again</button>
+    </section>
+  } @else if (order(); as currentOrder) {
+    @if (error()) {
+      <div class="inline-error" role="alert"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ error() }}</div>
+    }
     <div class="details-layout">
       <main class="details-main">
         <section class="content-card order-overview">
@@ -83,14 +99,21 @@
           <div class="amount-row amount-total"><span>Total</span><strong>{{ currentOrder.currency }} {{ currentOrder.totalAmount | number:'1.2-2' }}</strong></div>
         </section>
 
-        <app-order-workflow-actions [status]="currentOrder.status" />
+        <app-order-workflow-actions
+          [status]="currentOrder.status"
+          [disabled]="updating()"
+          (transition)="transitionStatus($event)"
+        />
+        @if (updating()) {
+          <p class="updating-note" role="status"><i class="bi bi-arrow-repeat" aria-hidden="true"></i>Updating order status…</p>
+        }
       </aside>
     </div>
   } @else {
     <section class="unavailable-state" role="status">
       <span class="unavailable-icon" aria-hidden="true"><i class="bi bi-receipt-cutoff"></i></span>
-      <h2>Order details are not connected yet</h2>
-      <p>This page is ready for the order details service. Order data will appear here when backend integration is implemented.</p>
+      <h2>Order not available</h2>
+      <p>No order details are available for this restaurant and order reference.</p>
       <a routerLink="/orders" class="return-button">Return to orders</a>
     </section>
   }
