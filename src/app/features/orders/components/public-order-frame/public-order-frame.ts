@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { ActivatedRoute, RouterLink, RouterLinkActive } from '@angular/router';
 
 @Component({
   selector: 'app-public-order-frame',
@@ -10,5 +10,9 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   styleUrl: './public-order-frame.css'
 })
 export class PublicOrderFrame {
+  private readonly route = inject(ActivatedRoute);
+
   readonly step = input.required<'cart' | 'checkout' | 'confirmation' | 'tracking'>();
+  protected readonly slug = this.route.snapshot.paramMap.get('slug') ?? '';
+  protected readonly trackingToken = this.route.snapshot.paramMap.get('trackingToken');
 }
