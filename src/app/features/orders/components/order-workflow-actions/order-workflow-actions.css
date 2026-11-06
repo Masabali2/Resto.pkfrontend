@@ -1,0 +1,22 @@
+:host { display: block; }
+.workflow-panel {
+  padding: 18px; border: 1px solid var(--color-border);
+  border-radius: var(--radius-card); background: var(--color-surface);
+}
+.workflow-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.workflow-heading h3 { margin: 0; color: var(--color-text); font-size: 14px; font-weight: 800; }
+.workflow-heading p { margin: 4px 0 0; color: var(--color-text-muted); font-size: 11px; }
+.workflow-note { color: var(--color-text-muted); font-size: 10px; text-align: right; }
+.workflow-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.workflow-action {
+  min-height: 36px; padding: 8px 13px; border: 1px solid var(--color-primary);
+  border-radius: var(--radius-control); background: var(--color-primary);
+  color: var(--color-on-primary); font-size: 11px; font-weight: 750;
+  opacity: .55; cursor: not-allowed;
+}
+.workflow-action.is-cancel { border-color: var(--color-danger); background: var(--color-danger-soft); color: var(--color-danger); }
+.terminal-message { margin: 14px 0 0; color: var(--color-text-muted); font-size: 12px; line-height: 1.6; }
+@media (max-width: 560px) {
+  .workflow-heading { flex-direction: column; }
+  .workflow-note { text-align: left; }
+}

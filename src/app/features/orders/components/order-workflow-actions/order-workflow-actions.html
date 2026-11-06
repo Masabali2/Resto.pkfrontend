@@ -1,0 +1,23 @@
+<section class="workflow-panel" aria-labelledby="workflow-title">
+  <div class="workflow-heading">
+    <div>
+      <h3 id="workflow-title">Order workflow</h3>
+      <p>Available next steps for this order</p>
+    </div>
+    <span class="workflow-note">Actions activate with API integration</span>
+  </div>
+
+  @if (availableTransitions().length === 0) {
+    <p class="terminal-message">This order has reached a final status. No further status changes are available.</p>
+  } @else {
+    <div class="workflow-actions">
+      @for (nextStatus of availableTransitions(); track nextStatus) {
+        <button type="button" class="workflow-action"
+          [class.is-cancel]="nextStatus === 'Cancelled'" disabled
+          [attr.aria-label]="'Set order status to ' + nextStatus">
+          {{ nextStatus === 'Cancelled' ? 'Cancel order' : 'Mark as ' + nextStatus }}
+        </button>
+      }
+    </div>
+  }
+</section>
