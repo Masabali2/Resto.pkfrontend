@@ -1,6 +1,6 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { PublicOrderFrame } from '../../../components/public-order-frame/public-order-frame';
 import { OrderApiService } from '../../../services/order-api.service';
 import { HttpErrorHandlerService } from '../../../../core/services/http-error-handler.service';
@@ -8,7 +8,7 @@ import { HttpErrorHandlerService } from '../../../../core/services/http-error-ha
 @Component({
   selector: 'app-public-cart',
   standalone: true,
-  imports: [DatePipe, DecimalPipe, PublicOrderFrame, RouterLink],
+  imports: [DecimalPipe, PublicOrderFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './cart.html',
   styleUrl: './cart.css'
