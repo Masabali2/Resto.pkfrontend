@@ -84,3 +84,33 @@
   font-weight: 750;
   text-decoration: none;
 }
+
+
+.confirmation-card > a {
+  min-height: 40px;
+  padding: 10px 13px;
+  border-radius: var(--radius-control);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.confirmation-card > a:hover { background: var(--color-primary-soft); }
+
+.confirmation-card > a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .confirmation-card { animation: confirmation-enter 420ms cubic-bezier(.2,.7,.2,1) both; }
+  .confirmation-icon { animation: confirmation-icon-enter 480ms 100ms ease-out both; }
+}
+
+@keyframes confirmation-enter {
+  from { opacity: 0; transform: translateY(10px) scale(.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes confirmation-icon-enter {
+  from { opacity: 0; transform: scale(.88); }
+  to { opacity: 1; transform: scale(1); }
+}
