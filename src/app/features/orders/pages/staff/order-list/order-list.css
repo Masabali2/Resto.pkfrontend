@@ -302,3 +302,39 @@
     transition: none;
   }
 }
+
+
+.orders-workspace,
+.state-panel { animation: staff-panel-enter 320ms ease-out both; }
+
+.restaurant-context {
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.restaurant-context:hover {
+  border-color: var(--color-input-hover-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.retry-button,
+.back-link {
+  transition: color var(--transition-fast), background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.retry-button:active { transform: translateY(1px); }
+
+@keyframes staff-panel-enter {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orders-workspace,
+  .state-panel,
+  .retry-button {
+    animation: none;
+    transition: none;
+  }
+
+  .retry-button:active { transform: none; }
+}
