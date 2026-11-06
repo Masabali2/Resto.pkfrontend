@@ -60,7 +60,7 @@ function menuDto(overrides: Partial<MenuDto> = {}): MenuDto {
 }
 
 interface Fixture {
-  component: MenuForm;
+  component: any;
   fixture: ReturnType<typeof TestBed.createComponent<MenuForm>>;
   httpMock: HttpTestingController;
   navigateCalls: any[];
@@ -99,7 +99,7 @@ function createFixture(params: Record<string, string>): Fixture {
   const fixture = TestBed.createComponent(MenuForm);
   httpMock = TestBed.inject(HttpTestingController);
 
-  return { component: fixture.componentInstance, fixture, httpMock, navigateCalls };
+  return { component: fixture.componentInstance as any, fixture, httpMock, navigateCalls };
 }
 
 function editFixture(): Fixture {
