@@ -1,11 +1,11 @@
 import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, untracked } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PublicOrderFrame } from '../../../components/public-order-frame/public-order-frame';
-import { OrderApiService } from '../../../services/order-api.service';
-import { HttpErrorHandlerService } from '../../../../core/services/http-error-handler.service';
-import type { OrderType, PublicCart } from '../../../models/order.models';
+import { PublicOrderStateService } from '../../../services/public-order-state.service';
+import type { OrderType } from '../../../models/order.models';
 
 @Component({
   selector: 'app-public-checkout',
@@ -19,14 +19,18 @@ export class PublicCheckout {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly formBuilder = inject(FormBuilder);
-  private readonly orderApi = inject(OrderApiService);
-  private readonly errors = inject(HttpErrorHandlerService);
+  private readonly publicOrderState = inject(PublicOrderStateService);
+  private readonly routeParams = toSignal(this.route.paramMap, {
+    initialValue: this.route.snapshot.paramMap
+  });
 
-  protected readonly slug = signal(this.route.snapshot.paramMap.get('slug') ?? '');
-  protected readonly cart = signal<PublicCart | null>(null);
-  protected readonly loading = signal(true);
-  protected readonly submitting = signal(false);
-  protected readonly error = signal<string | null>(null);
+  protected readonly slug = computed(() => this.routeParams().get('slug') ?? '');
+  protected readonly cart = this.publicOrderState.cart;
+  protected readonly loading = this.publicOrderState.cartLoading;
+  protected readonly submitting = computed(
+    () => this.publicOrderState.creatingOrder() || this.publicOrderState.cartMutating()
+  );
+  protected readonly error = this.publicOrderState.checkoutMessage;
 
   protected readonly form = this.formBuilder.nonNullable.group({
     customerName: ['', [Validators.required, Validators.maxLength(150)]],
@@ -37,20 +41,23 @@ export class PublicCheckout {
   });
 
   constructor() {
-    this.loadCart();
+    effect(() => {
+      const slug = this.slug();
+      if (slug) untracked(() => this.publicOrderState.loadCart(slug));
+    });
   }
 
   protected submit(): void {
-    if (this.form.invalid || !this.cart()?.items.length || this.submitting()) {
+    const slug = this.slug();
+
+    if (this.form.invalid || !this.cart()?.items.length || this.submitting() || !slug) {
       this.form.markAllAsTouched();
       return;
     }
 
-    this.submitting.set(true);
-    this.error.set(null);
     const value = this.form.getRawValue();
 
-    this.orderApi.createOrder(this.slug(), {
+    this.publicOrderState.createOrder(slug, {
       orderType: value.orderType,
       customerName: value.customerName.trim(),
       customerPhone: value.customerPhone.trim() || null,
@@ -58,35 +65,10 @@ export class PublicCheckout {
       specialInstructions: value.specialInstructions.trim() || null
     }).subscribe({
       next: response => {
-        this.submitting.set(false);
-        if (!response.success || !response.data) {
-          this.error.set(response.message ?? 'Order could not be created.');
-          return;
-        }
-        this.router.navigate(['/r', this.slug(), 'order-confirmation'], { state: { order: response.data } });
+        if (!response.success || !response.data) return;
+        this.router.navigate(['/r', slug, 'order-confirmation'], { state: { order: response.data } });
       },
-      error: error => {
-        this.submitting.set(false);
-        this.error.set(this.errors.handle(error, { fallbackMessage: 'Order could not be created.' }).message);
-      }
-    });
-  }
-
-  private loadCart(): void {
-    this.loading.set(true);
-    this.orderApi.getCart(this.slug()).subscribe({
-      next: response => {
-        this.loading.set(false);
-        if (!response.success || !response.data) {
-          this.error.set(response.message ?? 'Cart could not be loaded.');
-          return;
-        }
-        this.cart.set(response.data);
-      },
-      error: error => {
-        this.loading.set(false);
-        this.error.set(this.errors.handle(error, { fallbackMessage: 'Cart could not be loaded.' }).message);
-      }
+      error: () => undefined
     });
   }
 }
