@@ -37,6 +37,8 @@ export class OrderDetails {
       const orderId = this.orderId();
       if (restaurant && orderId) {
         untracked(() => this.orderState.loadOrder(restaurant.id, orderId));
+      } else {
+        untracked(() => this.orderState.clear());
       }
     });
   }
