@@ -160,6 +160,16 @@ export const routes: Routes = [
         ]
       },
       {
+        path: 'orders',
+        title: 'Orders — Resto.pk',
+        canActivate: [permissionGuard],
+        data: { permission: 'Order.View' },
+        loadComponent: () =>
+          import('./features/orders/pages/staff/order-list/order-list').then(
+            m => m.OrderList
+          )
+      },
+      {
         path: 'branding-assets',
         title: 'Branding & Assets — Resto.pk',
         canActivate: [permissionGuard],

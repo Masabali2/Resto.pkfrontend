@@ -1,0 +1,111 @@
+<section class="orders-page" aria-labelledby="orders-title">
+  <header class="page-header">
+    <div class="page-heading">
+      <p class="eyebrow">RESTAURANT MANAGEMENT</p>
+      <h1 id="orders-title">Orders</h1>
+      <p class="page-description">Review and manage orders placed by your customers.</p>
+    </div>
+
+    @if (restaurant(); as activeRestaurant) {
+      <div class="restaurant-context" aria-label="Selected restaurant">
+        <span class="context-indicator" aria-hidden="true"></span>
+        <span class="context-label">Viewing orders for</span>
+        <strong>{{ activeRestaurant.name }}</strong>
+      </div>
+    }
+  </header>
+
+  @if (restaurantState() === 'loading') {
+    <div class="state-panel" role="status" aria-live="polite">
+      <app-loading-spinner [size]="28" />
+      <p>Loading your restaurant…</p>
+    </div>
+  } @else if (restaurantState() === 'error') {
+    <div class="state-panel state-panel-error" role="alert">
+      <span class="state-icon" aria-hidden="true">
+        <i class="bi bi-exclamation-circle"></i>
+      </span>
+      <h2>We couldn't load your restaurant</h2>
+      <p>{{ restaurantError() || 'Please try again.' }}</p>
+      <button type="button" class="retry-button" (click)="retryRestaurantLoad()">
+        Try again
+      </button>
+    </div>
+  } @else if (restaurantState() === 'forbidden') {
+    <div class="state-panel" role="status">
+      <span class="state-icon" aria-hidden="true">
+        <i class="bi bi-shield-lock"></i>
+      </span>
+      <h2>Restaurant access unavailable</h2>
+      <p>Your account cannot access the selected restaurant.</p>
+    </div>
+  } @else if (restaurantState() === 'empty' || !restaurant()) {
+    <div class="state-panel" role="status">
+      <span class="state-icon" aria-hidden="true">
+        <i class="bi bi-shop"></i>
+      </span>
+      <h2>Select a restaurant</h2>
+      <p>Select an active restaurant to view its orders.</p>
+    </div>
+  } @else {
+    <section class="orders-workspace" aria-label="Order list">
+      <div class="list-toolbar">
+        <div>
+          <h2 class="section-title">All orders</h2>
+          <p class="section-description">Track incoming orders and their current status.</p>
+        </div>
+      </div>
+
+      <div class="status-filter" role="group" aria-label="Filter orders by status">
+        @for (status of statuses; track status) {
+          <button
+            type="button"
+            class="filter-option"
+            [class.is-selected]="selectedStatus() === status"
+            [attr.aria-pressed]="selectedStatus() === status"
+            (click)="selectStatus(status)"
+          >
+            {{ status }}
+          </button>
+        }
+      </div>
+
+      <div class="orders-table-wrap">
+        <table class="orders-table">
+          <caption class="visually-hidden">Orders for the selected restaurant</caption>
+          <thead>
+            <tr>
+              <th scope="col">Order</th>
+              <th scope="col">Customer</th>
+              <th scope="col">Items</th>
+              <th scope="col">Total</th>
+              <th scope="col">Status</th>
+              <th scope="col">Placed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <span class="empty-icon" aria-hidden="true">
+                    <i class="bi bi-receipt"></i>
+                  </span>
+                  <h3>Order list is ready</h3>
+                  <p>{{ emptyMessage() }}</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mobile-empty-state">
+        <span class="empty-icon" aria-hidden="true">
+          <i class="bi bi-receipt"></i>
+        </span>
+        <h3>Order list is ready</h3>
+        <p>{{ emptyMessage() }}</p>
+      </div>
+    </section>
+  }
+</section>

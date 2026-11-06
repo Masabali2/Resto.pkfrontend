@@ -65,3 +65,17 @@ describe('template catalogue routes', () => {
     expect(nestedPreview).toBeUndefined();
   });
 });
+
+describe('staff order routes', () => {
+  const authenticatedLayout = routes.find(route => route.children);
+
+  it('registers Orders inside the authenticated layout with Order.View', () => {
+    const orders = authenticatedLayout?.children?.find(route => route.path === 'orders');
+
+    expect(orders).toBeTruthy();
+    expect(orders?.title).toBe('Orders — Resto.pk');
+    expect(orders?.canActivate?.length).toBe(1);
+    expect(orders?.data).toEqual({ permission: 'Order.View' });
+    expect(typeof orders?.loadComponent).toBe('function');
+  });
+});
