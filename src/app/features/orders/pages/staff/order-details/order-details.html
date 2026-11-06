@@ -101,7 +101,7 @@
 
         <app-order-workflow-actions
           [status]="currentOrder.status"
-          [disabled]="updating()"
+          [disabled]="updating() || loading()"
           (transition)="transitionStatus($event)"
         />
         @if (updating()) {
