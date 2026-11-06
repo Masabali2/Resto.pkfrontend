@@ -26,7 +26,7 @@ export class PublicCheckout {
 
   protected readonly slug = computed(() => this.routeParams().get('slug') ?? '');
   protected readonly cart = this.publicOrderState.cart;
-  protected readonly loading = this.publicOrderState.cartLoading;
+  protected readonly loading = computed(() => this.publicOrderState.cartLoading() || (!this.publicOrderState.cart() && !this.publicOrderState.checkoutMessage()));
   protected readonly submitting = computed(
     () => this.publicOrderState.creatingOrder() || this.publicOrderState.cartMutating()
   );
