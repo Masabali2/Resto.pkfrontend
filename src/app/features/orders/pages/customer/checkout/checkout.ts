@@ -29,9 +29,9 @@ export class PublicCheckout {
   protected readonly error = signal<string | null>(null);
 
   protected readonly form = this.formBuilder.nonNullable.group({
-    customerName: ['', [Validators.required, Validators.maxLength(200)]],
-    customerPhone: ['', [Validators.maxLength(50)]],
-    customerEmail: ['', [Validators.email, Validators.maxLength(320)]],
+    customerName: ['', [Validators.required, Validators.maxLength(150)]],
+    customerPhone: ['', [Validators.maxLength(30), Validators.pattern(/^\+?[0-9\s\-()]{7,20}$/)]],
+    customerEmail: ['', [Validators.email, Validators.maxLength(254)]],
     orderType: ['Pickup' as OrderType, Validators.required],
     specialInstructions: ['', [Validators.maxLength(2000)]]
   });
