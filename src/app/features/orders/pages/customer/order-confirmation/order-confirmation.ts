@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { PLATFORM_ID } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { PublicOrderFrame } from '../../../components/public-order-frame/public-order-frame';
@@ -8,7 +8,7 @@ import type { PublicOrderCreated } from '../../../models/order.models';
 @Component({
   selector: 'app-public-order-confirmation',
   standalone: true,
-  imports: [RouterLink, PublicOrderFrame],
+  imports: [DecimalPipe, RouterLink, PublicOrderFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './order-confirmation.html',
   styleUrl: './order-confirmation.css'
