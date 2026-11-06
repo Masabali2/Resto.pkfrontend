@@ -1,5 +1,6 @@
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, untracked } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { PublicOrderFrame } from '../../../components/public-order-frame/public-order-frame';
@@ -8,7 +9,7 @@ import { PublicOrderStateService } from '../../../services/public-order-state.se
 @Component({
   selector: 'app-public-cart',
   standalone: true,
-  imports: [DecimalPipe, PublicOrderFrame],
+  imports: [DecimalPipe, PublicOrderFrame, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './cart.html',
   styleUrl: './cart.css'
