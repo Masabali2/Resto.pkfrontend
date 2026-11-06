@@ -1,0 +1,25 @@
+<app-public-order-frame step="checkout">
+  <main class="page-content" aria-labelledby="checkout-title">
+    <header class="page-heading"><p class="eyebrow">ALMOST THERE</p><h1 id="checkout-title">Checkout</h1><p>Share your details and choose how you would like to receive your order.</p></header>
+    <div class="checkout-layout">
+      <section class="checkout-card">
+        <div class="section-heading"><span class="section-icon"><i class="bi bi-person" aria-hidden="true"></i></span><div><h2>Customer details</h2><p>Who should we prepare this order for?</p></div></div>
+        <fieldset disabled><label>Full name<input type="text" autocomplete="name" placeholder="Your full name"></label><div class="field-grid"><label>Phone number<input type="tel" autocomplete="tel" placeholder="+92 300 0000000"></label><label>Email address <small>(optional)</small><input type="email" autocomplete="email" placeholder="you@example.com"></label></div></fieldset>
+      </section>
+      <section class="checkout-card">
+        <div class="section-heading"><span class="section-icon"><i class="bi bi-bag-check" aria-hidden="true"></i></span><div><h2>Order type</h2><p>Select your preferred fulfilment method.</p></div></div>
+        <fieldset class="order-types" disabled>
+          <label><input type="radio" name="orderType" value="Pickup"><span><i class="bi bi-bag" aria-hidden="true"></i><strong>Pickup</strong><small>Collect your order</small></span></label>
+          <label><input type="radio" name="orderType" value="DineIn"><span><i class="bi bi-cup-hot" aria-hidden="true"></i><strong>Dine-in</strong><small>Enjoy at the restaurant</small></span></label>
+          <label><input type="radio" name="orderType" value="Delivery"><span><i class="bi bi-bicycle" aria-hidden="true"></i><strong>Delivery</strong><small>Have it brought to you</small></span></label>
+        </fieldset>
+      </section>
+      <section class="checkout-card">
+        <div class="section-heading"><span class="section-icon"><i class="bi bi-chat-left-text" aria-hidden="true"></i></span><div><h2>Special instructions</h2><p>Anything the restaurant should know?</p></div></div>
+        <fieldset disabled><label>Notes <small>(optional)</small><textarea rows="3" placeholder="Add a note for the restaurant"></textarea></label></fieldset>
+      </section>
+    </div>
+    <aside class="integration-banner" role="note"><i class="bi bi-info-circle" aria-hidden="true"></i><div><strong>Checkout is being prepared</strong><p>Your details will be submitted securely after cart and order API integration. This screen does not collect or send personal information.</p></div></aside>
+    <button class="submit-button" type="button" disabled>Place order <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+  </main>
+</app-public-order-frame>

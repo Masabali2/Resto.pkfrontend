@@ -1,0 +1,20 @@
+<div class="customer-order">
+  <header class="customer-header">
+    <a class="brand" routerLink="/">
+      <span class="brand-mark" aria-hidden="true"><i class="bi bi-shop"></i></span>
+      <span><strong>Resto.pk</strong><small>Restaurant ordering</small></span>
+    </a>
+    <span class="secure-label"><i class="bi bi-shield-check" aria-hidden="true"></i> Secure ordering</span>
+  </header>
+  <nav class="order-steps" aria-label="Order progress">
+    <a routerLink="../cart" routerLinkActive="is-active" [routerLinkActiveOptions]="{exact:true}"><span>1</span>Cart</a>
+    <i aria-hidden="true"></i>
+    <a routerLink="../checkout" routerLinkActive="is-active" [routerLinkActiveOptions]="{exact:true}"><span>2</span>Details</a>
+    <i aria-hidden="true"></i>
+    <a routerLink="../order-confirmation" routerLinkActive="is-active" [routerLinkActiveOptions]="{exact:true}"><span>3</span>Confirmation</a>
+    <i aria-hidden="true"></i>
+    <a routerLink="../order-tracking" routerLinkActive="is-active"><span>4</span>Tracking</a>
+  </nav>
+  <ng-content />
+  <footer class="customer-footer"><span>Questions about your order?</span><span>Ordering powered by <strong>Resto.pk</strong></span></footer>
+</div>
