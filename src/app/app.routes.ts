@@ -204,6 +204,15 @@ export const routes: Routes = [
     import('./features/orders/pages/order-management/order-management').then(
       m => m.OrderManagement
     )
+},{
+  path: 'orders/create',
+  title: 'Create Order — Resto.pk',
+  canActivate: [permissionGuard],
+  data: { permission: PERMISSIONS.Order.View },
+  loadComponent: () =>
+    import('./features/orders/pages/staff/create-order/create-order').then(
+      m => m.CreateOrder
+    )
 },
       {
         path: 'branding-assets',
