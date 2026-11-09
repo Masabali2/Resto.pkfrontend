@@ -92,6 +92,9 @@ export class Navbar {
 
   toggleProfileMenu(): void {
     this.profileMenuOpen.update(open => !open);
+    if (this.profileMenuOpen()) {
+      this.mobileMenuOpen.set(false);
+    }
   }
 
   closeProfileMenu(): void {

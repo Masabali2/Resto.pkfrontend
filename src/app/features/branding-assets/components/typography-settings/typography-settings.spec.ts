@@ -74,7 +74,7 @@ describe('TypographySettings', () => {
   });
 
   it('themePrimary should return the theme primary color', () => {
-    (component as any).theme.set({ primary: '#FF0000', secondary: '#000000', tint: '#FFFFFF' });
+    fixture.componentRef.setInput('theme', { primary: '#FF0000', secondary: '#000000', tint: '#FFFFFF' });
     expect((component as any).themePrimary()).toBe('#FF0000');
   });
 });

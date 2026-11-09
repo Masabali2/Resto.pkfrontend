@@ -1,0 +1,345 @@
+<section class="orders-page" [class.is-embedded]="embedded()" aria-labelledby="orders-title">
+
+  @if (!embedded()) {
+    <header class="page-header">
+      <div class="page-heading">
+        <div class="heading-kicker">
+          <span class="heading-kicker-dot" aria-hidden="true"></span>
+          RESTAURANT MANAGEMENT
+        </div>
+
+        <h1 id="orders-title">Orders</h1>
+
+        <p class="page-description">
+          Review and manage orders placed by your customers.
+        </p>
+      </div>
+
+      @if (restaurant(); as activeRestaurant) {
+        <div class="restaurant-context" aria-label="Selected restaurant">
+          <span class="context-indicator" aria-hidden="true"></span>
+
+          <div class="context-copy">
+            <span class="context-label">Viewing orders for</span>
+            <strong>{{ activeRestaurant.name }}</strong>
+          </div>
+
+          <i class="bi bi-chevron-down context-chevron" aria-hidden="true"></i>
+        </div>
+      }
+    </header>
+  }
+
+  @if (!embedded()) {
+    @if (restaurantState() === 'loading') {
+      <div class="state-panel" role="status">
+        <div class="state-icon state-icon-loading">
+          <app-loading-spinner [size]="28" />
+        </div>
+
+        <div class="state-copy">
+          <h2>Loading restaurant</h2>
+          <p>Preparing your restaurant workspace…</p>
+        </div>
+      </div>
+    } @else if (restaurantState() === 'error') {
+      <div class="state-panel state-panel-error" role="alert">
+        <span class="state-icon" aria-hidden="true">
+          <i class="bi bi-exclamation-circle"></i>
+        </span>
+
+        <div class="state-copy">
+          <h2>We couldn't load your restaurant</h2>
+          <p>{{ restaurantError() || 'Please try again.' }}</p>
+        </div>
+
+        <button
+          type="button"
+          class="retry-button"
+          (click)="retryRestaurantLoad()"
+        >
+          <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+          Try again
+        </button>
+      </div>
+    } @else if (restaurantState() === 'forbidden') {
+      <div class="state-panel" role="status">
+        <span class="state-icon state-icon-danger" aria-hidden="true">
+          <i class="bi bi-shield-lock"></i>
+        </span>
+
+        <div class="state-copy">
+          <h2>Restaurant access unavailable</h2>
+          <p>Your account cannot access the selected restaurant.</p>
+        </div>
+      </div>
+    } @else if (restaurantState() === 'empty' || !restaurant()) {
+      <div class="state-panel" role="status">
+        <span class="state-icon" aria-hidden="true">
+          <i class="bi bi-shop"></i>
+        </span>
+
+        <div class="state-copy">
+          <h2>Select a restaurant</h2>
+          <p>Select an active restaurant to view its orders.</p>
+        </div>
+      </div>
+    }
+  }
+
+  @if (embedded() || restaurant()) {
+    <section class="orders-workspace" aria-label="Order list">
+
+      <div class="workspace-header">
+        <div class="workspace-heading">
+          <div class="workspace-title-row">
+            <span class="workspace-icon" aria-hidden="true">
+              <i class="bi bi-receipt"></i>
+            </span>
+
+            <div>
+              <h2 class="section-title">Orders</h2>
+
+              <p class="section-description">
+                Monitor and manage your restaurant orders.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-count" aria-live="polite">
+          <strong>{{ totalCount() }}</strong>
+          <span>order{{ totalCount() === 1 ? '' : 's' }}</span>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <div class="filter-heading">
+          <span class="filter-label">Order status</span>
+          <span class="filter-hint">Filter your workflow</span>
+        </div>
+
+        <div
+          class="status-filter"
+          role="group"
+          aria-label="Filter orders by status"
+        >
+          @for (status of statuses; track status) {
+            <button
+              type="button"
+              class="filter-option"
+              [class.is-selected]="selectedStatus() === status"
+              [attr.aria-pressed]="selectedStatus() === status"
+              (click)="selectStatus(status)"
+            >
+              @switch (status) {
+                @case ('All orders') {
+                  <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>
+                }
+
+                @case ('New') {
+                  <span class="status-dot status-dot-new" aria-hidden="true"></span>
+                }
+
+                @case ('Confirmed') {
+                  <span class="status-dot status-dot-confirmed" aria-hidden="true"></span>
+                }
+
+                @case ('Preparing') {
+                  <span class="status-dot status-dot-preparing" aria-hidden="true"></span>
+                }
+
+                @case ('Ready') {
+                  <span class="status-dot status-dot-ready" aria-hidden="true"></span>
+                }
+
+                @case ('Completed') {
+                  <span class="status-dot status-dot-completed" aria-hidden="true"></span>
+                }
+
+                @case ('Cancelled') {
+                  <span class="status-dot status-dot-cancelled" aria-hidden="true"></span>
+                }
+              }
+
+              <span>{{ status }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      @if (loading()) {
+        <div class="state-panel table-state" role="status">
+          <div class="state-icon state-icon-loading">
+            <app-loading-spinner [size]="28" />
+          </div>
+
+          <div class="state-copy">
+            <h2>Loading orders</h2>
+            <p>Fetching the latest orders for this restaurant…</p>
+          </div>
+        </div>
+      } @else if (error()) {
+        <div class="state-panel state-panel-error table-state" role="alert">
+          <span class="state-icon" aria-hidden="true">
+            <i class="bi bi-exclamation-circle"></i>
+          </span>
+
+          <div class="state-copy">
+            <h2>Orders could not be loaded</h2>
+            <p>{{ error() }}</p>
+          </div>
+
+          <button
+            type="button"
+            class="retry-button"
+            (click)="retryOrders()"
+          >
+            <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+            Try again
+          </button>
+        </div>
+      } @else if (orders().length === 0) {
+        <div class="empty-state">
+          <span class="empty-icon" aria-hidden="true">
+            <i class="bi bi-receipt"></i>
+          </span>
+
+          <h3>No orders found</h3>
+
+          <p>
+            No orders match the selected status. Try another filter to
+            continue.
+          </p>
+        </div>
+      } @else {
+        <div class="orders-table-wrap">
+          <table class="orders-table">
+            <caption class="visually-hidden">
+              Orders for the selected restaurant
+            </caption>
+
+            <thead>
+              <tr>
+                <th scope="col">Order</th>
+                <th scope="col">Customer</th>
+                <th scope="col">Items</th>
+                <th scope="col">Total</th>
+                <th scope="col">Status</th>
+                <th scope="col">Placed</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (order of orders(); track order.id) {
+                <tr>
+                  <td>
+                    <a
+                      class="order-number"
+                      [routerLink]="['/orders', order.id]"
+                    >
+                      <span>{{ order.orderNumber }}</span>
+                      <i
+                        class="bi bi-arrow-up-right"
+                        aria-hidden="true"
+                      ></i>
+                    </a>
+                  </td>
+
+                  <td>
+                    <div class="customer-cell">
+                      <span class="customer-avatar" aria-hidden="true">
+                        {{ order.customerName.charAt(0).toUpperCase() }}
+                      </span>
+
+                      <span class="customer-details">
+                        <strong>{{ order.customerName }}</strong>
+                        <small>{{ order.orderType }}</small>
+                      </span>
+                    </div>
+                  </td>
+
+                  <td>
+                    <span class="items-count">
+                      {{ order.items.length }}
+                      <span>
+                        item{{ order.items.length === 1 ? '' : 's' }}
+                      </span>
+                    </span>
+                  </td>
+
+                  <td>
+                    <div class="amount-cell">
+                      <span class="currency">{{ order.currency }}</span>
+                      <strong>
+                        {{ order.totalAmount | number:'1.2-2' }}
+                      </strong>
+                    </div>
+                  </td>
+
+                  <td>
+                    <app-order-status-badge [status]="order.status" />
+                  </td>
+
+                  <td>
+                    <time
+                      class="placed-time"
+                      [attr.datetime]="order.createdAt"
+                    >
+                      {{ order.createdAt | date:'medium' }}
+                    </time>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <footer class="pagination-controls">
+          <div class="pagination-summary">
+            Showing
+            <strong>
+              {{ (page() - 1) * pageSize + 1 }}
+            </strong>
+            -
+            <strong>
+              {{ Math.min(page() * pageSize, totalCount()) }}
+            </strong>
+            of
+            <strong>{{ totalCount() }}</strong>
+            orders
+          </div>
+
+          <div class="pagination-actions">
+            <button
+              type="button"
+              aria-label="Previous page"
+              (click)="previousPage()"
+              [disabled]="page() === 1"
+            >
+              <i class="bi bi-chevron-left" aria-hidden="true"></i>
+              <span>Previous</span>
+            </button>
+
+            <span class="page-indicator">
+              <strong>{{ page() }}</strong>
+              <span>of</span>
+              <strong>{{ totalPages() }}</strong>
+            </span>
+
+            <button
+              type="button"
+              aria-label="Next page"
+              (click)="nextPage()"
+              [disabled]="page() === totalPages()"
+            >
+              <span>Next</span>
+              <i class="bi bi-chevron-right" aria-hidden="true"></i>
+            </button>
+          </div>
+        </footer>
+      }
+    </section>
+  }
+
+</section>

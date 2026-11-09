@@ -1,17 +1,20 @@
 import { environment } from '../../../environments/environment';
 
-const API_BASE_URL = environment.apiUrl.replace(/\/+$/, '');
+const API_ORIGIN = new URL(environment.apiUrl).origin;
 
 export function resolveAssetUrl(url: string | null | undefined): string | null {
-  if (!url) {
+  if (url == null || url.length === 0) {
     return null;
   }
 
-  if (/^https?:\/\//i.test(url)) {
+  if (/^(?:https?:|blob:|data:)/i.test(url) || url.startsWith('//')) {
     return url;
   }
 
-  const normalizedUrl = url.startsWith('/') ? url : `/${url}`;
+  if (url.startsWith('/assets/') || url === '/favicon.ico') {
+    return url;
+  }
 
-  return `${API_BASE_URL.replace(/\/api$/, '')}${normalizedUrl}`;
+  const normalizedPath = url.startsWith('/') ? url : `/${url}`;
+  return `${API_ORIGIN}${normalizedPath}`;
 }

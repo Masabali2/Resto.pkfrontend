@@ -1,0 +1,125 @@
+<section class="order-details-page" aria-labelledby="order-details-title">
+  <header class="page-header">
+    <div class="heading-content">
+      <a class="back-link" routerLink="/orders"><i class="bi bi-arrow-left" aria-hidden="true"></i>Back to orders</a>
+      <p class="eyebrow">ORDER MANAGEMENT</p>
+      <h1 id="order-details-title">Order details</h1>
+      <p class="page-description">Review order information and follow its fulfilment workflow.</p>
+    </div>
+    @if (restaurant(); as activeRestaurant) {
+      <div class="restaurant-context">
+        <span class="context-indicator" aria-hidden="true"></span>
+        <span>Viewing</span>
+        <strong>{{ activeRestaurant.name }}</strong>
+      </div>
+    }
+  </header>
+
+  @if (loading() && !order()) {
+    <section class="unavailable-state" role="status">
+      <app-loading-spinner [size]="28" />
+      <h2>Loading order details</h2>
+      <p>Retrieving the latest order information.</p>
+    </section>
+  } @else if (error() && !order()) {
+    <section class="unavailable-state" role="alert">
+      <span class="unavailable-icon" aria-hidden="true"><i class="bi bi-exclamation-circle"></i></span>
+      <h2>Order details could not be loaded</h2>
+      <p>{{ error() }}</p>
+      <button type="button" class="return-button" (click)="retry()">Try again</button>
+    </section>
+  } @else if (order(); as currentOrder) {
+    @if (error()) {
+      <div class="inline-error" role="alert"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ error() }}</div>
+    }
+    <div class="details-layout">
+      <main class="details-main">
+        <section class="content-card order-overview">
+          <div class="overview-heading">
+            <div>
+              <p class="eyebrow">ORDER REFERENCE</p>
+              <h2>{{ currentOrder.orderNumber }}</h2>
+              <p class="muted-text">Placed {{ currentOrder.createdAt | date:'medium' }}</p>
+            </div>
+            <div class="overview-badges">
+              <app-order-status-badge [status]="currentOrder.status" />
+              <app-order-type-badge [type]="currentOrder.orderType" />
+            </div>
+          </div>
+          <div class="progress-divider"></div>
+          <app-order-status-progress [status]="currentOrder.status" />
+        </section>
+
+        <section class="content-card">
+          <div class="card-heading"><h2>Order items</h2><span>{{ currentOrder.items.length }} items</span></div>
+          <div class="items-list">
+            @for (item of currentOrder.items; track $index) {
+              <article class="order-item">
+                <div class="item-quantity">{{ item.quantity }}×</div>
+                <div class="item-information">
+                  <h3>{{ item.itemName }}</h3>
+                  <p>{{ item.currency }} {{ item.unitPrice | number:'1.2-2' }} each</p>
+                </div>
+                <strong class="item-total">{{ currentOrder.currency }} {{ item.lineTotal | number:'1.2-2' }}</strong>
+              </article>
+            }
+          </div>
+        </section>
+
+        <section class="content-card">
+          <div class="card-heading"><h2>Special instructions</h2></div>
+          @if (currentOrder.specialInstructions) {
+            <p class="instructions-text">{{ currentOrder.specialInstructions }}</p>
+          } @else {
+            <p class="muted-text">No special instructions were provided.</p>
+          }
+        </section>
+      </main>
+
+      <aside class="details-aside">
+        <section class="content-card">
+          <div class="card-heading"><h2>Customer</h2></div>
+          <h3 class="customer-name">{{ currentOrder.customerName }}</h3>
+          @if (currentOrder.customerPhone) {
+            <p class="customer-detail"><i class="bi bi-telephone" aria-hidden="true"></i>{{ currentOrder.customerPhone }}</p>
+          }
+          @if (currentOrder.customerEmail) {
+            <p class="customer-detail"><i class="bi bi-envelope" aria-hidden="true"></i>{{ currentOrder.customerEmail }}</p>
+          }
+        </section>
+
+        <section class="content-card total-card">
+          <div class="card-heading"><h2>Order summary</h2></div>
+          <div class="amount-row"><span>Subtotal</span><strong>{{ currentOrder.currency }} {{ currentOrder.subtotal | number:'1.2-2' }}</strong></div>
+          @if (currentOrder.discountAmount > 0) {
+            <div class="amount-row"><span>Discount</span><strong>− {{ currentOrder.currency }} {{ currentOrder.discountAmount | number:'1.2-2' }}</strong></div>
+          }
+          <div class="amount-row"><span>Tax</span><strong>{{ currentOrder.currency }} {{ currentOrder.taxAmount | number:'1.2-2' }}</strong></div>
+          <div class="amount-divider"></div>
+          <div class="amount-row amount-total"><span>Total</span><strong>{{ currentOrder.currency }} {{ currentOrder.totalAmount | number:'1.2-2' }}</strong></div>
+        </section>
+
+        @if (canUpdateOrder()) {
+          <app-order-workflow-actions
+            [status]="currentOrder.status"
+            [disabled]="updating() || loading()"
+            [allowCancellation]="canCancelOrder()"
+            (transition)="transitionStatus($event)"
+          />
+          @if (updating()) {
+            <p class="updating-note" role="status"><i class="bi bi-arrow-repeat" aria-hidden="true"></i>Updating order status…</p>
+          }
+        } @else {
+          <p class="muted-text" role="note">You have read-only access to this order. Contact a manager if you need to update its status.</p>
+        }
+      </aside>
+    </div>
+  } @else {
+    <section class="unavailable-state" role="status">
+      <span class="unavailable-icon" aria-hidden="true"><i class="bi bi-receipt-cutoff"></i></span>
+      <h2>Order not available</h2>
+      <p>No order details are available for this restaurant and order reference.</p>
+      <a routerLink="/orders" class="return-button">Return to orders</a>
+    </section>
+  }
+</section>

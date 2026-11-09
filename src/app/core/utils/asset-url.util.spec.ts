@@ -42,7 +42,7 @@ describe('resolveAssetUrl', () => {
   it('returns null or empty values safely', () => {
     expect(resolveAssetUrl(null)).toBeNull();
     expect(resolveAssetUrl(undefined)).toBeNull();
-    expect(resolveAssetUrl('')).toBe('');
+    expect(resolveAssetUrl('')).toBeNull();
   });
 
   it('does not rewrite frontend public assets to the API origin', () => {

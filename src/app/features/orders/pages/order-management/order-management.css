@@ -1,0 +1,148 @@
+:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.order-management-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+
+  width: min(100%, 1600px);
+  min-width: 0;
+  margin: 0 auto;
+  padding: clamp(18px, 2.5vw, 32px);
+}
+
+/* Order summary and page sections */
+app-order-summary {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.order-management-content {
+  width: 100%;
+  min-width: 0;
+  animation: content-enter 240ms ease-out both;
+}
+
+/* Page notification */
+.page-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  min-height: 44px;
+  padding: 10px 14px;
+
+  color: var(--color-info);
+  background: var(--color-info-soft);
+  border: 1px solid var(--color-info-border);
+  border-radius: var(--radius-control);
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.page-notice > i {
+  flex: 0 0 auto;
+  font-size: 15px;
+}
+
+.notice-dismiss {
+  display: grid;
+  place-items: center;
+
+  width: 28px;
+  height: 28px;
+  margin-left: auto;
+
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.notice-dismiss:hover {
+  background: rgb(29 78 216 / 8%);
+}
+
+/* Keyboard accessibility */
+.notice-dismiss:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+/* Restaurant loading state */
+.order-management-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  min-height: 240px;
+
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.loading-indicator {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+
+  border: 2px solid var(--color-border);
+  border-top-color: var(--resto-orange);
+  border-radius: 50%;
+
+  animation: loading-spin 700ms linear infinite;
+}
+
+/* Animations */
+@keyframes loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Tablet and mobile */
+@media (max-width: 768px) {
+  .order-management-page {
+    gap: 18px;
+  }
+}
+
+@media (max-width: 640px) {
+  .order-management-page {
+    gap: 16px;
+    padding: 16px 12px 24px;
+  }
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .order-management-content,
+  .loading-indicator {
+    animation: none;
+  }
+
+  .notice-dismiss {
+    transition: none;
+  }
+}

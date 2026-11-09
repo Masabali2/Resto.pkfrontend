@@ -1,0 +1,86 @@
+
+<main class="order-management-page">
+  @if (restaurant(); as activeRestaurant) {
+    <app-staff-order-header
+      [restaurantName]="activeRestaurant.name"
+      [searchTerm]="searchTerm()"
+      [viewMode]="viewMode()"
+      (searchChange)="onSearchChange($event)"
+      (viewModeChange)="onViewModeChange($event)"
+      (createOrder)="onCreateOrder()"
+    />
+
+    @if (createOrderMessage(); as message) {
+      <div class="page-notice" role="status">
+        <i class="bi bi-info-circle" aria-hidden="true"></i>
+        <span>{{ message }}</span>
+
+        <button
+          type="button"
+          class="notice-dismiss"
+          aria-label="Dismiss message"
+          (click)="dismissMessage()"
+        >
+          <i class="bi bi-x-lg" aria-hidden="true"></i>
+        </button>
+      </div>
+    }
+
+    <!-- Order summary cards -->
+    <app-order-summary />
+
+    <!-- Order management views -->
+ @if (viewMode() === 'table') {
+  <section class="order-management-content">
+    <app-order-list [embedded]="true" />
+  </section>
+} @else {
+  <section class="order-management-content">
+    <app-order-kanban
+      [restaurantId]="activeRestaurant.id"
+    />
+  </section>
+}
+  } @else {
+    @switch (restaurantState()) {
+      @case ('loading') {
+        <section class="order-management-loading" role="status">
+          <span class="loading-indicator"></span>
+          <p>Loading restaurant workspace…</p>
+        </section>
+      }
+
+      @case ('empty') {
+        <section class="restaurant-state-message">
+          <h2>No restaurant workspace found</h2>
+          <p>Create or select a restaurant before managing orders.</p>
+        </section>
+      }
+
+      @case ('error') {
+        <section class="restaurant-state-message">
+          <h2>Unable to load restaurant</h2>
+          <p>{{ restaurantError() || 'Something went wrong.' }}</p>
+
+          <button type="button" (click)="retryRestaurantLoad()">
+            Try again
+          </button>
+        </section>
+      }
+
+      @case ('forbidden') {
+        <section class="restaurant-state-message">
+          <h2>Access denied</h2>
+          <p>You do not have access to this restaurant workspace.</p>
+        </section>
+      }
+
+      @default {
+        <section class="order-management-loading" role="status">
+          <span class="loading-indicator"></span>
+          <p>Preparing restaurant workspace…</p>
+        </section>
+      }
+    }
+  }
+</main>

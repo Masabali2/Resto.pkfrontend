@@ -1,0 +1,57 @@
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import type { ApiResponse } from '../../../core/models/api-response.model';
+import type { PagedResult } from '../../../core/models/paged-result.model';
+import type { CreatePublicOrderRequest, CreateDirectPublicOrderRequest, PublicCart, PublicCartItem, PublicOrderCreated, PublicOrderTracking, StaffOrderDetails, StaffOrderSummary,UpdateOrderStatusRequest } from '../models/order.models';
+
+@Injectable({ providedIn: 'root' })
+export class OrderApiService {
+  private readonly http = inject(HttpClient);
+  private readonly publicBaseUrl = environment.apiUrl + '/v1/public/restaurants';
+  private readonly staffBaseUrl = environment.apiUrl + '/restaurants';
+
+  getStaffOrders(restaurantId: string, status: string | null, page = 1, pageSize = 20): Observable<ApiResponse<PagedResult<StaffOrderDetails>>> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    if (status) params = params.set('status', status);
+    return this.http.get<ApiResponse<PagedResult<StaffOrderDetails>>>(this.staffBaseUrl + '/' + restaurantId + '/orders', { params });
+  }
+  getStaffOrder(restaurantId: string, orderId: string): Observable<ApiResponse<StaffOrderDetails>> {
+    return this.http.get<ApiResponse<StaffOrderDetails>>(this.staffBaseUrl + '/' + restaurantId + '/orders/' + orderId);
+  }
+  updateStaffOrderStatus(restaurantId: string, orderId: string, request: UpdateOrderStatusRequest): Observable<ApiResponse<StaffOrderDetails>> {
+    return this.http.patch<ApiResponse<StaffOrderDetails>>(this.staffBaseUrl + '/' + restaurantId + '/orders/' + orderId + '/status', request);
+  }
+  getCart(slug: string): Observable<ApiResponse<PublicCart>> {
+    return this.http.get<ApiResponse<PublicCart>>(this.publicBaseUrl + '/' + encodeURIComponent(slug) + '/cart');
+  }
+  addCartItem(slug: string, menuItemId: string, quantity: number): Observable<ApiResponse<PublicCartItem>> {
+    return this.http.post<ApiResponse<PublicCartItem>>(this.publicBaseUrl + '/' + encodeURIComponent(slug) + '/cart/items', { menuItemId, quantity });
+  }
+  updateCartItem(slug: string, itemId: string, quantity: number): Observable<ApiResponse<PublicCartItem>> {
+    return this.http.put<ApiResponse<PublicCartItem>>(this.publicBaseUrl + '/' + encodeURIComponent(slug) + '/cart/items/' + itemId, { quantity });
+  }
+  removeCartItem(slug: string, itemId: string): Observable<ApiResponse<object>> {
+    return this.http.delete<ApiResponse<object>>(this.publicBaseUrl + '/' + encodeURIComponent(slug) + '/cart/items/' + itemId);
+  }
+  clearCart(slug: string): Observable<ApiResponse<object>> {
+    return this.http.delete<ApiResponse<object>>(this.publicBaseUrl + '/' + encodeURIComponent(slug) + '/cart');
+  }
+  createOrder(slug: string, request: CreatePublicOrderRequest): Observable<ApiResponse<PublicOrderCreated>> {
+    return this.http.post<ApiResponse<PublicOrderCreated>>(this.publicBaseUrl + '/' + encodeURIComponent(slug) + '/orders', request);
+  }
+  createDirectOrder(slug: string, request: CreateDirectPublicOrderRequest): Observable<ApiResponse<PublicOrderCreated>> {
+    return this.http.post<ApiResponse<PublicOrderCreated>>(this.publicBaseUrl + '/' + encodeURIComponent(slug) + '/orders/direct', request);
+  }
+  trackOrder(slug: string, trackingToken: string): Observable<ApiResponse<PublicOrderTracking>> {
+    return this.http.get<ApiResponse<PublicOrderTracking>>(this.publicBaseUrl + '/' + encodeURIComponent(slug) + '/orders/track/' + encodeURIComponent(trackingToken));
+  }
+  getStaffOrderSummary(
+  restaurantId: string
+): Observable<ApiResponse<StaffOrderSummary>> {
+  return this.http.get<ApiResponse<StaffOrderSummary>>(
+    `${this.staffBaseUrl}/${encodeURIComponent(restaurantId)}/orders/summary`
+  );
+}
+}
