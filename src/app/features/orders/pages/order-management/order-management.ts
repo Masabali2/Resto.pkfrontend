@@ -16,12 +16,13 @@ import {
 
 import { OrderList } from '../staff/order-list/order-list';
 import { OrderStateService } from '../../services/order-state.service';
-
+import { OrderKanban } from '../../components/order-kanban/order-kanban';
 @Component({
   selector: 'app-order-management',
   standalone: true,
   imports: [
     StaffOrderHeader,
+    OrderKanban,
     OrderList,
     OrderSummary
   ],

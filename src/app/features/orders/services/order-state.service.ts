@@ -9,11 +9,20 @@ import type {
   StaffOrderSummary
 } from '../models/order.models';
 import { OrderApiService } from './order-api.service';
-
+import { forkJoin } from 'rxjs';
 export type OrderStatusFilter = OrderStatus | 'All orders';
 
 const PAGE_SIZE = 20;
+const KANBAN_STATUSES: readonly OrderStatus[] = [
+  'New',
+  'Confirmed',
+  'Preparing',
+  'Ready',
+  'Completed',
+  'Cancelled'
+];
 
+const KANBAN_PAGE_SIZE = 20;
 @Injectable({ providedIn: 'root' })
 export class OrderStateService {
   private readonly orderApi = inject(OrderApiService);
@@ -30,7 +39,21 @@ export class OrderStateService {
   private readonly pageState = signal(1);
   private readonly totalPagesState = signal(1);
   private readonly totalCountState = signal(0);
+// Kanban board
+private readonly kanbanOrdersState =
+  signal<Record<OrderStatus, StaffOrderDetails[]>>({
+    New: [],
+    Confirmed: [],
+    Preparing: [],
+    Ready: [],
+    Completed: [],
+    Cancelled: []
+  });
 
+private readonly kanbanLoadingState = signal(false);
+private readonly kanbanErrorState = signal<string | null>(null);
+
+private kanbanRequestId = 0;
   // Selected order
   private readonly selectedOrderState =
     signal<StaffOrderDetails | null>(null);
@@ -81,7 +104,9 @@ export class OrderStateService {
   readonly detailError = this.detailErrorState.asReadonly();
   readonly workflowError = this.workflowErrorState.asReadonly();
   readonly summaryError = this.summaryErrorState.asReadonly();
-
+readonly kanbanOrders = this.kanbanOrdersState.asReadonly();
+readonly kanbanLoading = this.kanbanLoadingState.asReadonly();
+readonly kanbanError = this.kanbanErrorState.asReadonly();
   readonly detailMessage = computed(
     () => this.workflowErrorState() ?? this.detailErrorState()
   );
@@ -136,7 +161,77 @@ export class OrderStateService {
         }
       });
   }
+  // loading kanban orders for the restaurant
+loadKanbanOrders(restaurantId: string): void {
+  this.ensureRestaurantScope(restaurantId);
 
+  const requestId = ++this.kanbanRequestId;
+
+  this.kanbanLoadingState.set(true);
+  this.kanbanErrorState.set(null);
+
+  const requests = KANBAN_STATUSES.map(status =>
+    this.orderApi.getStaffOrders(
+      restaurantId,
+      status,
+      1,
+      KANBAN_PAGE_SIZE
+    )
+  );
+
+  forkJoin(requests)
+    .pipe(takeUntilDestroyed(this.destroyRef))
+    .subscribe({
+      next: responses => {
+        if (requestId !== this.kanbanRequestId) return;
+
+        const nextOrders: Record<OrderStatus, StaffOrderDetails[]> = {
+          New: [],
+          Confirmed: [],
+          Preparing: [],
+          Ready: [],
+          Completed: [],
+          Cancelled: []
+        };
+
+        for (let index = 0; index < KANBAN_STATUSES.length; index++) {
+          const status = KANBAN_STATUSES[index];
+          const response = responses[index];
+
+          if (!response.success || !response.data) {
+            this.kanbanLoadingState.set(false);
+            this.kanbanErrorState.set(
+              response.message ?? 'Kanban orders could not be loaded.'
+            );
+            return;
+          }
+
+          nextOrders[status] = response.data.items;
+        }
+
+        this.kanbanOrdersState.set(nextOrders);
+        this.kanbanLoadingState.set(false);
+      },
+
+      error: error => {
+        if (requestId !== this.kanbanRequestId) return;
+
+        this.kanbanLoadingState.set(false);
+
+        this.kanbanErrorState.set(
+          this.errors.handle(error, {
+            fallbackMessage: 'Kanban orders could not be loaded.'
+          }).message
+        );
+      }
+    });
+}
+// for refreshing the kanban orders when the restaurant is already loaded and the user wants to refresh the kanban board
+refreshKanban(restaurantId: string): void {
+  if (this.restaurantIdState() !== restaurantId) return;
+
+  this.loadKanbanOrders(restaurantId);
+}
   // Load paginated orders.
   loadOrders(restaurantId: string): void {
     this.ensureRestaurantScope(restaurantId);
@@ -373,6 +468,7 @@ export class OrderStateService {
     this.detailRequestId++;
     this.updateRequestId++;
     this.summaryRequestId++;
+    this.kanbanRequestId++;
   }
 
   // Reset all restaurant-specific state.
@@ -397,8 +493,81 @@ export class OrderStateService {
     this.detailErrorState.set(null);
     this.workflowErrorState.set(null);
     this.summaryErrorState.set(null);
+    this.kanbanOrdersState.set({
+      New: [],
+      Confirmed: [],
+      Preparing: [],
+      Ready: [],
+      Completed: [],
+      Cancelled: []
+    });
+    this.kanbanLoadingState.set(false);
+    this.kanbanErrorState.set(null);
+  }
+transitionOrderStatus(
+  restaurantId: string,
+  orderId: string,
+  status: OrderStatus,
+  notes: string | null = null
+): void {
+  if (
+    this.restaurantIdState() !== restaurantId ||
+    this.updatingStatusState()
+  ) {
+    return;
   }
 
+  const requestId = ++this.updateRequestId;
+
+  this.updatingStatusState.set(true);
+  this.workflowErrorState.set(null);
+
+  this.orderApi.updateStaffOrderStatus(
+    restaurantId,
+    orderId,
+    {
+      newStatus: status,
+      notes
+    }
+  )
+    .pipe(takeUntilDestroyed(this.destroyRef))
+    .subscribe({
+      next: response => {
+        if (requestId !== this.updateRequestId) return;
+
+        this.updatingStatusState.set(false);
+
+        if (!response.success || !response.data) {
+          this.workflowErrorState.set(
+            response.message ?? 'The order status could not be updated.'
+          );
+          return;
+        }
+
+        const updatedOrder = response.data;
+
+        if (this.selectedOrderState()?.id === orderId) {
+          this.selectedOrderState.set(updatedOrder);
+        }
+
+        this.syncOrderList(updatedOrder, restaurantId);
+        this.refreshKanban(restaurantId);
+        this.loadSummary(restaurantId);
+      },
+
+      error: error => {
+        if (requestId !== this.updateRequestId) return;
+
+        this.updatingStatusState.set(false);
+
+        this.workflowErrorState.set(
+          this.errors.handle(error, {
+            fallbackMessage: 'The order status could not be updated.'
+          }).message
+        );
+      }
+    });
+}
   // Keep the currently loaded list synchronized after status changes.
   private syncOrderList(
     order: StaffOrderDetails,

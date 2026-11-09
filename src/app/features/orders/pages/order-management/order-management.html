@@ -30,33 +30,17 @@
     <app-order-summary />
 
     <!-- Order management views -->
-    @if (viewMode() === 'table') {
-      <section class="order-management-content">
-        <app-order-list [embedded]="true" />
-      </section>
-    } @else {
-      <section class="view-placeholder">
-        <div class="placeholder-icon">
-          <i class="bi bi-kanban" aria-hidden="true"></i>
-        </div>
-
-        <h2>Kanban view</h2>
-
-        <p>
-          The Kanban board has not been connected yet.
-          Switch to Table to continue managing orders.
-        </p>
-
-        <button
-          type="button"
-          class="return-to-table"
-          (click)="onViewModeChange('table')"
-        >
-          <i class="bi bi-table" aria-hidden="true"></i>
-          Return to table
-        </button>
-      </section>
-    }
+ @if (viewMode() === 'table') {
+  <section class="order-management-content">
+    <app-order-list [embedded]="true" />
+  </section>
+} @else {
+  <section class="order-management-content">
+    <app-order-kanban
+      [restaurantId]="activeRestaurant.id"
+    />
+  </section>
+}
   } @else {
     @switch (restaurantState()) {
       @case ('loading') {

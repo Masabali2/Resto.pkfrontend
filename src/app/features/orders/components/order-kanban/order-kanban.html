@@ -1,0 +1,283 @@
+<section class="kanban-board">
+
+  @if (loading()) {
+    <div class="kanban-loading">
+      <app-loading-spinner />
+      <p>Loading orders...</p>
+    </div>
+  }
+
+  @else if (error()) {
+    <div class="kanban-error" role="alert">
+      <div class="error-icon">
+        <i class="bi bi-exclamation-triangle"></i>
+      </div>
+
+      <h3>Unable to load Kanban board</h3>
+      <p>{{ error() }}</p>
+
+      <button
+        type="button"
+        class="retry-button"
+        (click)="refresh()">
+        <i class="bi bi-arrow-clockwise"></i>
+        Try again
+      </button>
+    </div>
+  }
+
+  @else {
+    <div class="kanban-columns">
+
+      @for (
+        column of columns;
+        track column.status
+      ) {
+        <section class="kanban-column">
+
+          <!-- Column Header -->
+          <header class="kanban-column-header">
+
+            <div class="column-heading">
+              <div class="column-title-row">
+
+                <span
+                  class="column-status-dot"
+                  [style.backgroundColor]="column.accent">
+                </span>
+
+                <h3>{{ column.label }}</h3>
+
+                <span class="column-count">
+                  {{ getOrdersByStatus(column.status).length }}
+                </span>
+
+              </div>
+
+              <p>{{ column.description }}</p>
+            </div>
+
+            <span
+              class="column-accent"
+              [style.backgroundColor]="column.accent">
+            </span>
+
+          </header>
+
+          <!-- Column Orders -->
+          <div class="kanban-column-body">
+
+            @for (
+              order of getOrdersByStatus(column.status);
+              track order.id
+            ) {
+
+              <article
+                class="kanban-order-card"
+                [class.new-order-card]="order.status === 'New'"
+                [style.borderLeftColor]="getStatusBorderColor(column.status)"
+                [routerLink]="['/orders', order.id]"
+                tabindex="0"
+                [attr.aria-label]="'Open order ' + order.orderNumber">
+
+                <!-- Order Number / Time -->
+                <div class="order-card-header">
+
+                  <span class="order-number">
+                    {{ order.orderNumber }}
+                  </span>
+
+                  <span class="order-time">
+                    {{ order.createdAt | date:'shortTime' }}
+                  </span>
+
+                </div>
+
+                <!-- Customer Details -->
+                <div class="order-card-details">
+
+                  <p class="customer-name">
+                    {{ order.customerName }}
+                  </p>
+
+                  <div class="order-meta">
+
+                    <span>
+                      <i class="bi bi-bag"></i>
+                      {{ order.items.length }}
+                      item(s)
+                    </span>
+
+                    <span class="meta-separator">•</span>
+
+                    <span class="order-total">
+                      {{ order.currency }}
+                      {{ order.totalAmount | number:'1.2-2' }}
+                    </span>
+
+                  </div>
+
+                  <div class="order-type">
+                    <span class="order-type-icon">
+                      <i
+                        [class.bi-bag]="order.orderType === 'Pickup'"
+                        [class.bi-shop]="order.orderType === 'DineIn'"
+                        [class.bi-bicycle]="order.orderType === 'Delivery'">
+                      </i>
+                    </span>
+
+                    {{ order.orderType }}
+                  </div>
+
+                </div>
+
+                <!-- Special Instructions -->
+                @if (order.specialInstructions) {
+                  <div class="special-instructions">
+                    <i class="bi bi-sticky"></i>
+
+                    <span>
+                      {{ order.specialInstructions }}
+                    </span>
+                  </div>
+                }
+
+                <!-- Quick Actions -->
+                <footer class="order-card-footer">
+
+                  <span class="order-id">
+                    ID: {{ order.id.slice(0, 6) }}
+                  </span>
+
+                  <div
+                    class="quick-actions"
+                    (click)="$event.stopPropagation()"
+                    (keydown)="$event.stopPropagation()">
+
+                    @if (getNextAction(order.status); as action) {
+                      <button
+                        type="button"
+                        class="quick-action-button"
+                        [class]="action.cssClass"
+                        [disabled]="updating()"
+                        (click)="triggerTransition(order, action.nextStatus)">
+
+                        {{ action.label }}
+
+                      </button>
+                    }
+
+                    @if (canTransition(order.status, 'Cancelled')) {
+                      <button
+                        type="button"
+                        class="cancel-action"
+                        aria-label="Cancel order"
+                        title="Cancel order"
+                        [disabled]="updating()"
+                        (click)="openCancelModal(order)">
+
+                        <i class="bi bi-ban"></i>
+
+                      </button>
+                    }
+
+                  </div>
+
+                </footer>
+
+              </article>
+
+            }
+
+            <!-- Empty Column -->
+            @if (getOrdersByStatus(column.status).length === 0) {
+              <div class="kanban-empty-column">
+
+                <div class="empty-column-icon">
+                  <i class="bi bi-inbox"></i>
+                </div>
+
+                <span>No orders</span>
+
+              </div>
+            }
+
+          </div>
+
+        </section>
+      }
+
+    </div>
+  }
+
+  <!-- Cancellation Modal -->
+  @if (cancelOrder(); as order) {
+    <div
+      class="cancel-modal-backdrop"
+      (click)="closeCancelModal()">
+
+      <section
+        class="cancel-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cancel-modal-title"
+        (click)="$event.stopPropagation()">
+
+        <div class="cancel-modal-icon">
+          <i class="bi bi-exclamation-triangle"></i>
+        </div>
+
+        <h3 id="cancel-modal-title">Cancel this order?</h3>
+
+        <p>
+          Are you sure you want to cancel
+          <strong>{{ order.orderNumber }}</strong>?
+          This action changes the order status.
+        </p>
+
+        <label for="cancel-notes">
+          Cancellation reason
+          <span>(Optional)</span>
+        </label>
+
+        <textarea
+          id="cancel-notes"
+          rows="3"
+          maxlength="2000"
+          [value]="cancelNotes()"
+          (input)="cancelNotes.set($any($event.target).value)"
+          placeholder="Enter a reason for cancellation...">
+        </textarea>
+
+        <div class="cancel-modal-actions">
+
+          <button
+            type="button"
+            class="cancel-modal-dismiss"
+            [disabled]="updating()"
+            (click)="closeCancelModal()">
+            Keep order
+          </button>
+
+          <button
+            type="button"
+            class="cancel-modal-confirm"
+            [disabled]="updating()"
+            (click)="confirmCancellation()">
+
+            @if (updating()) {
+              Cancelling...
+            } @else {
+              Confirm cancellation
+            }
+
+          </button>
+
+        </div>
+
+      </section>
+
+    </div>
+  }
+
+</section>

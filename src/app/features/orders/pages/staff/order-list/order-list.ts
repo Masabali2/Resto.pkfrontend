@@ -72,7 +72,7 @@ export class OrderList {
     const restaurantId = this.restaurant()?.id;
     if (restaurantId) this.orderState.setStatusFilter(restaurantId, status);
   }
-
+protected readonly Math = Math;
   protected retryOrders(): void {
     const restaurantId = this.restaurant()?.id;
     if (restaurantId) this.orderState.loadOrders(restaurantId);

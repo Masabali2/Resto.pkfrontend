@@ -1,0 +1,623 @@
+:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.kanban-board {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Board Layout */
+
+.kanban-columns {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(265px, 1fr));
+  gap: 14px;
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.kanban-columns::-webkit-scrollbar {
+  height: 7px;
+}
+
+.kanban-columns::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 20px;
+}
+
+/* Column */
+
+.kanban-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 265px;
+  max-height: 760px;
+  min-height: 420px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: rgba(241, 245, 249, 0.72);
+}
+
+/* Column Header */
+
+.kanban-column-header {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 7px 5px 14px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.column-heading {
+  min-width: 0;
+}
+
+.column-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.column-title-row h3 {
+  margin: 0;
+  color: #0f172a;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.column-status-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 50%;
+}
+
+.column-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 23px;
+  height: 23px;
+  padding: 0 6px;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  background: #fff;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.column-heading > p {
+  margin: 5px 0 0 16px;
+  color: #94a3b8;
+  font-size: 10px;
+}
+
+.column-accent {
+  width: 4px;
+  height: 25px;
+  border-radius: 10px;
+  opacity: 0.8;
+}
+
+/* Scrollable Column Content */
+
+.kanban-column-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 3px;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.kanban-column-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.kanban-column-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 20px;
+}
+
+/* Order Card */
+
+.kanban-order-card {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  padding: 15px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-left: 4px solid #cbd5e1;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 2px 7px rgba(15, 23, 42, 0.035);
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.kanban-order-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.075);
+}
+
+.kanban-order-card:focus-visible {
+  outline: 3px solid rgba(255, 107, 0, 0.25);
+  outline-offset: 2px;
+}
+
+.new-order-card {
+  animation: new-order-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes new-order-pulse {
+  0%, 100% {
+    box-shadow: 0 2px 7px rgba(15, 23, 42, 0.035);
+  }
+
+  50% {
+    box-shadow: 0 3px 13px rgba(240, 90, 36, 0.16);
+  }
+}
+
+/* Card Header */
+
+.order-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.order-number {
+  overflow: hidden;
+  color: #0f172a;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.order-time {
+  flex-shrink: 0;
+  color: #94a3b8;
+  font-family: monospace;
+  font-size: 10px;
+}
+
+/* Customer Details */
+
+.order-card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.customer-name {
+  overflow: hidden;
+  margin: 0;
+  color: #1e293b;
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.order-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  color: #64748b;
+  font-size: 10px;
+}
+
+.order-meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.meta-separator {
+  color: #cbd5e1;
+}
+
+.order-total {
+  color: #334155;
+  font-weight: 700;
+}
+
+.order-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin-top: 3px;
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.order-type-icon {
+  color: #f05a24;
+}
+
+/* Special Instructions */
+
+.special-instructions {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  overflow: hidden;
+  padding: 7px;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 7px;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 10px;
+  font-style: italic;
+}
+
+.special-instructions i {
+  flex-shrink: 0;
+  color: #d97706;
+}
+
+.special-instructions span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Card Footer */
+
+.order-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.order-id {
+  overflow: hidden;
+  color: #94a3b8;
+  font-family: monospace;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quick-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.quick-action-button,
+.cancel-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 25px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.quick-action-button:disabled,
+.cancel-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action-confirm {
+  background: #2563eb;
+}
+
+.action-confirm:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.action-kitchen {
+  background: #4f46e5;
+}
+
+.action-kitchen:hover:not(:disabled) {
+  background: #4338ca;
+}
+
+.action-ready {
+  background: #059669;
+}
+
+.action-ready:hover:not(:disabled) {
+  background: #047857;
+}
+
+.action-complete {
+  background: #047857;
+}
+
+.action-complete:hover:not(:disabled) {
+  background: #065f46;
+}
+
+.cancel-action {
+  padding: 4px 7px;
+  background: transparent;
+  color: #dc2626;
+  font-size: 12px;
+}
+
+.cancel-action:hover:not(:disabled) {
+  background: #fef2f2;
+}
+
+/* Empty Column */
+
+.kanban-empty-column {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 125px;
+  gap: 9px;
+  border: 2px dashed #e2e8f0;
+  border-radius: 11px;
+  color: #94a3b8;
+  font-size: 11px;
+  font-style: italic;
+}
+
+.empty-column-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #94a3b8;
+  font-size: 15px;
+}
+
+/* Loading / Error */
+
+.kanban-loading,
+.kanban-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #fff;
+  color: #64748b;
+}
+
+.kanban-error {
+  padding: 25px;
+  text-align: center;
+}
+
+.kanban-error h3 {
+  margin: 0;
+  color: #0f172a;
+  font-family: 'Outfit', sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.kanban-error p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.error-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fff7ed;
+  color: #ea580c;
+  font-size: 19px;
+}
+
+.retry-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 15px;
+  border: 0;
+  border-radius: 8px;
+  background: #f05a24;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.retry-button:hover {
+  background: #d94918;
+}
+
+/* Cancellation Modal */
+
+.cancel-modal-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(4px);
+}
+
+.cancel-modal {
+  width: min(100%, 430px);
+  padding: 25px;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.2);
+}
+
+.cancel-modal-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 15px;
+  border-radius: 12px;
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 20px;
+}
+
+.cancel-modal h3 {
+  margin: 0 0 8px;
+  color: #0f172a;
+  font-family: 'Outfit', sans-serif;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.cancel-modal > p {
+  margin: 0 0 18px;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.cancel-modal label {
+  display: block;
+  margin-bottom: 7px;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cancel-modal label span {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.cancel-modal textarea {
+  display: block;
+  width: 100%;
+  min-height: 85px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  outline: none;
+  resize: vertical;
+  color: #334155;
+  font: inherit;
+  font-size: 12px;
+}
+
+.cancel-modal textarea:focus {
+  border-color: #f05a24;
+  box-shadow: 0 0 0 3px rgba(240, 90, 36, 0.1);
+}
+
+.cancel-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 20px;
+}
+
+.cancel-modal-actions button {
+  min-height: 37px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cancel-modal-actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.cancel-modal-dismiss {
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+}
+
+.cancel-modal-confirm {
+  border: 1px solid #dc2626;
+  background: #dc2626;
+  color: #fff;
+}
+
+.cancel-modal-confirm:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .kanban-columns {
+    grid-template-columns: repeat(6, minmax(250px, 82vw));
+    gap: 11px;
+  }
+
+  .kanban-column {
+    max-height: 680px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kanban-order-card,
+  .quick-action-button,
+  .cancel-action {
+    transition: none;
+  }
+
+  .new-order-card {
+    animation: none;
+  }
+}
