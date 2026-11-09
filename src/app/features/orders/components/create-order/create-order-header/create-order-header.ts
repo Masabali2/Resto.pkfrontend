@@ -1,9 +1,18 @@
-import { Component } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input
+} from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 @Component({
-  imports: [],
   selector: 'app-create-order-header',
-  styleUrl: './create-order-header.css',
+  standalone: true,
+  imports: [RouterLink],
   templateUrl: './create-order-header.html',
+  styleUrl: './create-order-header.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CreateOrderHeader {}
+export class CreateOrderHeader {
+  readonly restaurantName = input.required<string>();
+}
