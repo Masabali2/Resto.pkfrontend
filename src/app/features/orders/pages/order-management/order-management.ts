@@ -2,25 +2,28 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  effect,
   inject,
   signal
 } from '@angular/core';
 
 import { ActiveRestaurantStateService } from '../../../../core/services/active-restaurant-state.service';
-
+import { OrderSummary } from '../../components/order-summary/order-summary';
 import {
   StaffOrderHeader,
   type StaffOrderViewMode
 } from '../../components/staff-order-header/staff-order-header';
 
 import { OrderList } from '../staff/order-list/order-list';
+import { OrderStateService } from '../../services/order-state.service';
 
 @Component({
   selector: 'app-order-management',
   standalone: true,
   imports: [
     StaffOrderHeader,
-    OrderList
+    OrderList,
+    OrderSummary
   ],
   templateUrl: './order-management.html',
   styleUrl: './order-management.css',
@@ -30,10 +33,12 @@ export class OrderManagement {
   private readonly activeRestaurantState =
     inject(ActiveRestaurantStateService);
 
+  private readonly orderState =
+    inject(OrderStateService);
+
   protected readonly restaurant =
     this.activeRestaurantState.restaurant;
 
-  // Add these three members for the HTML template.
   protected readonly restaurantState =
     this.activeRestaurantState.state;
 
@@ -47,6 +52,17 @@ export class OrderManagement {
 
   protected readonly createOrderMessage =
     signal<string | null>(null);
+
+  // Automatically load the summary when the active restaurant changes.
+  private readonly summaryEffect = effect(() => {
+    const activeRestaurant = this.restaurant();
+
+    if (!activeRestaurant) {
+      return;
+    }
+
+    this.orderState.loadSummary(activeRestaurant.id);
+  });
 
   protected onSearchChange(value: string): void {
     this.searchTerm.set(value);
@@ -66,7 +82,6 @@ export class OrderManagement {
     this.createOrderMessage.set(null);
   }
 
-  // Add this method for the retry button.
   protected retryRestaurantLoad(): void {
     this.activeRestaurantState.refresh();
   }

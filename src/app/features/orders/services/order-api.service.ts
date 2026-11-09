@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import type { ApiResponse } from '../../../core/models/api-response.model';
 import type { PagedResult } from '../../../core/models/paged-result.model';
-import type { CreatePublicOrderRequest, CreateDirectPublicOrderRequest, PublicCart, PublicCartItem, PublicOrderCreated, PublicOrderTracking, StaffOrderDetails, UpdateOrderStatusRequest } from '../models/order.models';
+import type { CreatePublicOrderRequest, CreateDirectPublicOrderRequest, PublicCart, PublicCartItem, PublicOrderCreated, PublicOrderTracking, StaffOrderDetails, StaffOrderSummary,UpdateOrderStatusRequest } from '../models/order.models';
 
 @Injectable({ providedIn: 'root' })
 export class OrderApiService {
@@ -47,4 +47,11 @@ export class OrderApiService {
   trackOrder(slug: string, trackingToken: string): Observable<ApiResponse<PublicOrderTracking>> {
     return this.http.get<ApiResponse<PublicOrderTracking>>(this.publicBaseUrl + '/' + encodeURIComponent(slug) + '/orders/track/' + encodeURIComponent(trackingToken));
   }
+  getStaffOrderSummary(
+  restaurantId: string
+): Observable<ApiResponse<StaffOrderSummary>> {
+  return this.http.get<ApiResponse<StaffOrderSummary>>(
+    `${this.staffBaseUrl}/${encodeURIComponent(restaurantId)}/orders/summary`
+  );
+}
 }

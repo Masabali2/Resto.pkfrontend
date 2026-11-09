@@ -26,6 +26,10 @@
       </div>
     }
 
+    <!-- Order summary cards -->
+    <app-order-summary />
+
+    <!-- Order management views -->
     @if (viewMode() === 'table') {
       <section class="order-management-content">
         <app-order-list [embedded]="true" />

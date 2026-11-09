@@ -1,3 +1,4 @@
+
 :host {
   display: block;
   width: 100%;
@@ -15,11 +16,20 @@
   padding: clamp(18px, 2.5vw, 32px);
 }
 
+/* Order summary and page sections */
+app-order-summary {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
 .order-management-content {
+  width: 100%;
   min-width: 0;
   animation: content-enter 240ms ease-out both;
 }
 
+/* Page notification */
 .page-notice {
   display: flex;
   align-items: center;
@@ -55,12 +65,14 @@
   border: 0;
   border-radius: 7px;
   cursor: pointer;
+  transition: background-color var(--transition-fast);
 }
 
 .notice-dismiss:hover {
   background: rgb(29 78 216 / 8%);
 }
 
+/* Kanban placeholder */
 .view-placeholder {
   display: grid;
   justify-items: center;
@@ -137,12 +149,14 @@
   transform: translateY(-1px);
 }
 
+/* Keyboard accessibility */
 .return-to-table:focus-visible,
 .notice-dismiss:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 3px;
 }
 
+/* Restaurant loading state */
 .order-management-loading {
   display: flex;
   align-items: center;
@@ -158,6 +172,7 @@
 .loading-indicator {
   width: 20px;
   height: 20px;
+  flex: 0 0 auto;
 
   border: 2px solid var(--color-border);
   border-top-color: var(--resto-orange);
@@ -166,6 +181,7 @@
   animation: loading-spin 700ms linear infinite;
 }
 
+/* Animations */
 @keyframes loading-spin {
   to {
     transform: rotate(360deg);
@@ -184,6 +200,13 @@
   }
 }
 
+/* Tablet and mobile */
+@media (max-width: 768px) {
+  .order-management-page {
+    gap: 18px;
+  }
+}
+
 @media (max-width: 640px) {
   .order-management-page {
     gap: 16px;
@@ -196,6 +219,7 @@
   }
 }
 
+/* Reduced motion accessibility */
 @media (prefers-reduced-motion: reduce) {
   .order-management-content,
   .view-placeholder,
@@ -203,7 +227,8 @@
     animation: none;
   }
 
-  .return-to-table {
+  .return-to-table,
+  .notice-dismiss {
     transition: none;
   }
 }
