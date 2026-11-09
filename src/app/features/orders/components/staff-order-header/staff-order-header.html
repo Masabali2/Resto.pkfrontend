@@ -1,0 +1,116 @@
+
+<header class="staff-order-header">
+
+  <!-- Restaurant identity -->
+  <div class="restaurant-identity">
+
+    <div class="restaurant-logo-wrapper">
+      @if (logoUrl() && !logoLoadFailed()) {
+        <img
+          class="restaurant-logo"
+          [src]="logoUrl()"
+          [alt]="restaurantName() + ' logo'"
+          (error)="onLogoError()"
+        />
+      } @else {
+        <div class="restaurant-logo-fallback">
+          {{ restaurantInitials() }}
+        </div>
+      }
+
+      <span
+        class="restaurant-active-indicator"
+        title="Active restaurant"
+        aria-label="Active restaurant"
+      >
+        <i class="bi bi-check-lg" aria-hidden="true"></i>
+      </span>
+    </div>
+
+    <div class="restaurant-information">
+      <span class="workspace-label">
+        <i class="bi bi-shop" aria-hidden="true"></i>
+        RESTAURANT WORKSPACE
+      </span>
+
+      <div class="restaurant-name-row">
+        <h1>{{ restaurantName() }}</h1>
+
+        @if (currency()) {
+          <span class="currency-badge">
+            {{ currency() }}
+          </span>
+        }
+      </div>
+
+      <div class="page-context">
+        <span class="context-indicator"></span>
+        <span>Order Management</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Header actions -->
+  <div class="header-actions">
+
+    <!-- Search -->
+    <label class="order-search">
+      <i class="bi bi-search search-icon" aria-hidden="true"></i>
+
+      <input
+        type="search"
+        placeholder="Search orders..."
+        [value]="searchTerm()"
+        (input)="onSearchInput($event)"
+        aria-label="Search orders"
+      />
+
+      <span class="search-shortcut" aria-hidden="true">
+        <i class="bi bi-command"></i>
+        K
+      </span>
+    </label>
+
+    <!-- View selector -->
+    <div class="view-selector" role="group" aria-label="Order view">
+
+      <button
+        type="button"
+        class="view-option"
+        [class.view-option-active]="viewMode() === 'kanban'"
+        [attr.aria-pressed]="viewMode() === 'kanban'"
+        (click)="selectView('kanban')"
+      >
+        <i class="bi bi-kanban" aria-hidden="true"></i>
+        <span>Kanban</span>
+      </button>
+
+      <button
+        type="button"
+        class="view-option"
+        [class.view-option-active]="viewMode() === 'table'"
+        [attr.aria-pressed]="viewMode() === 'table'"
+        (click)="selectView('table')"
+      >
+        <i class="bi bi-list-ul" aria-hidden="true"></i>
+        <span>Table</span>
+      </button>
+
+    </div>
+
+    <!-- Create order -->
+    <app-button
+      variant="primary"
+      size="md"
+      type="button"
+      [fullWidth]="false"
+      (click)="onCreateOrder()"
+    >
+      <i class="bi bi-plus-lg" aria-hidden="true"></i>
+      <span>Create Order</span>
+    </app-button>
+
+  </div>
+
+</header>

@@ -1,5 +1,17 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, effect, inject, untracked } from '@angular/core';
+import {
+  DatePipe,
+  DecimalPipe
+} from '@angular/common';
+
+import {
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  inject,
+  input,
+  untracked
+} from '@angular/core';
+
 import { RouterLink } from '@angular/router';
 import { ActiveRestaurantStateService } from '../../../../../core/services/active-restaurant-state.service';
 import { LoadingSpinner } from '../../../../../shared/components/loading-spinner/loading-spinner';
@@ -28,6 +40,9 @@ export class OrderList {
   private readonly activeRestaurantState = inject(ActiveRestaurantStateService);
   private readonly orderState = inject(OrderStateService);
 
+  // Allows the list to be displayed inside another page.
+  readonly embedded = input(false);
+
   protected readonly statuses = ORDER_STATUSES;
   protected readonly restaurant = this.activeRestaurantState.restaurant;
   protected readonly restaurantState = this.activeRestaurantState.state;
@@ -44,6 +59,7 @@ export class OrderList {
   constructor() {
     effect(() => {
       const restaurantId = this.restaurant()?.id;
+
       if (restaurantId) {
         untracked(() => this.orderState.loadOrders(restaurantId));
       } else {

@@ -1,0 +1,334 @@
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.staff-order-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  width: 100%;
+  padding: 1.25rem 1.5rem;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-card, 16px);
+  box-shadow: var(--shadow-sm, 0 2px 8px rgb(15 23 42 / 4%));
+}
+
+/* Restaurant identity */
+
+.restaurant-identity {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.restaurant-logo-wrapper {
+  position: relative;
+  flex: 0 0 58px;
+  width: 58px;
+  height: 58px;
+}
+
+.restaurant-logo,
+.restaurant-logo-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 15px;
+}
+
+.restaurant-logo {
+  object-fit: cover;
+  border: 1px solid var(--color-border, #e2e8f0);
+  background: var(--color-surface, #ffffff);
+}
+
+.restaurant-logo-fallback {
+  background: var(--color-primary-soft, #fff1e9);
+  color: var(--resto-orange, #f05a24);
+  font-size: 1.25rem;
+  font-weight: 750;
+  letter-spacing: -0.04em;
+}
+
+.restaurant-active-indicator {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  display: grid;
+  place-items: center;
+  width: 21px;
+  height: 21px;
+  border: 3px solid var(--color-surface, #ffffff);
+  border-radius: 50%;
+  background: #16a34a;
+  color: #ffffff;
+  font-size: 0.65rem;
+}
+
+.restaurant-information {
+  min-width: 0;
+}
+
+.workspace-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.3rem;
+  color: var(--color-text-muted, #64748b);
+  font-size: 0.65rem;
+  font-weight: 750;
+  letter-spacing: 0.09em;
+}
+
+.workspace-label i {
+  color: var(--resto-orange, #f05a24);
+  font-size: 0.8rem;
+}
+
+.restaurant-name-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.restaurant-name-row h1 {
+  overflow: hidden;
+  margin: 0;
+  color: var(--color-text, #0f172a);
+  font-size: 1.25rem;
+  font-weight: 750;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+}
+
+.currency-badge {
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 6px;
+  background: var(--color-surface-secondary, #f8fafc);
+  color: var(--color-text-secondary, #475569);
+  font-size: 0.7rem;
+  font-weight: 650;
+}
+
+.page-context {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+  color: var(--color-text-muted, #64748b);
+  font-size: 0.78rem;
+}
+
+.context-indicator {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--resto-orange, #f05a24);
+}
+
+/* Header actions */
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+/* Search */
+
+.order-search {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: min(250px, 25vw);
+  min-width: 170px;
+  height: 42px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--color-input-border, #e2e8f0);
+  border-radius: 10px;
+  background: var(--color-input, #ffffff);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.order-search:focus-within {
+  border-color: var(--resto-orange, #f05a24);
+  box-shadow: 0 0 0 3px var(--color-focus-ring, rgb(240 90 36 / 14%));
+}
+
+.search-icon {
+  flex: 0 0 auto;
+  color: var(--color-icon, #64748b);
+  font-size: 0.9rem;
+}
+
+.order-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--color-text, #0f172a);
+  font: inherit;
+  font-size: 0.8rem;
+}
+
+.order-search input::placeholder {
+  color: var(--color-placeholder, #94a3b8);
+}
+
+.order-search input::-webkit-search-cancel-button {
+  cursor: pointer;
+}
+
+.search-shortcut {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.2rem 0.35rem;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 5px;
+  color: var(--color-text-muted, #64748b);
+  font-size: 0.65rem;
+}
+
+/* View selector */
+
+.view-selector {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 10px;
+  background: var(--color-surface-secondary, #f8fafc);
+}
+
+.view-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 34px;
+  padding: 0.4rem 0.65rem;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--color-text-secondary, #475569);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.view-option:hover {
+  background: var(--color-surface, #ffffff);
+  color: var(--color-text, #0f172a);
+}
+
+.view-option-active {
+  background: var(--color-surface, #ffffff);
+  color: var(--resto-orange, #f05a24);
+  box-shadow: 0 1px 3px rgb(15 23 42 / 10%);
+}
+
+.view-option:focus-visible {
+  outline: 2px solid var(--resto-orange, #f05a24);
+  outline-offset: 2px;
+}
+
+/* Responsive layout */
+
+@media (max-width: 1050px) {
+  .staff-order-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .header-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .order-search {
+    flex: 1;
+    width: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .staff-order-header {
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .restaurant-logo-wrapper {
+    flex-basis: 48px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .restaurant-name-row h1 {
+    font-size: 1.05rem;
+  }
+
+  .header-actions {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.65rem;
+  }
+
+  .order-search {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .view-selector {
+    min-width: 0;
+  }
+
+  .view-option {
+    flex: 1;
+    padding-inline: 0.5rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .header-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .view-selector {
+    width: 100%;
+  }
+
+  .header-actions app-button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .order-search,
+  .view-option {
+    transition: none;
+  }
+}

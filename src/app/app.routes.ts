@@ -194,17 +194,17 @@ export const routes: Routes = [
             m => m.OrderDetails
           )
       },
-      {
-        path: 'orders',
-        pathMatch: 'full',
-        title: 'Orders — Resto.pk',
-        canActivate: [permissionGuard],
-        data: { permission: PERMISSIONS.Order.View },
-        loadComponent: () =>
-          import('./features/orders/pages/staff/order-list/order-list').then(
-            m => m.OrderList
-          )
-      },
+     {
+  path: 'orders',
+  pathMatch: 'full',
+  title: 'Order Management — Resto.pk',
+  canActivate: [permissionGuard],
+  data: { permission: PERMISSIONS.Order.View },
+  loadComponent: () =>
+    import('./features/orders/pages/order-management/order-management').then(
+      m => m.OrderManagement
+    )
+},
       {
         path: 'branding-assets',
         title: 'Branding & Assets — Resto.pk',
