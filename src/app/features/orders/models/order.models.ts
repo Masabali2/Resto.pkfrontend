@@ -29,3 +29,48 @@ export interface StaffOrderSummary {
   totalRevenue: number;
   currency: string;
 }
+export interface StaffCreateOrderContext {
+  restaurantId: string;
+  restaurantName: string;
+  taxRate: number;
+  currency: string;
+
+  menuId: string;
+  menuName: string;
+
+  categories: StaffCreateOrderCategory[];
+  items: StaffCreateOrderItem[];
+
+  orderTypes: string[];
+  paymentMethod: string;
+}
+
+export interface StaffCreateOrderCategory {
+  id: string;
+  menuId: string;
+  name: string;
+  description: string | null;
+  displayOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+  itemCount: number;
+}
+
+export interface StaffCreateOrderItem {
+  id: string;
+  menuCategoryId: string;
+  menuId: string;
+  name: string;
+  description: string | null;
+  price: number;
+  currency: string;
+  imageFileId: string | null;
+  displayOrder: number;
+  isAvailable: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+  categoryName: string | null;
+  imageUrl: string | null;
+}

@@ -1,1 +1,184 @@
-<p>customer-information works!</p>
+<section
+  class="customer-information"
+  aria-labelledby="customer-information-title"
+>
+  <!-- Section header -->
+  <div class="customer-information-header">
+    <div
+      class="section-icon"
+      aria-hidden="true"
+    >
+      <span class="material-symbol">
+        person
+      </span>
+    </div>
+
+    <div class="section-heading">
+      <h2 id="customer-information-title">
+        Customer Information
+      </h2>
+
+      <p>
+        Enter the customer's contact details for this order.
+      </p>
+    </div>
+  </div>
+
+  <!-- Customer form fields -->
+  <div class="customer-information-form">
+
+    <!-- Customer name -->
+    <div class="form-field">
+      <label for="customer-name">
+        Customer Name
+        <span
+          class="required-indicator"
+          aria-hidden="true"
+        >
+          *
+        </span>
+      </label>
+
+      <div class="input-wrapper">
+        <span
+          class="material-symbol input-icon"
+          aria-hidden="true"
+        >
+          person_outline
+        </span>
+
+        <input
+          id="customer-name"
+          type="text"
+          autocomplete="name"
+          placeholder="Enter customer name"
+          [value]="customer().customerName"
+          [maxLength]="nameMaxLength"
+          (input)="updateName(getValue($event))"
+          required
+          aria-required="true"
+        />
+      </div>
+
+      <div class="field-meta">
+        <span>Required</span>
+
+        <span>
+          {{ nameLength() }}/{{ nameMaxLength }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Phone -->
+    <div class="form-field">
+      <label for="customer-phone">
+        Phone Number
+        <span
+          class="required-indicator"
+          aria-hidden="true"
+        >
+          *
+        </span>
+      </label>
+
+      <div class="input-wrapper">
+        <span
+          class="material-symbol input-icon"
+          aria-hidden="true"
+        >
+          call
+        </span>
+
+        <input
+          id="customer-phone"
+          type="tel"
+          autocomplete="tel"
+          inputmode="tel"
+          placeholder="e.g. 03001234567"
+          [value]="customer().phone"
+          [maxLength]="phoneMaxLength"
+          (input)="updatePhone(getValue($event))"
+          required
+          aria-required="true"
+          aria-describedby="customer-phone-hint"
+        />
+      </div>
+
+      <span
+        id="customer-phone-hint"
+        class="field-hint"
+      >
+        Enter a contact number for order updates.
+      </span>
+    </div>
+
+    <!-- Email -->
+    <div class="form-field">
+      <label for="customer-email">
+        Email Address
+        <span class="optional-label">
+          Optional
+        </span>
+      </label>
+
+      <div class="input-wrapper">
+        <span
+          class="material-symbol input-icon"
+          aria-hidden="true"
+        >
+          mail_outline
+        </span>
+
+        <input
+          id="customer-email"
+          type="email"
+          autocomplete="email"
+          placeholder="customer@example.com"
+          [value]="customer().email"
+          [maxLength]="emailMaxLength"
+          (input)="updateEmail(getValue($event))"
+          aria-describedby="customer-email-hint"
+        />
+      </div>
+
+      <span
+        id="customer-email-hint"
+        class="field-hint"
+      >
+        An email address can be provided for order communication.
+      </span>
+    </div>
+
+    <!-- Special instructions -->
+    <div class="form-field instructions-field">
+      <label for="customer-instructions">
+        Special Instructions
+        <span class="optional-label">
+          Optional
+        </span>
+      </label>
+
+      <textarea
+        id="customer-instructions"
+        rows="4"
+        placeholder="Add any special requests or customer notes..."
+        [value]="customer().specialInstructions"
+        [maxLength]="instructionsMaxLength"
+        (input)="updateInstructions(getValue($event))"
+        aria-describedby="customer-instructions-meta"
+      ></textarea>
+
+      <div
+        id="customer-instructions-meta"
+        class="field-meta"
+      >
+        <span>Additional order notes</span>
+
+        <span>
+          {{ instructionsLength() }}/{{ instructionsMaxLength }}
+        </span>
+      </div>
+    </div>
+
+  </div>
+</section>

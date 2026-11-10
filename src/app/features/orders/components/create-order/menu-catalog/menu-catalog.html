@@ -1,1 +1,155 @@
-<p>menu-catalog works!</p>
+<section
+  class="menu-catalog"
+  aria-label="Menu catalog"
+>
+  @if (loading()) {
+    <div
+      class="catalog-loading"
+      aria-live="polite"
+      aria-label="Loading menu items"
+    >
+      @for (
+        placeholder of [1, 2, 3, 4, 5, 6];
+        track placeholder
+      ) {
+        <div class="catalog-skeleton">
+          <div class="skeleton-image"></div>
+
+          <div class="skeleton-content">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  @else if (items().length === 0) {
+    <div
+      class="catalog-empty-state"
+      aria-live="polite"
+    >
+      <div class="empty-icon" aria-hidden="true">
+        <span class="material-symbol">
+          restaurant_menu
+        </span>
+      </div>
+
+      <h3>No menu items found</h3>
+
+      <p>
+        There are currently no items to display.
+        Try changing your filters or selecting another category.
+      </p>
+    </div>
+  }
+
+  @else {
+    <div class="catalog-grid">
+      @for (
+        item of items();
+        track item.id
+      ) {
+        <article
+          class="catalog-item-card"
+          [class.unavailable]="
+            !item.isAvailable ||
+            !item.isActive
+          "
+        >
+          <!-- Item image -->
+          <div class="catalog-item-image">
+            @if (item.imageUrl) {
+              <img
+                [src]="item.imageUrl"
+                [alt]="item.name"
+                loading="lazy"
+              />
+            } @else {
+              <div
+                class="image-placeholder"
+                aria-hidden="true"
+              >
+                <span class="material-symbol">
+                  restaurant
+                </span>
+              </div>
+            }
+
+            @if (
+              !item.isAvailable ||
+              !item.isActive
+            ) {
+              <span
+                class="availability-badge unavailable-badge"
+              >
+                Unavailable
+              </span>
+            } @else {
+              <span
+                class="availability-badge available-badge"
+              >
+                <span aria-hidden="true"></span>
+                Available
+              </span>
+            }
+          </div>
+
+          <!-- Item information -->
+          <div class="catalog-item-content">
+            <div class="catalog-item-heading">
+              <span class="catalog-category">
+                {{ item.categoryName ?? 'Menu Item' }}
+              </span>
+
+              <h3>{{ item.name }}</h3>
+            </div>
+
+            <p class="catalog-item-description">
+              {{
+                item.description ??
+                'No description available.'
+              }}
+            </p>
+
+            <!-- Price and action -->
+            <div class="catalog-item-footer">
+              <div class="catalog-item-price">
+                <span>{{ item.currency }}</span>
+
+                <strong>
+                  {{ item.price | number:'1.0-2' }}
+                </strong>
+              </div>
+
+              <button
+                type="button"
+                class="add-item-button"
+                [disabled]="
+                  !item.isAvailable ||
+                  !item.isActive
+                "
+                [attr.aria-label]="
+                  'Add ' +
+                  item.name +
+                  ' to order'
+                "
+                (click)="selectItem(item)"
+              >
+                <span
+                  class="material-symbol"
+                  aria-hidden="true"
+                >
+                  add
+                </span>
+
+                Add
+              </button>
+            </div>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>
