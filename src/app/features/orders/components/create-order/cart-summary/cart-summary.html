@@ -1,1 +1,16 @@
-<p>cart-summary works!</p>
+<div class="cart-summary" role="region" aria-label="Order summary">
+  <div class="summary-rows">
+    <div class="amount-row">
+      <span class="amount-label">Subtotal</span>
+      <span class="amount-value">{{ currency() }} {{ subtotal() | number:'1.2-2' }}</span>
+    </div>
+    <div class="amount-row">
+      <span class="amount-label">Tax <span class="tax-rate">({{ taxRate() }}%)</span></span>
+      <span class="amount-value">{{ currency() }} {{ taxAmount() | number:'1.2-2' }}</span>
+    </div>
+    <div class="amount-row amount-total">
+      <span class="amount-label">Total</span>
+      <span class="amount-value">{{ currency() }} {{ total() | number:'1.2-2' }}</span>
+    </div>
+  </div>
+</div>

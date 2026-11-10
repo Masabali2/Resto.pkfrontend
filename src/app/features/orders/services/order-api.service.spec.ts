@@ -114,4 +114,45 @@ describe('OrderApiService', () => {
     expect(request.request.method).toBe('GET');
     request.flush({});
   });
+
+  it('posts staff order creation without sending client-calculated totals', () => {
+    const request = {
+      orderType: 'Pickup' as const,
+      customerName: 'John Doe',
+      customerPhone: '+923001234567',
+      customerEmail: 'john@example.com',
+      specialInstructions: 'No onions please',
+      items: [{ menuItemId: 'menu-item-1', quantity: 2 }]
+    };
+
+    service.createStaffOrder('restaurant-1', request).subscribe();
+
+    const create = http.expectOne(staffBase + '/restaurant-1/orders');
+    expect(create.request.method).toBe('POST');
+    expect(create.request.body).toEqual(request);
+    expect(create.request.body).not.toHaveProperty('subtotal');
+    expect(create.request.body).not.toHaveProperty('taxAmount');
+    expect(create.request.body).not.toHaveProperty('totalAmount');
+    create.flush({});
+  });
+
+  it('handles forbidden response from staff order creation', () => {
+    const request = {
+      orderType: 'Pickup' as const,
+      customerName: 'John Doe',
+      customerPhone: null,
+      customerEmail: null,
+      specialInstructions: null,
+      items: [{ menuItemId: 'menu-item-1', quantity: 1 }]
+    };
+
+    let error: any;
+    service.createStaffOrder('restaurant-1', request).subscribe({
+      error: err => { error = err; }
+    });
+
+    const create = http.expectOne(staffBase + '/restaurant-1/orders');
+    create.flush({ errorCode: 'FORBIDDEN', message: 'Forbidden' }, { status: 403, statusText: 'Forbidden' });
+    expect(error.status).toBe(403);
+  });
 });

@@ -1,29 +1,54 @@
+
 <main class="create-order-page">
 
-  <!-- Page header -->
   <app-create-order-header
     [restaurantName]="restaurant()?.name ?? 'Your Restaurant'"
   />
 
-  <!-- Page content -->
   <section class="create-order-content">
 
     @if (pageState() === 'loading') {
-      <section class="page-state-card">
-        <span class="material-symbol loading-icon">progress_activity</span>
+      <section
+        class="page-state-card"
+        aria-live="polite"
+        aria-busy="true"
+      >
+        <span
+          class="material-symbol loading-icon"
+          aria-hidden="true"
+        >
+          progress_activity
+        </span>
+
         <h2>Preparing your menu</h2>
-        <p>We're loading your restaurant's menu and available items.</p>
+
+        <p>
+          We're loading your restaurant's menu and available items.
+        </p>
       </section>
     }
 
     @else if (pageState() === 'error') {
-      <section class="page-state-card error-state">
-        <span class="material-symbol">error_outline</span>
+      <section
+        class="page-state-card error-state"
+        role="alert"
+      >
+        <span class="material-symbol" aria-hidden="true">
+          error_outline
+        </span>
+
         <h2>Unable to load the menu</h2>
+
         <p>{{ errorMessage() }}</p>
 
-        <button type="button" class="retry-button" (click)="retry()">
-          <span class="material-symbol">refresh</span>
+        <button
+          type="button"
+          class="retry-button"
+          (click)="retry()"
+        >
+          <span class="material-symbol" aria-hidden="true">
+            refresh
+          </span>
           Try again
         </button>
       </section>
@@ -31,27 +56,41 @@
 
     @else if (pageState() === 'forbidden') {
       <section class="page-state-card error-state">
-        <span class="material-symbol">lock</span>
+        <span class="material-symbol" aria-hidden="true">
+          lock
+        </span>
+
         <h2>Access restricted</h2>
-        <p>You don't have permission to access this restaurant's menu.</p>
+
+        <p>
+          You don't have permission to access this restaurant's menu.
+        </p>
       </section>
     }
 
     @else if (pageState() === 'no-menu') {
       <section class="page-state-card">
-        <span class="material-symbol">menu_book</span>
-        <h2>No published menu found</h2>
+        <span class="material-symbol" aria-hidden="true">
+          menu_book
+        </span>
+
+        <h2>No menu found</h2>
+
         <p>
-          This restaurant doesn't currently have an active published menu
-          available for order creation.
+          This restaurant doesn't currently have a menu available
+          for order creation.
         </p>
       </section>
     }
 
     @else if (pageState() === 'empty') {
       <section class="page-state-card">
-        <span class="material-symbol">restaurant_menu</span>
+        <span class="material-symbol" aria-hidden="true">
+          restaurant_menu
+        </span>
+
         <h2>Your menu is empty</h2>
+
         <p>
           There are no active menu items available in this restaurant's menu.
           Add menu items before creating an order.
@@ -61,113 +100,137 @@
 
     @else if (pageState() === 'ready') {
 
-      <!-- Menu filter -->
-      <app-menu-category-filter
-        [categories]="categories()"
-        [itemCounts]="categoryItemCounts()"
-        [totalItems]="availableMenuItems().length"
-        [resultCount]="filteredMenuItems().length"
-        [filters]="menuFilters()"
-        [minAvailablePrice]="minMenuPrice()"
-        [maxAvailablePrice]="maxMenuPrice()"
-        [currency]="menuCurrency()"
-        [loading]="categoriesLoading()"
-        [dealsAvailable]="false"
-        [discountsAvailable]="false"
-        [dietaryFiltersAvailable]="false"
-        (filterChange)="onMenuFilterChange($event)"
-        (clearFilters)="clearMenuFilters()"
-      />
+      <div class="create-order-body">
+        <div class="create-order-menu">
 
-      <!-- Menu results -->
-      <section class="menu-results-section">
+          <!-- Menu filters -->
+          <app-menu-category-filter
+            [categories]="categories()"
+            [itemCounts]="categoryItemCounts()"
+            [totalItems]="availableMenuItems().length"
+            [resultCount]="filteredMenuItems().length"
+            [filters]="menuFilters()"
+            [minAvailablePrice]="minMenuPrice()"
+            [maxAvailablePrice]="maxMenuPrice()"
+            [currency]="menuCurrency()"
+            [loading]="false"
+            [dealsAvailable]="false"
+            [discountsAvailable]="false"
+            [dietaryFiltersAvailable]="false"
+            (filterChange)="onMenuFilterChange($event)"
+            (clearFilters)="clearMenuFilters()"
+          />
 
-        <div class="menu-results-heading">
-          <div>
-            <h2>Menu Items</h2>
-            <p>
-              Browse the items below and select products to add to the order.
-            </p>
-          </div>
+          <!-- Menu catalog -->
+          <section
+            class="menu-results-section"
+            aria-label="Menu items"
+          >
 
-          <span class="menu-results-count">
-            {{ filteredMenuItems().length }} results
-          </span>
-        </div>
+            <div class="menu-results-heading">
+              <div>
+                <h2>Menu Items</h2>
 
-        @if (itemsLoading()) {
-          <div class="menu-loading-state">
-            <span class="material-symbol loading-icon">progress_activity</span>
-            <p>Loading menu items...</p>
-          </div>
-        }
+                <p>
+                  Browse the items below and select products to add to the order.
+                </p>
+              </div>
 
-        @else if (filteredMenuItems().length === 0) {
-          <div class="menu-empty-state">
-            <div class="empty-state-icon">
-              <span class="material-symbol">search_off</span>
+              <span class="menu-results-count">
+                {{ filteredMenuItems().length }}
+                {{ filteredMenuItems().length === 1 ? 'item' : 'items' }}
+              </span>
             </div>
 
-            <h3>No matching menu items</h3>
-
-            <p>
-              We couldn't find any items matching your current search
-              or filter selections. Try changing your filters or clearing them.
-            </p>
-
-            <button
-              type="button"
-              class="clear-results-button"
-              (click)="clearMenuFilters()"
-            >
-              <span class="material-symbol">filter_alt_off</span>
-              Clear all filters
-            </button>
-          </div>
-        }
-
-        @else {
-          <div class="menu-items-grid">
-
-            @for (item of filteredMenuItems(); track item.id) {
-              <article class="menu-item-preview-card">
-
-                <div class="menu-item-preview-content">
-                  <div class="menu-item-preview-heading">
-                    <h3>{{ item.name }}</h3>
-
-                    @if (!item.isAvailable) {
-                      <span class="unavailable-label">
-                        Unavailable
-                      </span>
-                    }
-                  </div>
-
-                  @if (item.description) {
-                    <p>{{ item.description }}</p>
-                  }
-
-                  <div class="menu-item-preview-footer">
-                    <strong>
-                      {{ item.currency }} {{ item.price }}
-                    </strong>
-
-                    @if (item.isAvailable) {
-                      <span class="available-label">
-                        <span></span>
-                        Available
-                      </span>
-                    }
-                  </div>
+            @if (filteredMenuItems().length === 0) {
+              <div
+                class="menu-empty-state"
+                aria-live="polite"
+              >
+                <div
+                  class="empty-state-icon"
+                  aria-hidden="true"
+                >
+                  <span class="material-symbol">
+                    search_off
+                  </span>
                 </div>
 
-              </article>
+                <h3>No matching menu items</h3>
+
+                <p>
+                  We couldn't find any items matching your current search
+                  or filter selections. Try changing your filters or clearing them.
+                </p>
+
+                <button
+                  type="button"
+                  class="clear-results-button"
+                  (click)="clearMenuFilters()"
+                >
+                  <span class="material-symbol" aria-hidden="true">
+                    filter_alt_off
+                  </span>
+
+                  Clear all filters
+                </button>
+              </div>
             }
 
-          </div>
-        }
+            @else {
+              <app-menu-catalog
+                [items]="filteredMenuItems()"
+                [loading]="false"
+                (itemSelected)="onMenuItemSelected($event)"
+              />
+            }
 
-      </section>
+          </section>
+
+        </div>
+
+        <aside class="create-order-cart">
+          <app-order-cart
+            [items]="cartItems()"
+            [taxRate]="taxRate()"
+            [currency]="currency()"
+            (quantityChange)="onCartQuantityChange($event.menuItemId, $event.quantity)"
+            (remove)="onCartRemove($event)"
+          />
+        </aside>
+      </div>
+
+      <!-- Customer information -->
+      <app-customer-information
+        [customer]="customerInformation()"
+        (customerChange)="onCustomerInformationChange($event)"
+      />
+
+      <!-- Order type -->
+      <app-order-type-selector
+        [orderTypes]="orderTypes()"
+        [selected]="selectedOrderType()"
+        (orderTypeChange)="onOrderTypeChange($event)"
+      />
+
+      <!-- Place order -->
+      @if (cartHasItems()) {
+        <app-place-order
+          [customer]="customerInformation()"
+          [orderType]="selectedOrderType()"
+          [items]="cartItems()"
+          [subtotal]="cartSubtotal()"
+          [taxAmount]="cartTax()"
+          [totalAmount]="cartTotal()"
+          [currency]="currency()"
+          [paymentMethod]="paymentMethod()"
+          [submitting]="placingOrder()"
+          [error]="placeError()"
+          [placedOrder]="placedOrder()"
+          (placeOrder)="placeOrder()"
+        />
+      }
+
     }
 
   </section>

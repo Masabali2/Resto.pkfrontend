@@ -1,1 +1,41 @@
-<p>cart-item works!</p>
+<div class="cart-item" role="listitem">
+  <div class="cart-item__body">
+    <div class="cart-item__info">
+      <h3 class="cart-item__name">{{ item().itemName }}</h3>
+      <p class="cart-item__price">
+        {{ item().currency }} {{ item().unitPrice | number:'1.2-2' }} each
+      </p>
+    </div>
+
+    <div class="cart-item__controls">
+      <button
+        class="qty-btn qty-btn--decrement"
+        (click)="decrement()"
+        [disabled]="item().quantity <= 1"
+        aria-label="Decrease {{ item().itemName }} quantity"
+      >
+        <span class="material-symbol">remove</span>
+      </button>
+      <span class="qty-value">{{ item().quantity }}</span>
+      <button
+        class="qty-btn qty-btn--increment"
+        (click)="increment()"
+        aria-label="Increase {{ item().itemName }} quantity"
+      >
+        <span class="material-symbol">add</span>
+      </button>
+    </div>
+
+    <div class="cart-item__total">
+      {{ item().currency }} {{ lineTotal() | number:'1.2-2' }}
+    </div>
+
+    <button
+      class="remove-btn"
+      (click)="onRemove()"
+      aria-label="Remove {{ item().itemName }} from cart"
+    >
+      <span class="material-symbol">delete_outline</span>
+    </button>
+  </div>
+</div>
