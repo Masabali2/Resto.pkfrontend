@@ -74,3 +74,20 @@ export interface StaffCreateOrderItem {
   categoryName: string | null;
   imageUrl: string | null;
 }
+
+export interface StaffCartItem {
+  menuItemId: string;
+  itemName: string;
+  unitPrice: number;
+  quantity: number;
+  currency: string;
+}
+
+export interface CreateStaffOrderRequest {
+  orderType: OrderType;
+  customerName: string;
+  customerPhone: string | null;
+  customerEmail: string | null;
+  specialInstructions: string | null;
+  items: Array<{ menuItemId: string; quantity: number }>;
+}

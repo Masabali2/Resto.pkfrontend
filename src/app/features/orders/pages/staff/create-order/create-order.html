@@ -100,95 +100,136 @@
 
     @else if (pageState() === 'ready') {
 
-      <!-- Menu filters -->
-      <app-menu-category-filter
-        [categories]="categories()"
-        [itemCounts]="categoryItemCounts()"
-        [totalItems]="availableMenuItems().length"
-        [resultCount]="filteredMenuItems().length"
-        [filters]="menuFilters()"
-        [minAvailablePrice]="minMenuPrice()"
-        [maxAvailablePrice]="maxMenuPrice()"
-        [currency]="menuCurrency()"
-        [loading]="false"
-        [dealsAvailable]="false"
-        [discountsAvailable]="false"
-        [dietaryFiltersAvailable]="false"
-        (filterChange)="onMenuFilterChange($event)"
-        (clearFilters)="clearMenuFilters()"
-      />
+      <div class="create-order-body">
+        <div class="create-order-menu">
 
-      <!-- Menu catalog -->
-      <section
-        class="menu-results-section"
-        aria-label="Menu items"
-      >
+          <!-- Menu filters -->
+          <app-menu-category-filter
+            [categories]="categories()"
+            [itemCounts]="categoryItemCounts()"
+            [totalItems]="availableMenuItems().length"
+            [resultCount]="filteredMenuItems().length"
+            [filters]="menuFilters()"
+            [minAvailablePrice]="minMenuPrice()"
+            [maxAvailablePrice]="maxMenuPrice()"
+            [currency]="menuCurrency()"
+            [loading]="false"
+            [dealsAvailable]="false"
+            [discountsAvailable]="false"
+            [dietaryFiltersAvailable]="false"
+            (filterChange)="onMenuFilterChange($event)"
+            (clearFilters)="clearMenuFilters()"
+          />
 
-        <div class="menu-results-heading">
-          <div>
-            <h2>Menu Items</h2>
-
-            <p>
-              Browse the items below and select products to add to the order.
-            </p>
-          </div>
-
-          <span class="menu-results-count">
-            {{ filteredMenuItems().length }}
-            {{ filteredMenuItems().length === 1 ? 'item' : 'items' }}
-          </span>
-        </div>
-
-        @if (filteredMenuItems().length === 0) {
-          <div
-            class="menu-empty-state"
-            aria-live="polite"
+          <!-- Menu catalog -->
+          <section
+            class="menu-results-section"
+            aria-label="Menu items"
           >
-            <div
-              class="empty-state-icon"
-              aria-hidden="true"
-            >
-              <span class="material-symbol">
-                search_off
+
+            <div class="menu-results-heading">
+              <div>
+                <h2>Menu Items</h2>
+
+                <p>
+                  Browse the items below and select products to add to the order.
+                </p>
+              </div>
+
+              <span class="menu-results-count">
+                {{ filteredMenuItems().length }}
+                {{ filteredMenuItems().length === 1 ? 'item' : 'items' }}
               </span>
             </div>
 
-            <h3>No matching menu items</h3>
+            @if (filteredMenuItems().length === 0) {
+              <div
+                class="menu-empty-state"
+                aria-live="polite"
+              >
+                <div
+                  class="empty-state-icon"
+                  aria-hidden="true"
+                >
+                  <span class="material-symbol">
+                    search_off
+                  </span>
+                </div>
 
-            <p>
-              We couldn't find any items matching your current search
-              or filter selections. Try changing your filters or clearing them.
-            </p>
+                <h3>No matching menu items</h3>
 
-            <button
-              type="button"
-              class="clear-results-button"
-              (click)="clearMenuFilters()"
-            >
-              <span class="material-symbol" aria-hidden="true">
-                filter_alt_off
-              </span>
+                <p>
+                  We couldn't find any items matching your current search
+                  or filter selections. Try changing your filters or clearing them.
+                </p>
 
-              Clear all filters
-            </button>
-          </div>
-        }
+                <button
+                  type="button"
+                  class="clear-results-button"
+                  (click)="clearMenuFilters()"
+                >
+                  <span class="material-symbol" aria-hidden="true">
+                    filter_alt_off
+                  </span>
 
-        @else {
-          <app-menu-catalog
-            [items]="filteredMenuItems()"
-            [loading]="false"
-            (itemSelected)="onMenuItemSelected($event)"
+                  Clear all filters
+                </button>
+              </div>
+            }
+
+            @else {
+              <app-menu-catalog
+                [items]="filteredMenuItems()"
+                [loading]="false"
+                (itemSelected)="onMenuItemSelected($event)"
+              />
+            }
+
+          </section>
+
+        </div>
+
+        <aside class="create-order-cart">
+          <app-order-cart
+            [items]="cartItems()"
+            [taxRate]="taxRate()"
+            [currency]="currency()"
+            (quantityChange)="onCartQuantityChange($event.menuItemId, $event.quantity)"
+            (remove)="onCartRemove($event)"
           />
-        }
-
-      </section>
+        </aside>
+      </div>
 
       <!-- Customer information -->
       <app-customer-information
         [customer]="customerInformation()"
         (customerChange)="onCustomerInformationChange($event)"
       />
+
+      <!-- Order type -->
+      <app-order-type-selector
+        [orderTypes]="orderTypes()"
+        [selected]="selectedOrderType()"
+        (orderTypeChange)="onOrderTypeChange($event)"
+      />
+
+      <!-- Place order -->
+      @if (cartHasItems()) {
+        <app-place-order
+          [customer]="customerInformation()"
+          [orderType]="selectedOrderType()"
+          [items]="cartItems()"
+          [subtotal]="cartSubtotal()"
+          [taxAmount]="cartTax()"
+          [totalAmount]="cartTotal()"
+          [currency]="currency()"
+          [paymentMethod]="paymentMethod()"
+          [submitting]="placingOrder()"
+          [error]="placeError()"
+          [placedOrder]="placedOrder()"
+          (placeOrder)="placeOrder()"
+        />
+      }
 
     }
 

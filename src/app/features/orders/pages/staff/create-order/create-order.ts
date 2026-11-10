@@ -35,10 +35,26 @@ import {
   type CustomerInformationData
 } from '../../../components/create-order/customer-information/customer-information';
 
+import {
+  OrderCart
+} from '../../../components/create-order/order-cart/order-cart';
+
+import {
+  OrderTypeSelector
+} from '../../../components/create-order/order-type-selector/order-type-selector';
+
+import {
+  PlaceOrder
+} from '../../../components/create-order/place-order/place-order';
+
 import type {
+  CreateStaffOrderRequest,
+  OrderType,
+  StaffCartItem,
   StaffCreateOrderCategory,
   StaffCreateOrderContext,
-  StaffCreateOrderItem
+  StaffCreateOrderItem,
+  StaffOrderDetails
 } from '../../../models/order.models';
 
 type CreateOrderPageState =
@@ -63,7 +79,10 @@ const DEFAULT_CUSTOMER_INFORMATION: CustomerInformationData = {
     CreateOrderHeader,
     MenuCategoryFilter,
     MenuCatalog,
-    CustomerInformation
+    CustomerInformation,
+    OrderCart,
+    OrderTypeSelector,
+    PlaceOrder
   ],
   templateUrl: './create-order.html',
   styleUrl: './create-order.css',
@@ -152,6 +171,49 @@ export class CreateOrder {
     signal<CustomerInformationData>({
       ...DEFAULT_CUSTOMER_INFORMATION
     });
+
+  // ---------------------------------------------------------------------------
+  // Cart state (single source of truth for the Create Order workflow)
+  // ---------------------------------------------------------------------------
+
+  protected readonly cartItems = signal<StaffCartItem[]>([]);
+
+  protected readonly selectedOrderType = signal<OrderType | null>(null);
+
+  protected readonly placingOrder = signal<boolean>(false);
+
+  protected readonly placeError = signal<string | null>(null);
+
+  protected readonly placedOrder = signal<StaffOrderDetails | null>(null);
+
+  protected readonly cartSubtotal = computed(() =>
+    this.cartItems().reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)
+  );
+
+  protected readonly cartTax = computed(() => {
+    const rate = this.taxRate();
+    if (rate <= 0 || this.cartSubtotal() <= 0) {
+      return 0;
+    }
+    return Math.round((this.cartSubtotal() * rate) / 100 * 10000) / 10000;
+  });
+
+  protected readonly cartTotal = computed(() =>
+    this.cartSubtotal() + this.cartTax()
+  );
+
+  protected readonly cartItemCount = computed(() =>
+    this.cartItems().reduce((sum, item) => sum + item.quantity, 0)
+  );
+
+  protected readonly cartHasItems = computed(() => this.cartItems().length > 0);
+
+  protected readonly canPlaceOrder = computed(() =>
+    this.cartHasItems() &&
+    !!this.customerInformation().customerName?.trim() &&
+    !!this.customerInformation().phone?.trim() &&
+    !!this.selectedOrderType()
+  );
 
   private requestSequence = 0;
 
@@ -418,16 +480,142 @@ export class CreateOrder {
   protected onMenuItemSelected(
     item: StaffCreateOrderItem
   ): void {
-    // Cart state and quantity management will be implemented
-    // in the next order-building step.
     if (!item.isActive || !item.isAvailable) {
       return;
     }
 
-    // The selected item is now received by the parent.
-    // Do not submit an order or modify the backend here.
+    const existing = this.cartItems().find(cartItem => cartItem.menuItemId === item.id);
+
+    if (existing) {
+      this.cartItems.update(items =>
+        items.map(cartItem =>
+          cartItem.menuItemId === item.id
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            : cartItem
+        )
+      );
+      return;
+    }
+
+    this.cartItems.update(items => [
+      ...items,
+      {
+        menuItemId: item.id,
+        itemName: item.name,
+        unitPrice: item.price,
+        quantity: 1,
+        currency: item.currency
+      }
+    ]);
   }
 
+  protected onCartQuantityChange(
+    menuItemId: string,
+    quantity: number
+  ): void {
+    this.cartItems.update(items =>
+      items.map(cartItem =>
+        cartItem.menuItemId === menuItemId ? { ...cartItem, quantity } : cartItem
+      )
+    );
+  }
+
+  protected onCartRemove(menuItemId: string): void {
+    this.cartItems.update(items =>
+      items.filter(cartItem => cartItem.menuItemId !== menuItemId)
+    );
+  }
+
+  protected clearCart(): void {
+    this.cartItems.set([]);
+    this.placedOrder.set(null);
+    this.placeError.set(null);
+  }
+
+  protected onOrderTypeChange(orderType: OrderType): void {
+    this.selectedOrderType.set(orderType);
+  }
+
+  protected placeOrder(): void {
+    if (!this.canPlaceOrder() || this.placingOrder()) {
+      return;
+    }
+
+    const customer = this.customerInformation();
+    const restaurant = this.restaurant();
+
+    if (!restaurant) {
+      return;
+    }
+
+    const request: CreateStaffOrderRequest = {
+      orderType: this.selectedOrderType()!,
+      customerName: customer.customerName.trim(),
+      customerPhone: customer.phone?.trim() || null,
+      customerEmail: customer.email?.trim() || null,
+      specialInstructions: customer.specialInstructions?.trim() || null,
+      items: this.cartItems().map(cartItem => ({
+        menuItemId: cartItem.menuItemId,
+        quantity: cartItem.quantity
+      }))
+    };
+
+    this.placingOrder.set(true);
+    this.placeError.set(null);
+    this.placedOrder.set(null);
+
+    this.orderApiService
+      .createStaffOrder(restaurant.id, request)
+      .subscribe({
+        next: response => {
+          this.placingOrder.set(false);
+
+          if (!response.success || !response.data) {
+            this.placeError.set(
+              response.message ?? 'Unable to create the order.'
+            );
+            return;
+          }
+
+          this.placedOrder.set(response.data);
+        },
+
+        error: error => {
+          this.placingOrder.set(false);
+          this.placeError.set(this.extractPlaceOrderError(error));
+        }
+      });
+  }
+
+  private extractPlaceOrderError(error: unknown): string {
+    if (error instanceof HttpErrorResponse) {
+      if (error.status === 403) {
+        return 'You are not allowed to create orders for this restaurant.';
+      }
+
+      if (error.status === 404) {
+        return 'The restaurant or one of the menu items is no longer available.';
+      }
+
+      if (error.status === 400) {
+        return error.error?.message ?? 'Invalid order. Please check your cart and customer details.';
+      }
+
+      if (error.status === 409) {
+        return 'This order could not be created. Please try again.';
+      }
+
+      return (
+        this.httpErrorHandler.extractBackendMessage(error) ??
+        'Unable to create the order. Please try again.'
+      );
+    }
+
+    return 'Unable to create the order. Please try again.';
+  }
+
+  // ---------------------------------------------------------------------------
+  // Customer information
   // ---------------------------------------------------------------------------
   // Filters
   // ---------------------------------------------------------------------------

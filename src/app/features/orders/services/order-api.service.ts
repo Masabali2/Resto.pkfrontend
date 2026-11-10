@@ -10,6 +10,7 @@ import type { PagedResult } from '../../../core/models/paged-result.model';
 import type {
   CreatePublicOrderRequest,
   CreateDirectPublicOrderRequest,
+  CreateStaffOrderRequest,
   PublicCart,
   PublicCartItem,
   PublicOrderCreated,
@@ -148,11 +149,26 @@ export class OrderApiService {
   }
 
   createDirectOrder(
-    slug: string,
+    restaurantId: string,
     request: CreateDirectPublicOrderRequest
   ): Observable<ApiResponse<PublicOrderCreated>> {
     return this.http.post<ApiResponse<PublicOrderCreated>>(
-      `${this.publicBaseUrl}/${encodeURIComponent(slug)}/orders/direct`,
+      `${this.publicBaseUrl}/${restaurantId}/orders/direct`,
+      request
+    );
+  }
+
+  /**
+   * Creates a staff order for the given restaurant. All financials (prices, tax,
+   * subtotal, total) are calculated server-side; the payload carries only item
+   * IDs, quantities, customer information, and order type.
+   */
+  createStaffOrder(
+    restaurantId: string,
+    request: CreateStaffOrderRequest
+  ): Observable<ApiResponse<StaffOrderDetails>> {
+    return this.http.post<ApiResponse<StaffOrderDetails>>(
+      `${this.staffBaseUrl}/${restaurantId}/orders`,
       request
     );
   }
