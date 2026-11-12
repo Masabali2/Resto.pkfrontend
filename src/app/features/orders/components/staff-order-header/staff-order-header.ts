@@ -7,7 +7,6 @@ import {
   output,
   signal
 } from '@angular/core';
-import { Router } from '@angular/router';
 
 import { Button } from '../../../../shared/components/button/button';
 
@@ -22,8 +21,6 @@ export type StaffOrderViewMode = 'kanban' | 'table';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StaffOrderHeader {
-  private readonly router = inject(Router);
-
   readonly restaurantName = input.required<string>();
   readonly logoUrl = input<string | null>(null);
   readonly currency = input<string | null>(null);
@@ -70,6 +67,5 @@ export class StaffOrderHeader {
 
   protected onCreateOrder(): void {
     this.createOrder.emit();
-    void this.router.navigate(['/orders/create']);
   }
 }

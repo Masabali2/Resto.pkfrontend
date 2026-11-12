@@ -34,6 +34,7 @@ export class OrderApiService {
   getStaffOrders(
     restaurantId: string,
     status: string | null,
+    search: string | null,
     page = 1,
     pageSize = 20
   ): Observable<ApiResponse<PagedResult<StaffOrderDetails>>> {
@@ -43,6 +44,10 @@ export class OrderApiService {
 
     if (status) {
       params = params.set('status', status);
+    }
+
+    if (search) {
+      params = params.set('search', search);
     }
 
     return this.http.get<

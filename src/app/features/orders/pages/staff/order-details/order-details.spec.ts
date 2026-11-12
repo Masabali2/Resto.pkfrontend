@@ -107,7 +107,7 @@ describe('OrderDetails', () => {
     expect(orderApi.updateStaffOrderStatus).toHaveBeenCalledWith(
       'restaurant-1',
       'order-123',
-      { newStatus: 'Confirmed', notes: null }
+      { status: 'Confirmed', notes: null }
     );
     expect(fixture.nativeElement.textContent).toContain('Confirmed');
   });

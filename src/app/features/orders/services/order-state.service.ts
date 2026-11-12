@@ -36,6 +36,7 @@ export class OrderStateService {
   private readonly ordersState = signal<StaffOrderDetails[]>([]);
   private readonly statusFilterState =
     signal<OrderStatusFilter>('All orders');
+  private readonly searchTermState = signal<string>('');
   private readonly pageState = signal(1);
   private readonly totalPagesState = signal(1);
   private readonly totalCountState = signal(0);
@@ -87,6 +88,8 @@ private kanbanRequestId = 0;
   readonly selectedOrder = this.selectedOrderState.asReadonly();
 
   readonly statusFilter = this.statusFilterState.asReadonly();
+
+  readonly searchTerm = this.searchTermState.asReadonly();
 
   readonly page = this.pageState.asReadonly();
   readonly pageSize = PAGE_SIZE;
@@ -174,6 +177,7 @@ loadKanbanOrders(restaurantId: string): void {
     this.orderApi.getStaffOrders(
       restaurantId,
       status,
+      null,
       1,
       KANBAN_PAGE_SIZE
     )
@@ -233,7 +237,7 @@ refreshKanban(restaurantId: string): void {
   this.loadKanbanOrders(restaurantId);
 }
   // Load paginated orders.
-  loadOrders(restaurantId: string): void {
+  loadOrders(restaurantId: string, search: string | null = null): void {
     this.ensureRestaurantScope(restaurantId);
 
     const requestId = ++this.listRequestId;
@@ -242,12 +246,15 @@ refreshKanban(restaurantId: string): void {
       ? null
       : this.statusFilterState();
 
+    const searchTerm = (search ?? this.searchTermState()) || null;
+
     this.listLoadingState.set(true);
     this.listErrorState.set(null);
 
     this.orderApi.getStaffOrders(
       restaurantId,
       status,
+      searchTerm,
       this.pageState(),
       PAGE_SIZE
     )
@@ -304,6 +311,19 @@ refreshKanban(restaurantId: string): void {
     this.pageState.set(1);
 
     this.loadOrders(restaurantId);
+  }
+
+  // Change order search term. Resets pagination to page 1.
+  setSearchTerm(
+    restaurantId: string,
+    search: string
+  ): void {
+    this.ensureRestaurantScope(restaurantId);
+
+    this.searchTermState.set(search);
+    this.pageState.set(1);
+
+    this.loadOrders(restaurantId, search);
   }
 
   // Navigate to previous page.
@@ -407,7 +427,7 @@ refreshKanban(restaurantId: string): void {
       restaurantId,
       order.id,
       {
-        newStatus: status,
+        status: status,
         notes: null
       }
     )
@@ -477,6 +497,7 @@ refreshKanban(restaurantId: string): void {
     this.selectedOrderState.set(null);
 
     this.statusFilterState.set('All orders');
+    this.searchTermState.set('');
 
     this.pageState.set(1);
     this.totalPagesState.set(1);
@@ -522,14 +543,14 @@ transitionOrderStatus(
   this.updatingStatusState.set(true);
   this.workflowErrorState.set(null);
 
-  this.orderApi.updateStaffOrderStatus(
-    restaurantId,
-    orderId,
-    {
-      newStatus: status,
-      notes
-    }
-  )
+    this.orderApi.updateStaffOrderStatus(
+      restaurantId,
+      orderId,
+      {
+        status: status,
+        notes
+      }
+    )
     .pipe(takeUntilDestroyed(this.destroyRef))
     .subscribe({
       next: response => {

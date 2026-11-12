@@ -21,7 +21,7 @@ describe('OrderApiService', () => {
   afterEach(() => http.verify());
 
   it('requests paged staff orders with the supplied filters', () => {
-    service.getStaffOrders('restaurant-1', 'Preparing', 2, 10).subscribe();
+    service.getStaffOrders('restaurant-1', 'Preparing', null, 2, 10).subscribe();
 
     const request = http.expectOne(req => req.url === staffBase + '/restaurant-1/orders');
     expect(request.request.method).toBe('GET');
@@ -38,7 +38,7 @@ describe('OrderApiService', () => {
     expect(detail.request.method).toBe('GET');
     detail.flush({});
 
-    const body = { newStatus: 'Confirmed' as const, notes: 'Accepted by kitchen' };
+    const body = { status: 'Confirmed' as const, notes: 'Accepted by kitchen' };
     service.updateStaffOrderStatus('restaurant-1', 'order-1', body).subscribe();
     const update = http.expectOne(staffBase + '/restaurant-1/orders/order-1/status');
     expect(update.request.method).toBe('PATCH');

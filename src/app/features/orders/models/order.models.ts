@@ -21,7 +21,7 @@ export interface PublicOrderTracking {
   orderNumber: string; status: OrderStatus; totalAmount: number; currency: string;
   items: Array<{ itemName: string; quantity: number }>; createdAt: string; completedAt: string | null;
 }
-export interface UpdateOrderStatusRequest { newStatus: OrderStatus; notes: string | null; }
+export interface UpdateOrderStatusRequest { status: OrderStatus; notes: string | null; }
 export interface StaffOrderSummary {
   totalOrders: number;
   pendingKitchen: number;

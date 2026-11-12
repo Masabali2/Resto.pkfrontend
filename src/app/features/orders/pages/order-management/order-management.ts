@@ -6,6 +6,8 @@ import {
   inject,
   signal
 } from '@angular/core';
+import { Router } from '@angular/router';
+import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 
 import { ActiveRestaurantStateService } from '../../../../core/services/active-restaurant-state.service';
 import { OrderSummary } from '../../components/order-summary/order-summary';
@@ -37,6 +39,10 @@ export class OrderManagement {
   private readonly orderState =
     inject(OrderStateService);
 
+  private readonly router = inject(Router);
+
+  private readonly searchSubject = new Subject<string>();
+
   protected readonly restaurant =
     this.activeRestaurantState.restaurant;
 
@@ -51,9 +57,6 @@ export class OrderManagement {
   protected readonly viewMode =
     signal<StaffOrderViewMode>('table');
 
-  protected readonly createOrderMessage =
-    signal<string | null>(null);
-
   // Automatically load the summary when the active restaurant changes.
   private readonly summaryEffect = effect(() => {
     const activeRestaurant = this.restaurant();
@@ -65,6 +68,26 @@ export class OrderManagement {
     this.orderState.loadSummary(activeRestaurant.id);
   });
 
+  // Debounce search input so API requests are not fired on every keystroke.
+  private readonly searchEffect = effect(() => {
+    const value = this.searchTerm();
+    this.searchSubject.next(value);
+  });
+
+  constructor() {
+    this.searchSubject
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged()
+      )
+      .subscribe(value => {
+        const restaurantId = this.restaurant()?.id;
+        if (restaurantId) {
+          this.orderState.setSearchTerm(restaurantId, value);
+        }
+      });
+  }
+
   protected onSearchChange(value: string): void {
     this.searchTerm.set(value);
   }
@@ -74,13 +97,7 @@ export class OrderManagement {
   }
 
   protected onCreateOrder(): void {
-    this.createOrderMessage.set(
-      'The staff create-order screen is not available yet.'
-    );
-  }
-
-  protected dismissMessage(): void {
-    this.createOrderMessage.set(null);
+    void this.router.navigate(['/orders/create']);
   }
 
   protected retryRestaurantLoad(): void {

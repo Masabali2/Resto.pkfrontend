@@ -53,7 +53,7 @@ describe('OrderList', () => {
     const fixture = TestBed.createComponent(OrderList);
     fixture.detectChanges();
 
-    expect(orderApi.getStaffOrders).toHaveBeenCalledWith('restaurant-1', null, 1, 20);
+    expect(orderApi.getStaffOrders).toHaveBeenCalledWith('restaurant-1', null, null, 1, 20);
     expect(fixture.nativeElement.textContent).toContain('Test Restaurant');
     expect(fixture.nativeElement.textContent).toContain('No orders found');
   });
