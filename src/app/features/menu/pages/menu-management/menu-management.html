@@ -68,9 +68,16 @@
         type="button"
         class="btn btn-publish"
         (click)="publishMenuChanges()"
+        [disabled]="isReadOnly() || publishing()"
+        [attr.aria-busy]="publishing()"
+        [aria-label]="publishLabel()"
       >
-        <i class="bi bi-cloud-arrow-up"></i>
-        <span>Publish Changes</span>
+        @if (publishing()) {
+          <app-loading-spinner [size]="16" />
+        } @else {
+          <i class="bi bi-cloud-arrow-up"></i>
+        }
+        <span>{{ publishLabel() }}</span>
       </button>
 
     </div>

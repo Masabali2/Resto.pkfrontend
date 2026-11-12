@@ -3,6 +3,7 @@ import {
   HttpClientTestingModule,
   HttpTestingController
 } from '@angular/common/http/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { MenuService } from './menu.service';
 import type { ApiResponse } from '../../../core/models/api-response.model';
 import type { PagedResult } from '../../../core/models/paged-result.model';
@@ -102,6 +103,49 @@ describe('MenuService', () => {
     );
 
     req.flush({ success: true, data: { id: 'menu-1', isActive: false }, message: null, errorCode: null, errors: null, traceId: null } as ApiResponse<MenuDto>);
+  });
+
+  it('publishMenu patches the publish endpoint with no body', () => {
+    service.publishMenu('menu-1').subscribe();
+
+    const req = expectRequest(
+      httpMock,
+      'PATCH',
+      `${API_ROOT}/menus/menu-1/publish`,
+      null
+    );
+
+    req.flush({ success: true, data: { id: 'menu-1', status: 'Published', isActive: true }, message: null, errorCode: null, errors: null, traceId: null } as ApiResponse<MenuDto>);
+  });
+
+  it('unpublishMenu patches the unpublish endpoint with no body', () => {
+    service.unpublishMenu('menu-1').subscribe();
+
+    const req = expectRequest(
+      httpMock,
+      'PATCH',
+      `${API_ROOT}/menus/menu-1/unpublish`,
+      null
+    );
+
+    req.flush({ success: true, data: { id: 'menu-1', status: 'Draft', isActive: true }, message: null, errorCode: null, errors: null, traceId: null } as ApiResponse<MenuDto>);
+  });
+
+  it('publishMenu propagates HTTP errors', () => {
+    let error: unknown;
+    service.publishMenu('menu-1').subscribe({
+      error: err => (error = err)
+    });
+
+    const req = expectRequest(
+      httpMock,
+      'PATCH',
+      `${API_ROOT}/menus/menu-1/publish`,
+      null
+    );
+    req.error(new ErrorEvent('Network failure'));
+
+    expect(error).toBeInstanceOf(HttpErrorResponse);
   });
 
   it('archiveMenu deletes the menu', () => {
