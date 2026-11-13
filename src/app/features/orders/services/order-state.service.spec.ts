@@ -49,7 +49,18 @@ describe('OrderStateService', () => {
     const defaultApi = {
       getStaffOrderSummary: vi.fn().mockReturnValue(of({
         success: true,
-        data: { totalOrders: 0, pendingKitchen: 0, completedToday: 0, totalRevenue: 0, currency: 'PKR' },
+        data: {
+          totalOrders: 0,
+          pendingKitchen: 0,
+          completedToday: 0,
+          completedOrders: 0,
+          cancelledOrders: 0,
+          totalRevenue: 0,
+          averageOrderValue: 0,
+          currency: 'PKR',
+          startDate: null,
+          endDate: null
+        },
         errorCode: null,
         message: null,
         errors: null,

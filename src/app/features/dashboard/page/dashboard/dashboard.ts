@@ -5,19 +5,22 @@ import {
   inject,
   signal
 } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { finalize } from 'rxjs';
-import { LucidePlus } from '@lucide/angular';
+import { finalize, Observable } from 'rxjs';
+import { LucideArrowRight, LucidePlus, LucideReceipt } from '@lucide/angular';
+import { ActiveRestaurantStateService } from '../../../../core/services/active-restaurant-state.service';
 import { AuthStateService } from '../../../../core/services/auth-state.service';
 import { AuthorizationService } from '../../../../core/services/authorization.service';
 import { NotificationService } from '../../../../core/services/notification.service';
+import { OrderApiService } from '../../../orders/services/order-api.service';
+import { OrderStatusBadge } from '../../../orders/components/order-status-badge/order-status-badge';
 import { TenantContextService } from '../../../../core/services/tenant-context.service';
 import { SubscriptionFlowService } from '../../../subscription/services/subscription-flow.service';
 import { SubscriptionOffer } from '../../../subscription/components/subscription-offer/subscription-offer';
 import { SubscriptionRequiredDialog } from '../../../subscription/components/subscription-required-dialog/subscription-required-dialog';
 import { SubscriptionStatusCard } from '../../../subscription/components/subscription-status-card/subscription-status-card';
-import { resolveSubscriptionStatus } from '../../../subscription/utils/subscription-status.util';
+import { resolveSubscriptionStatus, formatPlanPrice } from '../../../subscription/utils/subscription-status.util';
 import { DashboardService } from '../../services/dashboard.service';
 import { DashboardPageHeader } from '../../components/dashboard-page-header/dashboard-page-header';
 import { DashboardStats } from '../../components/dashboard-stats/dashboard-stats';
@@ -33,15 +36,24 @@ import { LoadingSpinner } from '../../../../shared/components/loading-spinner/lo
 import { Button } from '../../../../shared/components/button/button';
 import type {
   DashboardMetric,
-  DashboardMetricIcon
+  DashboardMetricIcon,
+  DashboardMetricStatus
 } from '../../models/dashboard-metric.model';
 import type {
   DashboardCollection,
   DashboardSnapshot
 } from '../../models/dashboard-snapshot.model';
+import type { ApiResponse } from '../../../../core/models/api-response.model';
 import type { QuickAction } from '../../models/quick-action.model';
 import type { SetupStep } from '../../models/setup-step.model';
 import type { ResolvedSubscriptionStatus } from '../../../subscription/models/subscription-status.model';
+import type { RestaurantDto } from '../../../../core/models/restaurant.model';
+import type {
+  StaffOrderSummary,
+  StaffOrderDetails,
+  DailyOrderDto,
+  OrderAnalyticsDto
+} from '../../../orders/models/order.models';
 
 type DashboardPageState =
   | 'loading'
@@ -60,17 +72,21 @@ type DashboardPageState =
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [
+    imports: [
     Button,
     DashboardPageHeader,
     DashboardStats,
     LoadingSpinner,
+    LucideArrowRight,
     LucidePlus,
+    LucideReceipt,
     OnboardingHighlights,
     OnboardingWelcome,
     OnboardingWorkspacePrompt,
+    OrderStatusBadge,
     QuickActions,
     RestaurantOverview,
+    RouterLink,
     SetupProgress,
     SubscriptionOffer,
     SubscriptionRequiredDialog,
@@ -92,6 +108,8 @@ export class Dashboard {
 
   /** Shared subscription flow — the single plan-selection experience. */
   protected readonly subscriptionFlow = inject(SubscriptionFlowService);
+
+  private readonly orderApi = inject(OrderApiService);
 
   protected readonly memberships = computed(
     () => this.authState.authResult()?.memberships ?? []
@@ -162,6 +180,111 @@ export class Dashboard {
   protected readonly websites = computed(() => this.snapshot()?.websites ?? null);
 
   protected readonly menus = computed(() => this.snapshot()?.menus ?? null);
+
+  /**
+   * The restaurant that is currently active for the workspace. All order,
+   * revenue and menu data is scoped to this restaurant.
+   */
+  private readonly activeRestaurantStateService =
+    inject(ActiveRestaurantStateService);
+
+  protected readonly activeRestaurant = computed(() =>
+    this.activeRestaurantStateService.restaurant()
+  );
+
+  protected readonly activeRestaurantState = computed(() =>
+    this.activeRestaurantStateService.state()
+  );
+
+  protected readonly activeRestaurantError = computed(() =>
+    this.activeRestaurantStateService.errorMessage()
+  );
+
+  /** Date range presets offered to the user. */
+  protected readonly dateRanges = [
+    { id: 'today', label: 'Today' },
+    { id: '7days', label: 'Last 7 days' },
+    { id: '30days', label: 'Last 30 days' },
+    { id: 'month', label: 'This month' },
+    { id: 'custom', label: 'Custom range' }
+  ] as const;
+
+  protected readonly dateRange = signal<'today' | '7days' | '30days' | 'month' | 'custom'>(
+    '30days'
+  );
+
+  protected readonly customStart = signal<string | null>(null);
+
+  protected readonly customEnd = signal<string | null>(null);
+
+  /** Resolved start/end date (YYYY-MM-DD) for the selected range. */
+  protected readonly startDate = computed(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const format = (d: Date) =>
+      d.toISOString().slice(0, 10);
+
+    switch (this.dateRange()) {
+      case 'today':
+        return format(today);
+      case '7days': {
+        const start = new Date(today);
+        start.setDate(start.getDate() - 6);
+        return format(start);
+      }
+      case 'month': {
+        const start = new Date(today.getFullYear(), today.getMonth(), 1);
+        return format(start);
+      }
+      case 'custom':
+        return this.customStart() ?? format(today);
+      case '30days':
+      default: {
+        const start = new Date(today);
+        start.setDate(start.getDate() - 29);
+        return format(start);
+      }
+    }
+  });
+
+  protected readonly endDate = computed(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (this.dateRange() === 'custom') {
+      return this.customEnd() ?? formatDate(today);
+    }
+
+    return formatDate(today);
+  });
+
+  /** Order summary (KPI numbers) for the active restaurant and date range. */
+  protected readonly orderSummary = signal<StaffOrderSummary | null>(null);
+
+  protected readonly orderSummaryLoading = signal(false);
+
+  protected readonly orderSummaryError = signal<string | null>(null);
+
+  /** Daily order trend for the revenue chart. */
+  protected readonly orderAnalytics = signal<OrderAnalyticsDto | null>(null);
+
+  protected readonly orderAnalyticsLoading = signal(false);
+
+  protected readonly orderAnalyticsError = signal<string | null>(null);
+
+  /** Recent orders for the operational summary. */
+  protected readonly recentOrders = signal<StaffOrderDetails[] | null>(null);
+
+  protected readonly recentOrdersLoading = signal(false);
+
+  protected readonly recentOrdersError = signal<string | null>(null);
+
+  private loadedRestaurantId: string | null = null;
+
+  private orderRequestSequence = 0;
+
+  private loadedRequestKey: string | null = null;
 
   protected readonly hasRestaurants = computed(() => {
     const restaurants = this.restaurants();
@@ -317,6 +440,33 @@ export class Dashboard {
     toObservable(this.tenantContext.activeTenantId)
       .pipe(takeUntilDestroyed())
       .subscribe(tenantId => this.loadSnapshot(tenantId));
+
+    // (Re)load order-scoped data whenever the active restaurant or the date
+    // range changes. Stale responses from a previous restaurant/range are
+    // ignored by loadOrderData's request-sequence guard.
+    toObservable(this.activeRestaurant)
+      .pipe(takeUntilDestroyed())
+      .subscribe(restaurant =>
+        this.loadOrderData(restaurant?.id ?? null)
+      );
+
+    toObservable(this.dateRange)
+      .pipe(takeUntilDestroyed())
+      .subscribe(() =>
+        this.loadOrderData(this.activeRestaurant()?.id ?? null)
+      );
+
+    toObservable(this.customStart)
+      .pipe(takeUntilDestroyed())
+      .subscribe(() =>
+        this.loadOrderData(this.activeRestaurant()?.id ?? null)
+      );
+
+    toObservable(this.customEnd)
+      .pipe(takeUntilDestroyed())
+      .subscribe(() =>
+        this.loadOrderData(this.activeRestaurant()?.id ?? null)
+      );
 
     // The trial activation changes what the workspace is allowed to do, so the
     // dashboard data is read again once the backend accepted it.
@@ -509,6 +659,460 @@ export class Dashboard {
   }
 
   /**
+   * Loads order-scoped data (summary, trend, recent orders) for a restaurant
+   * and date range. Each source degrades independently, so one failing
+   * endpoint never blanks the whole section.
+   */
+  private loadOrderData(restaurantId: string | null): void {
+    if (restaurantId === null) {
+      this.loadedRequestKey = null;
+      this.orderSummary.set(null);
+      this.orderSummaryLoading.set(false);
+      this.orderSummaryError.set(null);
+      this.orderAnalytics.set(null);
+      this.orderAnalyticsLoading.set(false);
+      this.orderAnalyticsError.set(null);
+      this.recentOrders.set(null);
+      this.recentOrdersLoading.set(false);
+      this.recentOrdersError.set(null);
+      return;
+    }
+
+    const start = this.startDate();
+    const end = this.endDate();
+    const key = `${restaurantId}|${start}|${end}`;
+
+    if (key === this.loadedRequestKey) {
+      return;
+    }
+
+    this.loadedRequestKey = key;
+    const requestId = ++this.orderRequestSequence;
+
+    this.orderSummary.set(null);
+    this.orderSummaryLoading.set(true);
+    this.orderSummaryError.set(null);
+    this.orderAnalytics.set(null);
+    this.orderAnalyticsLoading.set(true);
+    this.orderAnalyticsError.set(null);
+    this.recentOrders.set(null);
+    this.recentOrdersLoading.set(true);
+    this.recentOrdersError.set(null);
+
+    this.requestOrder(
+      requestId,
+      this.orderApi.getStaffOrderSummary(restaurantId, start, end),
+      value => this.orderSummary.set(value),
+      loading => this.orderSummaryLoading.set(loading),
+      message => this.orderSummaryError.set(message)
+    );
+
+    this.requestOrder(
+      requestId,
+      this.orderApi.getStaffOrderAnalytics(restaurantId, start, end),
+      value => this.orderAnalytics.set(value),
+      loading => this.orderAnalyticsLoading.set(loading),
+      message => this.orderAnalyticsError.set(message)
+    );
+
+    this.requestOrder(
+      requestId,
+      this.orderApi.getStaffOrders(restaurantId, null, null, 1, 8),
+      value => this.recentOrders.set(value?.items ?? null),
+      loading => this.recentOrdersLoading.set(loading),
+      message => this.recentOrdersError.set(message)
+    );
+  }
+
+  /** Retries the last order-data load for the active restaurant and range. */
+  protected retryOrders(): void {
+    this.loadOrderData(this.activeRestaurant()?.id ?? null);
+  }
+
+  private requestOrder<T>(
+    requestId: number,
+    source: Observable<ApiResponse<T>>,
+    setValue: (value: T | null) => void,
+    setLoading: (loading: boolean) => void,
+    setError: (message: string | null) => void
+  ): void {
+    source
+      .pipe(finalize(() => {
+        if (requestId === this.orderRequestSequence) {
+          setLoading(false);
+        }
+      }))
+      .subscribe({
+        next: response => {
+          if (requestId !== this.orderRequestSequence) {
+            return;
+          }
+
+          setValue(response.data ?? null);
+        },
+        error: () => {
+          if (requestId !== this.orderRequestSequence) {
+            return;
+          }
+
+          const message = 'We could not load this data. Please try again.';
+          setError(message);
+          this.notificationService.error(message);
+        }
+      });
+  }
+
+  protected refresh(): void {
+    this.loadedRequestKey = null;
+    this.loadOrderData(this.activeRestaurant()?.id ?? null);
+  }
+
+  protected selectDateRange(
+    id: 'today' | '7days' | '30days' | 'month' | 'custom'
+  ): void {
+    this.dateRange.set(id);
+  }
+
+  protected onCustomStart(event: Event): void {
+    const input = event.target as HTMLInputElement | null;
+    this.customStart.set(input?.value ?? null);
+  }
+
+  protected onCustomEnd(event: Event): void {
+    const input = event.target as HTMLInputElement | null;
+    this.customEnd.set(input?.value ?? null);
+  }
+
+  protected readonly greeting = computed(() => {
+    const hour = new Date().getHours();
+
+    if (hour < 12) {
+      return 'Good morning';
+    }
+
+    if (hour < 17) {
+      return 'Good afternoon';
+    }
+
+    return 'Good evening';
+  });
+
+  protected readonly restaurantSubtitle = (restaurant: RestaurantDto): string => {
+    const parts = [restaurant.city, restaurant.country].filter(
+      part => typeof part === 'string' && part.trim().length > 0
+    );
+    const location = parts.join(', ');
+    const today = new Date().toLocaleDateString('en-PK', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    });
+    return location
+      ? `${location} · ${restaurant.status} · ${today}`
+      : `${restaurant.status} · ${today}`;
+  };
+
+  protected restaurantStatusBadge(restaurant: RestaurantDto): string {
+    return restaurant.status;
+  };
+
+  protected formatMoney(amount: number, currency: string | null): string {
+    return formatMoney(amount, currency);
+  }
+
+  protected pct(value: number, max: number): number {
+    if (!max || max <= 0) {
+      return 0;
+    }
+
+    return Math.round((value / max) * 100);
+  }
+
+  protected readonly maxRevenue = computed(() => {
+    const daily = this.orderAnalytics()?.daily ?? [];
+
+    return daily.reduce((m, d) => Math.max(m, d.revenue), 0);
+  });
+
+  protected readonly maxOrderCount = computed(() => {
+    const daily = this.orderAnalytics()?.daily ?? [];
+
+    return daily.reduce((m, d) => Math.max(m, d.orderCount), 0);
+  });
+
+  protected readonly orderMetrics = computed<DashboardMetric[]>(() => {
+    const summary = this.orderSummary();
+    const status: DashboardMetricStatus = this.orderSummaryLoading()
+      ? 'loading'
+      : this.orderSummaryError()
+        ? 'unavailable'
+        : 'ready';
+
+    const money = (value: number) =>
+      formatMoney(value, summary?.currency ?? null);
+
+    const metrics: DashboardMetric[] = [];
+
+    metrics.push({
+      id: 'total-orders',
+      label: 'Total Orders',
+      value: summary ? String(summary.totalOrders) : '—',
+      hint: 'All orders in the selected period',
+      icon: 'orders',
+      status
+    });
+
+    if (this.canViewRevenue()) {
+      metrics.push({
+        id: 'total-revenue',
+        label: 'Total Revenue',
+        value: summary ? money(summary.totalRevenue) : '—',
+        hint: 'Completed orders only',
+        icon: 'revenue',
+        status
+      });
+
+      metrics.push({
+        id: 'average-order-value',
+        label: 'Average Order Value',
+        value: summary ? money(summary.averageOrderValue) : '—',
+        hint: 'Revenue ÷ completed orders',
+        icon: 'store',
+        status
+      });
+    }
+
+    metrics.push({
+      id: 'pending-orders',
+      label: 'Pending Orders',
+      value: summary ? String(summary.pendingKitchen) : '—',
+      hint: 'New, confirmed or preparing',
+      icon: 'pending',
+      status
+    });
+
+    metrics.push({
+      id: 'completed-orders',
+      label: 'Completed Orders',
+      value: summary ? String(summary.completedOrders) : '—',
+      hint: 'Fulfilled in the selected period',
+      icon: 'completed',
+      status
+    });
+
+    metrics.push({
+      id: 'cancelled-orders',
+      label: 'Cancelled Orders',
+      value: summary ? String(summary.cancelledOrders) : '—',
+      hint: 'Cancelled in the selected period',
+      icon: 'cancelled',
+      status
+    });
+
+    return metrics;
+  });
+
+  protected readonly menuMetrics = computed<DashboardMetric[]>(() => {
+    const menus = this.menus();
+    const status: DashboardMetricStatus = this.snapshotLoading()
+      ? 'loading'
+      : menus?.status === 'unavailable'
+        ? 'unavailable'
+        : 'ready';
+
+    return [
+      {
+        id: 'total-menus',
+        label: 'Total Menus',
+        value: menus?.status === 'ready' ? String(menus.totalCount) : '—',
+        hint: 'Menus for this restaurant',
+        icon: 'menu',
+        status
+      }
+    ];
+  });
+
+  protected readonly canViewRevenue = computed(() =>
+    this.authorization.hasPermission('Restaurant.View')
+  );
+
+  protected readonly canViewOrders = computed(() =>
+    this.authorization.hasPermission('Order.View')
+  );
+
+  protected readonly canViewMenus = computed(() =>
+    this.authorization.hasPermission('Menu.View')
+  );
+
+  protected readonly canViewSubscription = computed(() =>
+    this.authorization.hasPermission('Tenant.View')
+  );
+
+  protected readonly canManageRestaurant = computed(() =>
+    this.authorization.hasPermission('Restaurant.Update') ||
+    this.authorization.hasPermission('Restaurant.Create')
+  );
+
+  protected readonly canCreateOrder = computed(() =>
+    this.authorization.hasPermission('Order.Create')
+  );
+
+  protected readonly canManageWebsite = computed(() =>
+    this.authorization.hasPermission('Website.View')
+  );
+
+  /** Real operational alerts derived from the loaded data. */
+  protected readonly operationalAlerts = computed(() => {
+    const alerts: Array<{
+      id: string;
+      label: string;
+      detail: string;
+      kind: 'info' | 'warning' | 'danger';
+    }> = [];
+
+    const summary = this.orderSummary();
+    const restaurant = this.activeRestaurant();
+    const subscription = this.subscriptionStatus();
+
+    if (summary) {
+      if (summary.cancelledOrders > 0) {
+        alerts.push({
+          id: 'cancelled-orders',
+          label: 'Cancelled orders',
+          detail: `${summary.cancelledOrders} order${
+            summary.cancelledOrders === 1 ? '' : 's'
+          } cancelled in the selected period.`,
+          kind: 'warning'
+        });
+      }
+
+      if (summary.pendingKitchen > 0) {
+        alerts.push({
+          id: 'pending-kitchen',
+          label: 'Orders in the kitchen',
+          detail: `${summary.pendingKitchen} order${
+            summary.pendingKitchen === 1 ? '' : 's'
+          } awaiting attention.`,
+          kind: 'info'
+        });
+      }
+    }
+
+    if (subscription.kind === 'expired') {
+      alerts.push({
+        id: 'subscription-expired',
+        label: 'Subscription expired',
+        detail: subscription.detail,
+        kind: 'danger'
+      });
+    }
+
+    if (subscription.kind === 'pending') {
+      alerts.push({
+        id: 'subscription-pending',
+        label: 'Workspace pending activation',
+        detail: subscription.detail,
+        kind: 'warning'
+      });
+    }
+
+    if (
+      restaurant &&
+      restaurant.status &&
+      restaurant.status.toLowerCase() !== 'active'
+    ) {
+      alerts.push({
+        id: 'restaurant-status',
+        label: 'Restaurant not active',
+        detail: `The restaurant is currently ${restaurant.status}.`,
+        kind: 'warning'
+      });
+    }
+
+    return alerts;
+  });
+
+  /** Role-appropriate quick actions that navigate to existing features. */
+  protected readonly operationalQuickActions = computed<QuickAction[]>(() => {
+    const restaurantId = this.activeRestaurant()?.id;
+    const hasRestaurant = !!restaurantId;
+
+    const actions: QuickAction[] = [];
+
+    actions.push({
+      id: 'create-order',
+      label: 'Create Order',
+      description: 'Take a new order for this restaurant.',
+      icon: 'store',
+      route: ['/orders/create'],
+      disabled: !hasRestaurant || !this.canCreateOrder(),
+      disabledReason: !hasRestaurant
+        ? 'Select a restaurant first.'
+        : !this.canCreateOrder()
+          ? 'Order creation is not available to your role.'
+          : undefined
+    });
+
+    actions.push({
+      id: 'view-orders',
+      label: 'View Orders',
+      description: 'Open the full order management screen.',
+      icon: 'orders',
+      route: ['/orders'],
+      disabled: !hasRestaurant || !this.canViewOrders(),
+      disabledReason: !hasRestaurant
+        ? 'Select a restaurant first.'
+        : 'Order access is not available to your role.'
+    });
+
+    actions.push({
+      id: 'manage-menu',
+      label: 'Manage Menu',
+      description: 'Add dishes, categories and prices.',
+      icon: 'menu',
+      route: ['/menus'],
+      disabled: !hasRestaurant || !this.canViewMenus(),
+      disabledReason: !hasRestaurant
+        ? 'Select a restaurant first.'
+        : 'Menu access is not available to your role.'
+    });
+
+    if (this.canManageWebsite()) {
+      actions.push({
+        id: 'manage-website',
+        label: 'Manage Website',
+        description: 'Create or publish your restaurant website.',
+        icon: 'website',
+        route: ['/websites'],
+        disabled: !hasRestaurant
+      });
+    }
+
+    if (this.canManageRestaurant()) {
+      actions.push({
+        id: 'manage-restaurant',
+        label: 'Manage Restaurant',
+        description: 'Update restaurant details and settings.',
+        icon: 'restaurant',
+        route: ['/setup/restaurant'],
+        disabled: !hasRestaurant
+      });
+    }
+
+    if (this.canViewSubscription() && this.canManageRestaurant()) {
+      actions.push({
+        id: 'manage-subscription',
+        label: 'Manage Subscription',
+        description: 'Review or change the workspace plan.',
+        icon: 'wallet',
+        route: ['/subscription']
+      });
+    }
+
+    return actions;
+  });
+
+  /**
    * Derives the state of a checklist step from the collection that backs it.
    * Steps whose data cannot be read are reported as unavailable instead of
    * being counted as completed or missing.
@@ -587,5 +1191,34 @@ export class Dashboard {
       icon,
       status: 'ready'
     };
+  }
+}
+
+function formatDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * Formats a monetary amount for display. The currency reported by the
+ * backend is honoured; PKR is the Resto.pk default when no currency is
+ * available.
+ */
+function formatMoney(amount: number, currency: string | null): string {
+  const code = currency || 'PKR';
+
+  try {
+    return new Intl.NumberFormat('en-PK', {
+      style: 'currency',
+      currency: code,
+      maximumFractionDigits: 2
+    }).format(amount);
+  } catch {
+    return `${amount.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })} ${code}`;
   }
 }

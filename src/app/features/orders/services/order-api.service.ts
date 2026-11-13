@@ -19,6 +19,7 @@ import type {
   StaffCreateOrderContext,
   StaffOrderDetails,
   StaffOrderSummary,
+  OrderAnalyticsDto,
   UpdateOrderStatusRequest
 } from '../models/order.models';
 
@@ -199,10 +200,48 @@ export class OrderApiService {
   }
 
   getStaffOrderSummary(
-    restaurantId: string
+    restaurantId: string,
+    startDate?: string | null,
+    endDate?: string | null
   ): Observable<ApiResponse<StaffOrderSummary>> {
+    let params = new HttpParams();
+
+    if (startDate) {
+      params = params.set('startDate', startDate);
+    }
+
+    if (endDate) {
+      params = params.set('endDate', endDate);
+    }
+
     return this.http.get<ApiResponse<StaffOrderSummary>>(
-      `${this.staffBaseUrl}/${encodeURIComponent(restaurantId)}/orders/summary`
+      `${this.staffBaseUrl}/${encodeURIComponent(restaurantId)}/orders/summary`,
+      { params }
+    );
+  }
+
+  /**
+   * Daily order trend (revenue and order volume) for a restaurant within an
+   * optional date range. Read-only dashboard analytics.
+   */
+  getStaffOrderAnalytics(
+    restaurantId: string,
+    startDate?: string | null,
+    endDate?: string | null
+  ): Observable<ApiResponse<OrderAnalyticsDto>> {
+    let params = new HttpParams();
+
+    if (startDate) {
+      params = params.set('startDate', startDate);
+    }
+
+    if (endDate) {
+      params = params.set('endDate', endDate);
+    }
+
+    return this.http.get<ApiResponse<OrderAnalyticsDto>>(
+      `${this.staffBaseUrl}/${encodeURIComponent(restaurantId)}/orders/analytics`,
+      { params }
     );
   }
 }

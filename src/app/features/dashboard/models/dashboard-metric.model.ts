@@ -3,14 +3,25 @@
 export type DashboardMetricStatus = 'ready' | 'loading' | 'unavailable';
 
 /** Icon shown on a dashboard statistic card. */
-export type DashboardMetricIcon = 'workspace' | 'restaurant' | 'website' | 'menu';
+export type DashboardMetricIcon =
+  | 'workspace'
+  | 'restaurant'
+  | 'website'
+  | 'menu'
+  | 'orders'
+  | 'revenue'
+  | 'pending'
+  | 'completed'
+  | 'cancelled'
+  | 'customers'
+  | 'store';
 
 /**
  * A single statistic card.
  *
- * Only metrics backed by existing frontend data are rendered; business
- * metrics that the backend does not expose (orders, revenue) are not
- * invented here.
+ * `value` is already formatted for display (e.g. a PKR amount or a count).
+ * `status` distinguishes real zero values from loading/unavailable states so a
+ * backend problem never looks like legitimate progress.
  */
 export interface DashboardMetric {
   readonly id: string;

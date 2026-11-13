@@ -56,8 +56,27 @@ export interface StaffOrderSummary {
   totalOrders: number;
   pendingKitchen: number;
   completedToday: number;
+  completedOrders: number;
+  cancelledOrders: number;
   totalRevenue: number;
+  averageOrderValue: number;
   currency: string;
+  startDate: string | null;
+  endDate: string | null;
+}
+
+/** A single daily bucket of order analytics (calendar date, restaurant tz). */
+export interface DailyOrderDto {
+  date: string;
+  orderCount: number;
+  revenue: number;
+}
+
+/** Order trend analytics for a restaurant within an optional date range. */
+export interface OrderAnalyticsDto {
+  daily: DailyOrderDto[];
+  totalOrders: number;
+  totalRevenue: number;
 }
 export interface StaffCreateOrderContext {
   restaurantId: string;
