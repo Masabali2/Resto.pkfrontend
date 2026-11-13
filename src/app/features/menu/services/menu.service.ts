@@ -127,6 +127,22 @@ export class MenuService {
     );
   }
 
+  /** Row 5b — PATCH api/v1/menus/{menuId}/publish. */
+  publishMenu(menuId: string): Observable<ApiResponse<MenuDto>> {
+    return this.http.patch<ApiResponse<MenuDto>>(
+      `${this.menusUrl}/${menuId}/publish`,
+      null
+    );
+  }
+
+  /** Row 5c — PATCH api/v1/menus/{menuId}/unpublish. */
+  unpublishMenu(menuId: string): Observable<ApiResponse<MenuDto>> {
+    return this.http.patch<ApiResponse<MenuDto>>(
+      `${this.menusUrl}/${menuId}/unpublish`,
+      null
+    );
+  }
+
   /** Row 6 — DELETE api/v1/menus/{menuId} (terminal archive, 204 NoContent). */
   archiveMenu(menuId: string): Observable<void> {
     return this.http.delete<void>(`${this.menusUrl}/${menuId}`);

@@ -44,82 +44,439 @@
     }
 
     @default {
-      <app-dashboard-page-header
-        eyebrow="YOUR WORKSPACE IS READY"
-        title="Let&rsquo;s build something delicious."
-        [subtitle]="headerSubtitle()"
-        badge="Workspace created"
-      >
-        <app-button
-          dashboardPageHeaderActions
-          variant="primary"
-          size="md"
-          [fullWidth]="false"
-          (click)="createRestaurant()"
+      @if (activeRestaurant(); as restaurant) {
+        <app-dashboard-page-header
+          [eyebrow]="greeting()"
+          [title]="restaurant.name"
+          [subtitle]="restaurantSubtitle(restaurant)"
+          [badge]="restaurantStatusBadge(restaurant)"
         >
-          <svg lucidePlus [size]="16" [strokeWidth]="2.4" aria-hidden="true"></svg>
-          Add restaurant
-        </app-button>
-      </app-dashboard-page-header>
+          <div dashboardPageHeaderActions class="header-actions">
+            <app-button
+              variant="outline"
+              size="sm"
+              [fullWidth]="false"
+              (click)="refresh()"
+            >
+              <svg lucidePlus [size]="14" [strokeWidth]="2.2" aria-hidden="true"></svg>
+              Refresh
+            </app-button>
 
-      <app-workspace-overview
-        [tenant]="activeTenant()"
-        [membershipCount]="memberships().length"
-      />
+            <div class="date-range-picker">
+              <span class="date-range-label">Period</span>
+              @for (range of dateRanges; track range.id) {
+                <button
+                  type="button"
+                  class="date-range-btn"
+                  [class.is-active]="dateRange() === range.id"
+                  (click)="selectDateRange(range.id)"
+                >
+                  {{ range.label }}
+                </button>
+              }
+              @if (dateRange() === 'custom') {
+                <input
+                  type="date"
+                  class="date-input"
+                  [value]="startDate()"
+                  (change)="onCustomStart($event)"
+                />
+                <input
+                  type="date"
+                  class="date-input"
+                  [value]="endDate()"
+                  (change)="onCustomEnd($event)"
+                />
+              }
+            </div>
+          </div>
+        </app-dashboard-page-header>
 
-      <app-subscription-status-card
-        [state]="subscriptionState()"
-        [loading]="subscriptionLoading()"
-        (manage)="openSubscription('Manage the subscription of this workspace.')"
-      />
+        @if (canViewOrders()) {
+          <app-dashboard-stats [metrics]="orderMetrics()" />
+        }
 
-      @if (showTrialOffer()) {
-        <section class="trial-offer-card" aria-label="Subscription offer">
-          <app-subscription-offer
-            [state]="subscriptionState()"
-            [loading]="subscriptionFlow.trialLoading()"
-            [error]="subscriptionFlow.trialError()"
-            (startTrial)="startTrial()"
+        @if (canViewOrders()) {
+          <section class="analytics-section" aria-labelledby="analytics-title">
+            <div class="section-heading">
+              <span class="section-kicker">REVENUE ANALYTICS</span>
+              <h2 id="analytics-title">Revenue and order trend</h2>
+            </div>
+
+            <div class="analytics-grid">
+              @if (canViewRevenue()) {
+                <div class="chart-card">
+                  <div class="chart-wrap">
+                    <h3>Revenue</h3>
+                    @if (orderAnalyticsLoading()) {
+                      <div class="chart-skeleton" role="status" aria-live="polite">
+                        @for (i of [0, 1, 2, 3, 4, 5, 6]; track i) {
+                          <div class="skeleton-bar"></div>
+                        }
+                      </div>
+                    } @else if (orderAnalyticsError(); as message) {
+                      <div class="state-panel is-error" role="alert">
+                        {{ message }}
+                        <app-button
+                          variant="outline"
+                          size="sm"
+                          [fullWidth]="false"
+                          (click)="retryOrders()"
+                        >
+                          Retry
+                        </app-button>
+                      </div>
+                    } @else {
+                      @if (orderAnalytics()?.daily?.length > 0) {
+                        <div class="chart" aria-label="Revenue by day">
+                          @for (day of orderAnalytics()?.daily; track day.date) {
+                              <div class="bar-group">
+                                <div
+                                  class="bar revenue-bar"
+                                  [style.height.%]="revenuePct(day)"
+                                  [title]="
+                                    day.date +
+                                    ': ' +
+                                    formatMoney(
+                                      day.revenue,
+                                      activeRestaurant()?.currency ?? null
+                                    )
+                                  "
+                                ></div>
+                                <span class="bar-label">{{ day.date }}</span>
+                              </div>
+                            }
+                          </div>
+                          <p class="chart-total">
+                            {{
+                              formatMoney(
+                                orderAnalytics()?.totalRevenue ?? 0,
+                                activeRestaurant()?.currency ?? null
+                              )
+                            }}
+                            total revenue
+                          </p>
+                        } @else {
+                          <p class="empty-note">
+                            No revenue recorded in the selected period.
+                          </p>
+                        }
+                      }
+                  </div>
+                </div>
+              }
+
+              <div class="chart-card">
+                <div class="chart-wrap">
+                  <h3>Order volume</h3>
+                  @if (orderAnalyticsLoading()) {
+                    <div class="chart-skeleton" role="status" aria-live="polite">
+                      @for (i of [0, 1, 2, 3, 4, 5, 6]; track i) {
+                        <div class="skeleton-bar"></div>
+                      }
+                    </div>
+                  } @else if (orderAnalyticsError(); as message) {
+                    <div class="state-panel is-error" role="alert">
+                      {{ message }}
+                      <app-button
+                        variant="outline"
+                        size="sm"
+                        [fullWidth]="false"
+                        (click)="retryOrders()"
+                      >
+                        Retry
+                      </app-button>
+                    </div>
+                  } @else {
+                    @if (orderAnalytics()?.daily?.length > 0) {
+                      <div class="chart" aria-label="Orders by day">
+                        @for (day of orderAnalytics()?.daily; track day.date) {
+                          <div class="bar-group">
+                            <div
+                              class="bar volume-bar"
+                              [style.height.%]="countPct(day)"
+                              [title]="
+                                day.date +
+                                ': ' +
+                                day.orderCount +
+                                ' orders'
+                              "
+                            ></div>
+                            <span class="bar-label">{{ day.date }}</span>
+                          </div>
+                        }
+                      </div>
+                      <p class="chart-total">
+                        {{ orderAnalytics()?.totalOrders }} total orders
+                      </p>
+                    } @else {
+                      <p class="empty-note">
+                        No orders recorded in the selected period.
+                      </p>
+                    }
+                  }
+                </div>
+              </div>
+            </div>
+          </section>
+        }
+
+        @if (canViewOrders()) {
+          <section class="orders-section" aria-labelledby="orders-title">
+            <div class="section-heading">
+              <span class="section-kicker">ORDER OVERVIEW</span>
+              <h2 id="orders-title">Recent orders</h2>
+              <a
+                class="section-action"
+                [routerLink]="['/orders']"
+                >View all orders
+                <svg
+                  lucideArrowRight
+                  [size]="14"
+                  [strokeWidth]="2"
+                  aria-hidden="true"
+                ></svg>
+              </a>
+            </div>
+
+            @if (recentOrdersLoading()) {
+              <div class="state-panel" role="status" aria-live="polite">
+                <app-loading-spinner [size]="26" />
+                <p>Loading recent orders&hellip;</p>
+              </div>
+            } @else if (recentOrdersError(); as message) {
+              <div class="state-panel is-error" role="alert">
+                {{ message }}
+                <app-button
+                  variant="outline"
+                  size="sm"
+                  [fullWidth]="false"
+                  (click)="retryOrders()"
+                >
+                  Retry
+                </app-button>
+              </div>
+            } @else if (recentOrders()?.length; as orders) {
+              <ul class="order-list">
+                @for (order of orders; track order.id) {
+                  <li>
+                    <a
+                      class="order-row"
+                      [routerLink]="['/orders', order.id]"
+                    >
+                      <div class="order-number">
+                        {{ order.orderNumber }}
+                      </div>
+                      <div class="order-customer">
+                        {{ order.customerName }}
+                      </div>
+                      <div class="order-type">
+                        {{ order.orderType }}
+                      </div>
+                      <app-order-status-badge
+                        [status]="order.status"
+                      />
+                      <div class="order-total">
+                        {{
+                          formatMoney(
+                            order.totalAmount,
+                            order.currency ?? null
+                          )
+                        }}
+                      </div>
+                      <div class="order-time">
+                        {{ order.createdAt | slice:0:16 }}
+                      </div>
+                    </a>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <div class="empty-card" role="status" aria-live="polite">
+                <span class="empty-icon" aria-hidden="true">
+                  <svg lucideReceipt [size]="34" [strokeWidth]="1.6"></svg>
+                </span>
+                <div class="empty-copy">
+                  <h3>No recent orders</h3>
+                  <p>
+                    There are no orders to display for this restaurant in the
+                    selected period.
+                  </p>
+                </div>
+              </div>
+            }
+          </section>
+        }
+
+        <section class="menu-section" aria-labelledby="menu-title">
+          <div class="section-heading">
+            <span class="section-kicker">MENU OVERVIEW</span>
+            <h2 id="menu-title">Menu</h2>
+            <a class="section-action" [routerLink]="['/menus']">Manage menu</a>
+          </div>
+          <app-dashboard-stats
+            [metrics]="menuMetrics()"
           />
         </section>
-      }
 
-      <app-dashboard-stats [metrics]="metrics()" />
+        <section class="restaurant-info-section" aria-labelledby="restaurant-info-title">
+          <div class="section-heading">
+            <span class="section-kicker">RESTAURANT INFORMATION</span>
+            <h2 id="restaurant-info-title">{{ restaurant.name }}</h2>
+          </div>
+          <div class="restaurant-info-grid">
+            <div class="info-card">
+              <span class="info-label">Contact</span>
+              <span class="info-value">
+                {{
+                  restaurant.phone || restaurant.email || 'Not provided'
+                }}
+              </span>
+            </div>
+            <div class="info-card">
+              <span class="info-label">Address</span>
+              <span class="info-value">
+                {{
+                  [restaurant.addressLine1, restaurant.addressLine2, restaurant.city, restaurant.country]
+                    .filter(part => typeof part === 'string' && part.trim().length > 0)
+                    .join(', ') || 'Not provided'
+                }}
+              </span>
+            </div>
+            <div class="info-card">
+              <span class="info-label">Timezone</span>
+              <span class="info-value">{{ restaurant.timeZone }}</span>
+            </div>
+            <div class="info-card">
+              <span class="info-label">Status</span>
+              <span class="info-value status-text">
+                {{ restaurant.status }}
+              </span>
+            </div>
+          </div>
+          @if (canManageRestaurant()) {
+            <div class="info-actions">
+              <app-button variant="outline" size="sm" [fullWidth]="false" [routerLink]="['/setup/restaurant']">
+                Manage restaurant
+              </app-button>
+            </div>
+          }
+        </section>
 
-      @if (snapshotError(); as message) {
-        <section class="state-card is-error" role="alert">
-          <h2>Your workspace data could not be loaded</h2>
-          <p>{{ message }}</p>
+        @if (canViewSubscription()) {
+          <app-subscription-status-card
+            [state]="subscriptionState()"
+            [loading]="subscriptionLoading()"
+            (manage)="openSubscription('Manage the subscription of this workspace.')"
+          />
+        }
 
+        <section class="alerts-section" aria-labelledby="alerts-title">
+          <div class="section-heading">
+            <span class="section-kicker">OPERATIONAL ALERTS</span>
+            <h2 id="alerts-title">Alerts</h2>
+          </div>
+          @if (operationalAlerts().length > 0) {
+            <ul class="alert-list">
+              @for (alert of operationalAlerts(); track alert.id) {
+                <li
+                  class="alert-item"
+                  [class]="'alert-item alert-' + alert.kind"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <span class="alert-label">{{ alert.label }}</span>
+                  <span class="alert-detail">{{ alert.detail }}</span>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="empty-note">No operational alerts right now.</p>
+          }
+        </section>
+
+        <app-quick-actions
+          [actions]="operationalQuickActions()"
+          (actionSelected)="onQuickAction($event)"
+        />
+      } @else {
+        <app-dashboard-page-header
+          eyebrow="YOUR WORKSPACE IS READY"
+          title="Let&rsquo;s build something delicious."
+          [subtitle]="headerSubtitle()"
+          badge="Workspace created"
+        >
           <app-button
-            variant="outline"
+            dashboardPageHeaderActions
+            variant="primary"
             size="md"
             [fullWidth]="false"
-            (click)="retry()"
+            (click)="createRestaurant()"
           >
-            Try again
+            <svg lucidePlus [size]="16" [strokeWidth]="2.4" aria-hidden="true"></svg>
+            Add restaurant
           </app-button>
-        </section>
-      } @else if (snapshot()) {
-        <app-setup-progress
-          kicker="YOUR GETTING-STARTED PLAN"
-          title="Your restaurant journey"
-          description="Complete these steps to bring your restaurant online."
-          [steps]="setupSteps()"
-          (stepAction)="onStepAction($event)"
+        </app-dashboard-page-header>
+
+        <app-workspace-overview
+          [tenant]="activeTenant()"
+          [membershipCount]="memberships().length"
+        />
+
+        <app-subscription-status-card
+          [state]="subscriptionState()"
+          [loading]="subscriptionLoading()"
+          (manage)="openSubscription('Manage the subscription of this workspace.')"
+        />
+
+        @if (showTrialOffer()) {
+          <section class="trial-offer-card" aria-label="Subscription offer">
+            <app-subscription-offer
+              [state]="subscriptionState()"
+              [loading]="subscriptionFlow.trialLoading()"
+              [error]="subscriptionFlow.trialError()"
+              (startTrial)="startTrial()"
+            />
+          </section>
+        }
+
+        <app-dashboard-stats [metrics]="metrics()" />
+
+        @if (snapshotError(); as message) {
+          <section class="state-card is-error" role="alert">
+            <h2>Your workspace data could not be loaded</h2>
+            <p>{{ message }}</p>
+
+            <app-button
+              variant="outline"
+              size="md"
+              [fullWidth]="false"
+              (click)="retry()"
+            >
+              Try again
+            </app-button>
+          </section>
+        } @else if (snapshot()) {
+          <app-setup-progress
+            kicker="YOUR GETTING-STARTED PLAN"
+            title="Your restaurant journey"
+            description="Complete these steps to bring your restaurant online."
+            [steps]="setupSteps()"
+            (stepAction)="onStepAction($event)"
+          />
+        }
+
+        <app-quick-actions
+          [actions]="quickActions()"
+          (actionSelected)="onQuickAction($event)"
+        />
+
+        <app-restaurant-overview
+          [restaurants]="restaurants()"
+          [loading]="snapshotLoading()"
+          (createRestaurant)="createRestaurant()"
         />
       }
-
-      <app-quick-actions
-        [actions]="quickActions()"
-        (actionSelected)="onQuickAction($event)"
-      />
-
-      <app-restaurant-overview
-        [restaurants]="restaurants()"
-        [loading]="snapshotLoading()"
-        (createRestaurant)="createRestaurant()"
-      />
     }
   }
 

@@ -1,8 +1,8 @@
-
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  inject,
   input,
   output,
   signal
@@ -21,16 +21,13 @@ export type StaffOrderViewMode = 'kanban' | 'table';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StaffOrderHeader {
-  // Restaurant information
   readonly restaurantName = input.required<string>();
   readonly logoUrl = input<string | null>(null);
   readonly currency = input<string | null>(null);
 
-  // Header state
   readonly searchTerm = input('');
   readonly viewMode = input<StaffOrderViewMode>('table');
 
-  // Events
   readonly searchChange = output<string>();
   readonly viewModeChange = output<StaffOrderViewMode>();
   readonly createOrder = output<void>();

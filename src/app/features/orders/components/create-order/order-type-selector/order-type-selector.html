@@ -1,0 +1,20 @@
+<fieldset class="order-type-selector" role="group" aria-label="Order type">
+  <legend class="order-type__legend">Order type</legend>
+  <div class="order-type__group">
+    @for (type of options(); track type) {
+      <button
+        type="button"
+        class="order-type__option"
+        [class.order-type__option--selected]="isSelected(type)"
+        [class.order-type__option--disabled]="!isValid()"
+        (click)="select(type)"
+        [attr.aria-pressed]="isSelected(type)"
+      >
+        <span class="order-type__label">{{ labelFor(type) }}</span>
+      </button>
+    }
+  </div>
+  @if (touched() && !isValid()) {
+    <p class="order-type__error">Please select a valid order type.</p>
+  }
+</fieldset>

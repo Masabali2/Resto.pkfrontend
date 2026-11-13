@@ -1,0 +1,86 @@
+<div class="place-order" role="region" aria-label="Place order">
+  @if (placedOrder()) {
+    <div class="order-success">
+      <div class="success-icon"><span class="material-symbol">check_circle</span></div>
+      <h2 class="success-title">Order placed</h2>
+      <p class="success-message">
+        Your order <strong>{{ placedOrder()!.orderNumber }}</strong> has been received.
+      </p>
+      <div class="success-detail">
+        <span class="success-label">Status</span>
+        <span class="success-value">{{ placedOrder()!.status }}</span>
+      </div>
+      <div class="success-detail">
+        <span class="success-label">Total</span>
+        <span class="success-value">{{ currency() }} {{ placedOrder()!.totalAmount | number:'1.2-2' }}</span>
+      </div>
+    </div>
+  } @else {
+    @if (error()) {
+      <div class="error-banner">
+        <span class="material-symbol">error</span>
+        <span class="error-message">{{ error() }}</span>
+      </div>
+    }
+
+    <div class="order-review">
+      <h2 class="review-title">Review your order</h2>
+
+      <div class="review-section">
+        <h3 class="section-title">Customer</h3>
+        <div class="review-field"><span class="field-label">Name</span><span class="field-value">{{ customer().customerName }}</span></div>
+        <div class="review-field"><span class="field-label">Phone</span><span class="field-value">{{ customer().phone }}</span></div>
+        @if (customer().email) {
+          <div class="review-field"><span class="field-label">Email</span><span class="field-value">{{ customer().email }}</span></div>
+        }
+        @if (customer().specialInstructions) {
+          <div class="review-field"><span class="field-label">Special instructions</span><span class="field-value">{{ customer().specialInstructions }}</span></div>
+        }
+      </div>
+
+      <div class="review-section">
+        <h3 class="section-title">Order details</h3>
+        <div class="review-field"><span class="field-label">Order type</span><span class="field-value">{{ orderType() }}</span></div>
+        <div class="review-field"><span class="field-label">Payment method</span><span class="field-value">{{ paymentMethod() }}</span></div>
+        <div class="review-field"><span class="field-label">Items</span><span class="field-value">{{ lineItemCount() }}</span></div>
+      </div>
+
+      <div class="review-items">
+        <h3 class="section-title">Ordered items</h3>
+        <ul class="review-item-list" role="list">
+          @for (item of items(); track item.menuItemId) {
+            <li class="review-item">
+              <span class="review-item__name">{{ item.itemName }} <span class="review-item__qty">x{{ item.quantity }}</span></span>
+              <span class="review-item__price">{{ item.currency }} {{ (item.unitPrice * item.quantity) | number:'1.2-2' }}</span>
+            </li>
+          }
+        </ul>
+      </div>
+
+      <div class="review-summary">
+        <div class="amount-row"><span class="amount-label">Subtotal</span><span class="amount-value">{{ currency() }} {{ subtotal() | number:'1.2-2' }}</span></div>
+        <div class="amount-row"><span class="amount-label">Tax</span><span class="amount-value">{{ currency() }} {{ taxAmount() | number:'1.2-2' }}</span></div>
+        <div class="amount-row amount-total"><span class="amount-label">Total</span><span class="amount-value">{{ currency() }} {{ totalAmount() | number:'1.2-2' }}</span></div>
+      </div>
+
+      <button
+        class="place-btn"
+        (click)="onPlaceOrder()"
+        [disabled]="!isValid() || submitting()"
+        [class.place-btn--loading]="submitting()"
+      >
+        @if (submitting()) {
+          <span class="material-symbol place-btn__spinner">sync</span>
+          <span class="place-btn__text">Placing order…</span>
+        } @else {
+          <span class="place-btn__text">Place order</span>
+          <span class="place-btn__icon"><span class="material-symbol">arrow_right</span></span>
+        }
+      </button>
+
+      @if (!isValid() && !submitting()) {
+        <p class="place-hint">Please review the cart and customer details before placing the order.</p>
+      }
+    </div>
+  }
+</div>

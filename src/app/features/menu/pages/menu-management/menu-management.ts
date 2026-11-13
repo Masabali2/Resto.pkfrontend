@@ -25,7 +25,7 @@ import { MenuPagination } from './menu-pagination';
 import { MenuItemModal } from './menu-item-modal';
 import type { ApiResponse } from '../../../../core/models/api-response.model';
 import type { PagedResult } from '../../../../core/models/paged-result.model';
-import type { MenuDetailsDto } from '../../models/menu.model';
+import type { MenuDetailsDto, MenuDto } from '../../models/menu.model';
 import type { MenuCategoryDto } from '../../models/menu-category.model';
 import type { MenuItemDto, MenuItemSummaryDto, MenuItemListQuery } from '../../models/menu-item.model';
 import { formatPrice } from '../../models/menu-price.util';
@@ -107,6 +107,17 @@ export class MenuManagement {
   protected readonly deleteTarget = signal<DeleteTarget | null>(null);
   protected readonly deleteKind = signal<DeleteKind | null>(null);
   protected readonly pendingToggles = signal<Set<string>>(new Set());
+  protected readonly publishing = signal(false);
+
+  protected readonly publishLabel = computed(() => {
+    const menu = this.menu();
+    if (!menu) return 'Publish Changes';
+    return menu.status === 'Published' ? 'Unpublish' : 'Publish Changes';
+  });
+
+  protected readonly publishedUrl = signal<string | null>(null);
+  protected readonly copyConfirmed = signal(false);
+  protected readonly publishingUrl = signal(false);
 
   /* ---------- Category lifecycle state ---------- */
 
@@ -258,6 +269,9 @@ export class MenuManagement {
           return;
         }
         this.menu.set(response.data);
+        this.publishedUrl.set(
+          response.data.status === 'Published' ? (response.data.publicUrl ?? null) : null
+        );
         this.loadSummary(menuId, tenantId);
         this.loadCategories(menuId, tenantId);
         this.loadItems(menuId, tenantId);
@@ -858,9 +872,93 @@ export class MenuManagement {
   }
 
   protected publishMenuChanges(): void {
-    this.notificationService.success(
-      '🎉 Menu published successfully to Resto.pk live QR & Web channels!'
-    );
+    const menu = this.menu();
+    const menuId = this.route.snapshot.paramMap.get('menuId');
+    if (!menu || !menuId || this.publishing() || this.isReadOnly()) return;
+
+    if (menu.status === 'Archived') return;
+
+    this.pageState.set('list');
+    this.errorMessage.set('');
+    this.publishing.set(true);
+    const contextKey = this.loadedContextKey;
+
+    const operation =
+      menu.status === 'Published'
+        ? this.menuService.unpublishMenu(menuId)
+        : this.menuService.publishMenu(menuId);
+
+    operation
+      .pipe(finalize(() => {
+        if (this.isSameContext(contextKey)) {
+          this.publishing.set(false);
+        }
+      }))
+      .subscribe({
+        next: (response: ApiResponse<MenuDto>) => {
+          if (!this.isSameContext(contextKey)) return;
+          if (!response.success || !response.data) {
+            const message =
+              response.message ??
+              'Unable to update the menu publication status.';
+            this.errorMessage.set(message);
+            this.notificationService.error(message);
+            return;
+          }
+
+          const updated = response.data;
+          const current = this.menu();
+          if (current) {
+            this.menu.set({
+              ...current,
+              status: updated.status,
+              isActive: updated.isActive
+            });
+          }
+
+          this.publishedUrl.set(
+            updated.status === 'Published' ? (updated.publicUrl ?? null) : null
+          );
+
+          this.notificationService.success(
+            updated.status === 'Published'
+              ? 'Menu published successfully to Resto.pk live QR & Web channels!'
+              : 'Menu unpublished successfully.'
+          );
+
+          const tenantId = this.tenantContext.activeTenantId();
+          if (menuId && tenantId !== null) {
+            this.loadSummary(menuId, tenantId);
+          }
+        },
+        error: (error: unknown) => {
+          if (!this.isSameContext(contextKey)) return;
+          const message =
+            this.httpErrorHandler.extractBackendMessage(error) ??
+            'Unable to update the menu publication status. Please try again.';
+          this.errorMessage.set(message);
+          this.pageState.set('error');
+          this.notificationService.error(message);
+        }
+      });
+  }
+
+  protected async copyPublicUrl(): Promise<void> {
+    const url = this.publishedUrl();
+    if (!url) return;
+    this.publishingUrl.set(true);
+    try {
+      await navigator.clipboard.writeText(url);
+      this.copyConfirmed.set(true);
+      setTimeout(() => this.copyConfirmed.set(false), 2000);
+    } finally {
+      this.publishingUrl.set(false);
+    }
+  }
+
+  protected openPublicUrl(): void {
+    const url = this.publishedUrl();
+    if (url) window.open(url, '_blank', 'noopener');
   }
 
   /* ---------- Helpers ---------- */

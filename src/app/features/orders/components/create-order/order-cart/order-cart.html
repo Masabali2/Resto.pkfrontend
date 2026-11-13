@@ -1,0 +1,32 @@
+<div class="order-cart" role="region" aria-label="Shopping cart">
+  <div class="order-cart__header">
+    <h2 class="order-cart__title">Your cart</h2>
+    <span class="order-cart__count">{{ itemCount() }} item{{ itemCount() === 1 ? '' : 's' }}</span>
+  </div>
+
+  @if (isEmpty()) {
+    <div class="cart-empty">
+      <div class="cart-empty__icon"><span class="material-symbol">shopping_cart</span></div>
+      <h3 class="cart-empty__title">Your cart is empty</h3>
+      <p class="cart-empty__message">
+        Select menu items above to add them to your order.
+      </p>
+    </div>
+  } @else {
+    <div class="cart-list" role="list">
+      @for (item of items(); track item.menuItemId) {
+        <app-cart-item
+          [item]="item"
+          (quantityChange)="onQuantityChange(item.menuItemId, $event)"
+          (remove)="onRemove($event)"
+        />
+      }
+    </div>
+
+    <app-cart-summary
+      [items]="items()"
+      [taxRate]="taxRate()"
+      [currency]="currency()"
+    />
+  }
+</div>

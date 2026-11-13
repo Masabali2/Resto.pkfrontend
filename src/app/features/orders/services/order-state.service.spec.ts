@@ -46,9 +46,31 @@ describe('OrderStateService', () => {
   });
 
   async function createState(orderApi: Record<string, ReturnType<typeof vi.fn>>) {
+    const defaultApi = {
+      getStaffOrderSummary: vi.fn().mockReturnValue(of({
+        success: true,
+        data: {
+          totalOrders: 0,
+          pendingKitchen: 0,
+          completedToday: 0,
+          completedOrders: 0,
+          cancelledOrders: 0,
+          totalRevenue: 0,
+          averageOrderValue: 0,
+          currency: 'PKR',
+          startDate: null,
+          endDate: null
+        },
+        errorCode: null,
+        message: null,
+        errors: null,
+        traceId: null
+      })),
+      ...orderApi
+    };
     await TestBed.configureTestingModule({
       providers: [
-        { provide: OrderApiService, useValue: orderApi },
+        { provide: OrderApiService, useValue: defaultApi },
         { provide: HttpErrorHandlerService, useValue: { handle: vi.fn().mockReturnValue({ message: 'Request failed.' }) } }
       ]
     });
@@ -66,7 +88,7 @@ describe('OrderStateService', () => {
 
     state.loadOrders('restaurant-1');
 
-    expect(orderApi.getStaffOrders).toHaveBeenCalledWith('restaurant-1', null, 1, 20);
+    expect(orderApi.getStaffOrders).toHaveBeenCalledWith('restaurant-1', null, null, 1, 20);
     expect(state.orders()).toEqual([order]);
     expect(state.totalCount()).toBe(1);
     expect(state.totalPages()).toBe(1);
@@ -107,7 +129,7 @@ describe('OrderStateService', () => {
     expect(orderApi.updateStaffOrderStatus).toHaveBeenCalledWith(
       'restaurant-1',
       'order-1',
-      { newStatus: 'Confirmed', notes: null }
+      { status: 'Confirmed', notes: null }
     );
     expect(state.selectedOrder()?.status).toBe('Confirmed');
     expect(state.orders()).toEqual([]);

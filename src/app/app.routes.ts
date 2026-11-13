@@ -21,6 +21,14 @@ export const routes: Routes = [
       import('./features/orders/pages/customer/cart/cart').then(m => m.PublicCart)
   },
   {
+    path: 'r/:slug/menu',
+    title: 'Menu — Resto.pk',
+    loadComponent: () =>
+      import('./features/orders/pages/customer/public-menu/public-menu').then(
+        m => m.PublicMenu
+      )
+  },
+  {
     path: 'r/:slug/checkout',
     title: 'Checkout — Resto.pk',
     loadComponent: () =>
@@ -203,6 +211,15 @@ export const routes: Routes = [
   loadComponent: () =>
     import('./features/orders/pages/order-management/order-management').then(
       m => m.OrderManagement
+    )
+},{
+  path: 'orders/create',
+  title: 'Create Order — Resto.pk',
+  canActivate: [permissionGuard],
+  data: { permission: PERMISSIONS.Order.View },
+  loadComponent: () =>
+    import('./features/orders/pages/staff/create-order/create-order').then(
+      m => m.CreateOrder
     )
 },
       {

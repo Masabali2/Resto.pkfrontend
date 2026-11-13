@@ -19,6 +19,8 @@ export interface MenuDto {
   status: MenuStatus;
   createdAt: string;
   updatedAt: string | null;
+  /** Public customer-facing URL for the menu when published (backend-authoritative). */
+  publicUrl?: string | null;
 }
 
 /**

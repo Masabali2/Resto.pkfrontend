@@ -1,0 +1,86 @@
+:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.cart-summary {
+  width: 100%;
+  min-width: 0;
+}
+
+.summary-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.amount-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+  gap: 12px;
+}
+
+.amount-label {
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.amount-value {
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: right;
+  min-width: 85px;
+}
+
+.amount-row.amount-total {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 10px;
+  margin-top: 4px;
+}
+
+.amount-total .amount-label {
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.amount-total .amount-value {
+  color: #e05600;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.tax-rate {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 6px;
+}
+
+@media (max-width: 480px) {
+  .amount-label {
+    font-size: 13px;
+  }
+
+  .amount-value {
+    font-size: 14px;
+    min-width: 70px;
+  }
+
+  .amount-total .amount-label {
+    font-size: 14px;
+  }
+
+  .amount-total .amount-value {
+    font-size: 16px;
+  }
+}

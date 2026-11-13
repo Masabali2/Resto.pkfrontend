@@ -1,6 +1,14 @@
 
 /** Icon shown on a quick action card. */
-export type QuickActionIcon = 'workspace' | 'restaurant' | 'website' | 'menu';
+export type QuickActionIcon =
+  | 'workspace'
+  | 'restaurant'
+  | 'website'
+  | 'menu'
+  | 'store'
+  | 'orders'
+  | 'wallet'
+  | 'users';
 
 /**
  * A shortcut to an existing application route.
@@ -16,6 +24,8 @@ export interface QuickAction {
   readonly icon: QuickActionIcon;
   /** Verified application route the action opens. */
   readonly route: string[];
+  /** True when the action cannot run right now. */
+  readonly disabled?: boolean;
   /** Set when the action cannot run right now; explains why to the user. */
   readonly disabledReason?: string;
   /**

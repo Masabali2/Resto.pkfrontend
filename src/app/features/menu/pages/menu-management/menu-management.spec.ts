@@ -548,4 +548,201 @@ describe('MenuManagement', () => {
     expect(names).toContain('Burgers');
     expect(notification.error).toHaveBeenCalled();
   });
+
+  it('publishes a Draft menu and updates the local status from the backend response', () => {
+    const fixture = TestBed.createComponent(MenuManagement);
+    loadPage(fixture);
+
+    const component = fixture.componentInstance as unknown as {
+      menu: WritableSignal<MenuDetailsDto | null>;
+      publishedUrl: WritableSignal<string | null>;
+    };
+    const publish = fixture.nativeElement.querySelector(
+      '[aria-label="Publish Changes"]'
+    ) as HTMLButtonElement;
+    expect(publish).not.toBeNull();
+    expect(publish.disabled).toBe(false);
+
+    publish.click();
+
+    const request = httpMock.expectOne({
+      method: 'PATCH',
+      url: `${API_ROOT}/menu-1/publish`
+    });
+    expect(request.request.body).toBeNull();
+    request.flush(
+      ok({ ...menu, status: 'Published', publicUrl: 'https://localhost:4200/r/pub-site/menu' })
+    );
+    flushGet(httpMock, `${API_ROOT}/menu-1/items/summary`, summary);
+    fixture.detectChanges();
+
+    expect(component.menu()?.status).toBe('Published');
+    expect(component.menu()?.isActive).toBe(true);
+    expect(component.publishedUrl()).toBe('https://localhost:4200/r/pub-site/menu');
+
+    const urlInput = fixture.nativeElement.querySelector(
+      'input[aria-label="Public menu URL"]'
+    ) as HTMLInputElement | null;
+    expect(urlInput).not.toBeNull();
+    expect(urlInput!.value).toBe('https://localhost:4200/r/pub-site/menu');
+    expect(urlInput!.readOnly).toBe(true);
+
+    expect(notification.success).toHaveBeenCalledWith(
+      'Menu published successfully to Resto.pk live QR & Web channels!'
+    );
+    expect(publish.disabled).toBe(false);
+    expect(notification.error).not.toHaveBeenCalled();
+  });
+
+  it('unpublishes a Published menu back to Draft', () => {
+    const fixture = TestBed.createComponent(MenuManagement);
+    loadPage(fixture);
+
+    const component = fixture.componentInstance as unknown as {
+      menu: WritableSignal<MenuDetailsDto | null>;
+      publishedUrl: WritableSignal<string | null>;
+    };
+    component.menu.set({ ...menu, status: 'Published', publicUrl: 'https://localhost:4200/r/pub-site/menu' });
+    component.publishedUrl.set('https://localhost:4200/r/pub-site/menu');
+    fixture.detectChanges();
+
+    const unpublish = fixture.nativeElement.querySelector(
+      '[aria-label="Unpublish"]'
+    ) as HTMLButtonElement;
+    expect(unpublish).not.toBeNull();
+
+    unpublish.click();
+
+    const request = httpMock.expectOne({
+      method: 'PATCH',
+      url: `${API_ROOT}/menu-1/unpublish`
+    });
+    request.flush(ok({ ...menu, status: 'Draft' }));
+    flushGet(httpMock, `${API_ROOT}/menu-1/items/summary`, summary);
+    fixture.detectChanges();
+
+    expect(component.menu()?.status).toBe('Draft');
+    expect(component.publishedUrl()).toBeNull();
+    expect(notification.success).toHaveBeenCalledWith(
+      'Menu unpublished successfully.'
+    );
+  });
+
+  it('does not change local status when publish fails', () => {
+    const fixture = TestBed.createComponent(MenuManagement);
+    loadPage(fixture);
+
+    const component = fixture.componentInstance as unknown as {
+      menu: WritableSignal<MenuDetailsDto | null>;
+    };
+    const publish = fixture.nativeElement.querySelector(
+      '[aria-label="Publish Changes"]'
+    ) as HTMLButtonElement;
+    publish.click();
+
+    httpMock
+      .expectOne({ method: 'PATCH', url: `${API_ROOT}/menu-1/publish` })
+      .flush(
+        { message: 'Menu cannot be published.' },
+        { status: 400, statusText: 'Bad Request' }
+      );
+    fixture.detectChanges();
+
+    expect(component.menu()?.status).toBe('Draft');
+    expect(notification.error).toHaveBeenCalled();
+  });
+
+  it('blocks repeated publish clicks while a request is running', () => {
+    const fixture = TestBed.createComponent(MenuManagement);
+    loadPage(fixture);
+
+    const publish = fixture.nativeElement.querySelector(
+      '[aria-label="Publish Changes"]'
+    ) as HTMLButtonElement;
+    publish.click();
+    fixture.detectChanges();
+
+    const request = httpMock.expectOne({
+      method: 'PATCH',
+      url: `${API_ROOT}/menu-1/publish`
+    });
+
+    expect(publish.disabled).toBe(true);
+
+    // A second click while the request is running must not fire again.
+    publish.click();
+    expect(() =>
+      httpMock.expectOne({
+        method: 'PATCH',
+        url: `${API_ROOT}/menu-1/publish`
+      })
+    ).toThrow();
+
+    request.flush(ok({ ...menu, status: 'Published' }));
+    flushGet(httpMock, `${API_ROOT}/menu-1/items/summary`, summary);
+    fixture.detectChanges();
+
+    expect(publish.disabled).toBe(false);
+  });
+
+  it('resets loading state after a failed publish', () => {
+    const fixture = TestBed.createComponent(MenuManagement);
+    loadPage(fixture);
+
+    const component = fixture.componentInstance as unknown as {
+      menu: WritableSignal<MenuDetailsDto | null>;
+    };
+    const publish = fixture.nativeElement.querySelector(
+      '[aria-label="Publish Changes"]'
+    ) as HTMLButtonElement;
+    publish.click();
+
+    httpMock
+      .expectOne({ method: 'PATCH', url: `${API_ROOT}/menu-1/publish` })
+      .flush(null, { status: 500, statusText: 'Server Error' });
+    fixture.detectChanges();
+
+    expect(publish.disabled).toBe(false);
+    expect(component.menu()?.status).toBe('Draft');
+  });
+
+  it('shows the backend validation message on publish failure', () => {
+    const fixture = TestBed.createComponent(MenuManagement);
+    loadPage(fixture);
+
+    const publish = fixture.nativeElement.querySelector(
+      '[aria-label="Publish Changes"]'
+    ) as HTMLButtonElement;
+    publish.click();
+
+    httpMock
+      .expectOne({ method: 'PATCH', url: `${API_ROOT}/menu-1/publish` })
+      .flush(
+        { message: 'A menu requires at least one active category to publish.' },
+        { status: 400, statusText: 'Bad Request' }
+      );
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain(
+      'A menu requires at least one active category to publish.'
+    );
+    expect(notification.error).toHaveBeenCalled();
+  });
+
+  it('prevents publishing an Archived menu', () => {
+    const fixture = TestBed.createComponent(MenuManagement);
+    loadPage(fixture);
+
+    const component = fixture.componentInstance as unknown as {
+      menu: WritableSignal<MenuDetailsDto | null>;
+    };
+    component.menu.set({ ...menu, status: 'Archived', isActive: false });
+    fixture.detectChanges();
+
+    const publish = fixture.nativeElement.querySelector(
+      '[aria-label="Publish Changes"]'
+    ) as HTMLButtonElement;
+    expect(publish.disabled).toBe(true);
+  });
 });
+

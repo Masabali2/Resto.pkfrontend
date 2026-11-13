@@ -1,0 +1,54 @@
+ 
+<header class="create-order-header">
+  <div class="header-main">
+    <a
+      class="back-link"
+      routerLink="/orders"
+      aria-label="Return to order management"
+      title="Back to order management"
+    >
+      <span class="material-symbol">arrow_back</span>
+    </a>
+
+    <div class="header-copy">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a routerLink="/orders">Order Management</a>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-current" aria-current="page">Create Order</span>
+      </nav>
+
+      <div class="title-row">
+        <h1>Create a New Order</h1>
+        <span class="new-order-badge">
+          <span class="badge-dot"></span>
+          New order
+        </span>
+      </div>
+
+      <p class="header-description">
+        Select menu items, customize quantities, and enter your customer's
+        details to prepare an order. Review the order summary before placing it.
+      </p>
+    </div>
+  </div>
+
+  <aside class="restaurant-context" aria-label="Active restaurant">
+    <div class="restaurant-icon">
+      <span class="material-symbol">storefront</span>
+    </div>
+
+    <div class="restaurant-copy">
+      <span class="restaurant-label">CURRENT RESTAURANT</span>
+      <strong [title]="restaurantName()">{{ restaurantName() }}</strong>
+      <span class="restaurant-description">Orders will be created for this restaurant</span>
+    </div>
+
+    <span
+      class="restaurant-status"
+      aria-label="Selected restaurant"
+      title="Selected restaurant"
+    >
+      <span class="status-dot"></span>
+    </span>
+  </aside>
+</header> 

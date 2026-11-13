@@ -1,0 +1,311 @@
+<section class="menu-filter-panel" aria-label="Menu search and filters">
+
+  <!-- Header -->
+  <div class="filter-panel-header">
+    <div class="filter-heading">
+      <div class="filter-heading-icon">
+        <span class="material-symbol">restaurant_menu</span>
+      </div>
+
+      <div class="filter-heading-copy">
+        <h2>Explore Menu</h2>
+        <p>Find the perfect items for your customer's order.</p>
+      </div>
+    </div>
+
+    <div class="filter-header-actions">
+      @if (hasActiveFilters()) {
+        <span class="active-filter-count">
+          {{ activeFilterCount() }}
+          {{ activeFilterCount() === 1 ? 'filter' : 'filters' }} applied
+        </span>
+
+        <button
+          type="button"
+          class="clear-filters-button"
+          (click)="resetFilters()"
+        >
+          <span class="material-symbol">restart_alt</span>
+          Clear all
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-section">
+    <label class="search-box">
+      <span class="material-symbol search-icon">search</span>
+
+      <input
+        type="search"
+        [value]="filters().searchTerm"
+        (input)="onSearchChange($event)"
+        placeholder="Search by item name, description or category..."
+        aria-label="Search menu items"
+      />
+
+      @if (filters().searchTerm) {
+        <button
+          type="button"
+          class="search-clear-button"
+          aria-label="Clear search"
+          (click)="clearSearch()"
+        >
+          <span class="material-symbol">close</span>
+        </button>
+      }
+
+      <span class="search-shortcut">Search</span>
+    </label>
+  </div>
+
+  <!-- Categories -->
+  <div class="category-section">
+    <div class="section-heading">
+      <div>
+        <h3>Categories</h3>
+        <p>Browse items by menu category.</p>
+      </div>
+
+      <span class="category-total">
+        {{ totalItems() }} items
+      </span>
+    </div>
+
+    @if (loading()) {
+      <div class="category-loading">
+        @for (placeholder of [1, 2, 3, 4, 5, 6]; track placeholder) {
+          <div class="category-skeleton"></div>
+        }
+      </div>
+    } @else {
+      <div class="category-list" role="group" aria-label="Menu categories">
+
+        <button
+          type="button"
+          class="category-button"
+          [class.active]="filters().categoryId === null"
+          [attr.aria-pressed]="filters().categoryId === null"
+          (click)="onCategoryChange(null)"
+        >
+          <span class="category-button-icon">
+            <span class="material-symbol">grid_view</span>
+          </span>
+
+          <span class="category-button-copy">
+            <strong>All Items</strong> 
+            <small>{{ totalItems() }} items</small>
+          </span>
+
+          @if (filters().categoryId === null) {
+            <span class="category-selected-icon material-symbol">
+              check_circle
+            </span>
+          }
+        </button>
+
+        @for (category of categories(); track category.id) {
+          <button
+            type="button"
+            class="category-button"
+            [class.active]="filters().categoryId === category.id"
+            [attr.aria-pressed]="filters().categoryId === category.id"
+            (click)="onCategoryChange(category.id)"
+          >
+            <span class="category-button-icon">
+              <span class="material-symbol">restaurant</span>
+            </span>
+
+            <span class="category-button-copy">
+              <strong>{{ category.name }}</strong>
+              <small>{{ getCategoryCount(category.id) }} items</small>
+            </span>
+
+            @if (filters().categoryId === category.id) {
+              <span class="category-selected-icon material-symbol">
+                check_circle
+              </span>
+            }
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Quick filters -->
+  <div class="quick-filter-section">
+    <div class="section-heading quick-filter-heading">
+      <div>
+        <h3>Quick Filters</h3>
+        <p>Narrow down the menu to find exactly what you need.</p>
+      </div>
+    </div>
+
+    <div class="quick-filter-list">
+
+      @if (dealsAvailable()) {
+        <label
+          class="quick-filter-chip deal-chip"
+          [class.selected]="filters().dealsOnly"
+        >
+          <input
+            type="checkbox"
+            [checked]="filters().dealsOnly"
+            (change)="onDealsChange($event)"
+          />
+
+          <span class="material-symbol">local_offer</span>
+          <span>Deals & Offers</span>
+        </label>
+      }
+
+      @if (discountsAvailable()) {
+        <label
+          class="quick-filter-chip"
+          [class.selected]="filters().discountedOnly"
+        >
+          <input
+            type="checkbox"
+            [checked]="filters().discountedOnly"
+            (change)="onDiscountedChange($event)"
+          />
+
+          <span class="material-symbol">sell</span>
+          <span>Discounted Items</span>
+        </label>
+      }
+
+      <label
+        class="quick-filter-chip"
+        [class.selected]="filters().availableOnly"
+      >
+        <input
+          type="checkbox"
+          [checked]="filters().availableOnly"
+          (change)="onAvailabilityChange($event)"
+        />
+
+        <span class="material-symbol">check_circle</span>
+        <span>Available Only</span>
+      </label>
+
+      @if (dietaryFiltersAvailable()) {
+        <label
+          class="quick-filter-chip"
+          [class.selected]="filters().vegetarianOnly"
+        >
+          <input
+            type="checkbox"
+            [checked]="filters().vegetarianOnly"
+            (change)="onVegetarianChange($event)"
+          />
+
+          <span class="material-symbol">eco</span>
+          <span>Vegetarian</span>
+        </label>
+      }
+
+    </div>
+  </div>
+
+  <!-- Price range and sorting -->
+  <div class="advanced-filter-section">
+
+    <div class="price-filter">
+      <div class="section-heading">
+        <div class="price-heading">
+          <span class="material-symbol">payments</span>
+
+          <div>
+            <h3>Price Range</h3>
+            <p>Set your preferred item price.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="price-inputs">
+        <label class="price-input-group">
+          <span>Minimum price</span>
+
+          <div class="price-input-wrapper">
+            <span>{{ currency() }}</span>
+
+            <input
+              type="number"
+              min="0"
+              [attr.max]="maxAvailablePrice()"
+              [value]="displayedMinPrice()"
+              (change)="onMinPriceChange($event)"
+              aria-label="Minimum menu item price"
+            />
+          </div>
+        </label>
+
+        <span class="price-range-separator">to</span>
+
+        <label class="price-input-group">
+          <span>Maximum price</span>
+
+          <div class="price-input-wrapper">
+            <span>{{ currency() }}</span>
+
+            <input
+              type="number"
+              [attr.min]="minAvailablePrice()"
+              [attr.max]="maxAvailablePrice()"
+              [value]="displayedMaxPrice()"
+              (change)="onMaxPriceChange($event)"
+              aria-label="Maximum menu item price"
+            />
+          </div>
+        </label>
+      </div>
+
+      <div class="price-range-caption">
+        <span>{{ currency() }} {{ formatPrice(minAvailablePrice()) }}</span>
+        <span>{{ currency() }} {{ formatPrice(maxAvailablePrice()) }}</span>
+      </div>
+    </div>
+
+    <div class="sort-filter">
+      <label for="menu-sort">
+        <span class="material-symbol">sort</span>
+        <span>Sort menu items</span>
+      </label>
+
+      <select
+        id="menu-sort"
+        [value]="filters().sortBy"
+        (change)="onSortChange($event)"
+      >
+        <option value="recommended">Recommended</option>
+        <option value="name-asc">Name: A to Z</option>
+        <option value="name-desc">Name: Z to A</option>
+        <option value="price-asc">Price: Low to High</option>
+        <option value="price-desc">Price: High to Low</option>
+      </select>
+    </div>
+
+  </div>
+
+  <!-- Results footer -->
+  <div class="filter-results-footer">
+    <div class="results-information">
+      <span class="material-symbol">inventory_2</span>
+      <span>
+        Showing
+        <strong>{{ resultCount() ?? totalItems() }}</strong>
+        menu items
+      </span>
+    </div>
+
+    @if (hasActiveFilters()) {
+      <span class="filter-applied-indicator">
+        <span class="material-symbol">filter_alt</span>
+        Filters applied
+      </span>
+    }
+  </div>
+
+</section>

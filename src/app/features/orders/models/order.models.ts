@@ -21,11 +21,122 @@ export interface PublicOrderTracking {
   orderNumber: string; status: OrderStatus; totalAmount: number; currency: string;
   items: Array<{ itemName: string; quantity: number }>; createdAt: string; completedAt: string | null;
 }
-export interface UpdateOrderStatusRequest { newStatus: OrderStatus; notes: string | null; }
+
+/**
+ * Anonymous public menu (GET api/v1/public/sites/{slug}/menu).
+ * Mirrors the backend PublicMenuDto/PublicMenuCategoryDto/PublicMenuItemDto
+ * and deliberately excludes tenant, restaurant and staff data.
+ */
+export interface PublicMenuDto {
+  id: string;
+  name: string;
+  description: string | null;
+  categories: PublicMenuCategoryDto[];
+}
+export interface PublicMenuCategoryDto {
+  id: string;
+  name: string;
+  description: string | null;
+  displayOrder: number;
+  items: PublicMenuItemDto[];
+}
+export interface PublicMenuItemDto {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  currency: string;
+  displayOrder: number;
+  isAvailable: boolean;
+  imageFileId: string | null;
+}
+
+export interface UpdateOrderStatusRequest { status: OrderStatus; notes: string | null; }
 export interface StaffOrderSummary {
   totalOrders: number;
   pendingKitchen: number;
   completedToday: number;
+  completedOrders: number;
+  cancelledOrders: number;
   totalRevenue: number;
+  averageOrderValue: number;
   currency: string;
+  startDate: string | null;
+  endDate: string | null;
+}
+
+/** A single daily bucket of order analytics (calendar date, restaurant tz). */
+export interface DailyOrderDto {
+  date: string;
+  orderCount: number;
+  revenue: number;
+}
+
+/** Order trend analytics for a restaurant within an optional date range. */
+export interface OrderAnalyticsDto {
+  daily: DailyOrderDto[];
+  totalOrders: number;
+  totalRevenue: number;
+}
+export interface StaffCreateOrderContext {
+  restaurantId: string;
+  restaurantName: string;
+  taxRate: number;
+  currency: string;
+
+  menuId: string;
+  menuName: string;
+
+  categories: StaffCreateOrderCategory[];
+  items: StaffCreateOrderItem[];
+
+  orderTypes: string[];
+  paymentMethod: string;
+}
+
+export interface StaffCreateOrderCategory {
+  id: string;
+  menuId: string;
+  name: string;
+  description: string | null;
+  displayOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+  itemCount: number;
+}
+
+export interface StaffCreateOrderItem {
+  id: string;
+  menuCategoryId: string;
+  menuId: string;
+  name: string;
+  description: string | null;
+  price: number;
+  currency: string;
+  imageFileId: string | null;
+  displayOrder: number;
+  isAvailable: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+  categoryName: string | null;
+  imageUrl: string | null;
+}
+
+export interface StaffCartItem {
+  menuItemId: string;
+  itemName: string;
+  unitPrice: number;
+  quantity: number;
+  currency: string;
+}
+
+export interface CreateStaffOrderRequest {
+  orderType: OrderType;
+  customerName: string;
+  customerPhone: string | null;
+  customerEmail: string | null;
+  specialInstructions: string | null;
+  items: Array<{ menuItemId: string; quantity: number }>;
 }

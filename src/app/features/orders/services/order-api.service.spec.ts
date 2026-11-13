@@ -21,7 +21,7 @@ describe('OrderApiService', () => {
   afterEach(() => http.verify());
 
   it('requests paged staff orders with the supplied filters', () => {
-    service.getStaffOrders('restaurant-1', 'Preparing', 2, 10).subscribe();
+    service.getStaffOrders('restaurant-1', 'Preparing', null, 2, 10).subscribe();
 
     const request = http.expectOne(req => req.url === staffBase + '/restaurant-1/orders');
     expect(request.request.method).toBe('GET');
@@ -38,7 +38,7 @@ describe('OrderApiService', () => {
     expect(detail.request.method).toBe('GET');
     detail.flush({});
 
-    const body = { newStatus: 'Confirmed' as const, notes: 'Accepted by kitchen' };
+    const body = { status: 'Confirmed' as const, notes: 'Accepted by kitchen' };
     service.updateStaffOrderStatus('restaurant-1', 'order-1', body).subscribe();
     const update = http.expectOne(staffBase + '/restaurant-1/orders/order-1/status');
     expect(update.request.method).toBe('PATCH');
@@ -113,5 +113,46 @@ describe('OrderApiService', () => {
     );
     expect(request.request.method).toBe('GET');
     request.flush({});
+  });
+
+  it('posts staff order creation without sending client-calculated totals', () => {
+    const request = {
+      orderType: 'Pickup' as const,
+      customerName: 'John Doe',
+      customerPhone: '+923001234567',
+      customerEmail: 'john@example.com',
+      specialInstructions: 'No onions please',
+      items: [{ menuItemId: 'menu-item-1', quantity: 2 }]
+    };
+
+    service.createStaffOrder('restaurant-1', request).subscribe();
+
+    const create = http.expectOne(staffBase + '/restaurant-1/orders');
+    expect(create.request.method).toBe('POST');
+    expect(create.request.body).toEqual(request);
+    expect(create.request.body).not.toHaveProperty('subtotal');
+    expect(create.request.body).not.toHaveProperty('taxAmount');
+    expect(create.request.body).not.toHaveProperty('totalAmount');
+    create.flush({});
+  });
+
+  it('handles forbidden response from staff order creation', () => {
+    const request = {
+      orderType: 'Pickup' as const,
+      customerName: 'John Doe',
+      customerPhone: null,
+      customerEmail: null,
+      specialInstructions: null,
+      items: [{ menuItemId: 'menu-item-1', quantity: 1 }]
+    };
+
+    let error: any;
+    service.createStaffOrder('restaurant-1', request).subscribe({
+      error: err => { error = err; }
+    });
+
+    const create = http.expectOne(staffBase + '/restaurant-1/orders');
+    create.flush({ errorCode: 'FORBIDDEN', message: 'Forbidden' }, { status: 403, statusText: 'Forbidden' });
+    expect(error.status).toBe(403);
   });
 });
