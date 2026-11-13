@@ -555,6 +555,7 @@ describe('MenuManagement', () => {
 
     const component = fixture.componentInstance as unknown as {
       menu: WritableSignal<MenuDetailsDto | null>;
+      publishedUrl: WritableSignal<string | null>;
     };
     const publish = fixture.nativeElement.querySelector(
       '[aria-label="Publish Changes"]'
@@ -569,12 +570,23 @@ describe('MenuManagement', () => {
       url: `${API_ROOT}/menu-1/publish`
     });
     expect(request.request.body).toBeNull();
-    request.flush(ok({ ...menu, status: 'Published' }));
+    request.flush(
+      ok({ ...menu, status: 'Published', publicUrl: 'https://localhost:4200/r/pub-site/menu' })
+    );
     flushGet(httpMock, `${API_ROOT}/menu-1/items/summary`, summary);
     fixture.detectChanges();
 
     expect(component.menu()?.status).toBe('Published');
     expect(component.menu()?.isActive).toBe(true);
+    expect(component.publishedUrl()).toBe('https://localhost:4200/r/pub-site/menu');
+
+    const urlInput = fixture.nativeElement.querySelector(
+      'input[aria-label="Public menu URL"]'
+    ) as HTMLInputElement | null;
+    expect(urlInput).not.toBeNull();
+    expect(urlInput!.value).toBe('https://localhost:4200/r/pub-site/menu');
+    expect(urlInput!.readOnly).toBe(true);
+
     expect(notification.success).toHaveBeenCalledWith(
       'Menu published successfully to Resto.pk live QR & Web channels!'
     );
@@ -588,8 +600,10 @@ describe('MenuManagement', () => {
 
     const component = fixture.componentInstance as unknown as {
       menu: WritableSignal<MenuDetailsDto | null>;
+      publishedUrl: WritableSignal<string | null>;
     };
-    component.menu.set({ ...menu, status: 'Published' });
+    component.menu.set({ ...menu, status: 'Published', publicUrl: 'https://localhost:4200/r/pub-site/menu' });
+    component.publishedUrl.set('https://localhost:4200/r/pub-site/menu');
     fixture.detectChanges();
 
     const unpublish = fixture.nativeElement.querySelector(
@@ -608,6 +622,7 @@ describe('MenuManagement', () => {
     fixture.detectChanges();
 
     expect(component.menu()?.status).toBe('Draft');
+    expect(component.publishedUrl()).toBeNull();
     expect(notification.success).toHaveBeenCalledWith(
       'Menu unpublished successfully.'
     );

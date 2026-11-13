@@ -115,6 +115,10 @@ export class MenuManagement {
     return menu.status === 'Published' ? 'Unpublish' : 'Publish Changes';
   });
 
+  protected readonly publishedUrl = signal<string | null>(null);
+  protected readonly copyConfirmed = signal(false);
+  protected readonly publishingUrl = signal(false);
+
   /* ---------- Category lifecycle state ---------- */
 
   protected readonly pendingCategoryIds = signal<Set<string>>(new Set());
@@ -265,6 +269,9 @@ export class MenuManagement {
           return;
         }
         this.menu.set(response.data);
+        this.publishedUrl.set(
+          response.data.status === 'Published' ? (response.data.publicUrl ?? null) : null
+        );
         this.loadSummary(menuId, tenantId);
         this.loadCategories(menuId, tenantId);
         this.loadItems(menuId, tenantId);
@@ -909,6 +916,10 @@ export class MenuManagement {
             });
           }
 
+          this.publishedUrl.set(
+            updated.status === 'Published' ? (updated.publicUrl ?? null) : null
+          );
+
           this.notificationService.success(
             updated.status === 'Published'
               ? 'Menu published successfully to Resto.pk live QR & Web channels!'
@@ -930,6 +941,24 @@ export class MenuManagement {
           this.notificationService.error(message);
         }
       });
+  }
+
+  protected async copyPublicUrl(): Promise<void> {
+    const url = this.publishedUrl();
+    if (!url) return;
+    this.publishingUrl.set(true);
+    try {
+      await navigator.clipboard.writeText(url);
+      this.copyConfirmed.set(true);
+      setTimeout(() => this.copyConfirmed.set(false), 2000);
+    } finally {
+      this.publishingUrl.set(false);
+    }
+  }
+
+  protected openPublicUrl(): void {
+    const url = this.publishedUrl();
+    if (url) window.open(url, '_blank', 'noopener');
   }
 
   /* ---------- Helpers ---------- */

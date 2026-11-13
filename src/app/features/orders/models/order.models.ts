@@ -21,6 +21,36 @@ export interface PublicOrderTracking {
   orderNumber: string; status: OrderStatus; totalAmount: number; currency: string;
   items: Array<{ itemName: string; quantity: number }>; createdAt: string; completedAt: string | null;
 }
+
+/**
+ * Anonymous public menu (GET api/v1/public/sites/{slug}/menu).
+ * Mirrors the backend PublicMenuDto/PublicMenuCategoryDto/PublicMenuItemDto
+ * and deliberately excludes tenant, restaurant and staff data.
+ */
+export interface PublicMenuDto {
+  id: string;
+  name: string;
+  description: string | null;
+  categories: PublicMenuCategoryDto[];
+}
+export interface PublicMenuCategoryDto {
+  id: string;
+  name: string;
+  description: string | null;
+  displayOrder: number;
+  items: PublicMenuItemDto[];
+}
+export interface PublicMenuItemDto {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  currency: string;
+  displayOrder: number;
+  isAvailable: boolean;
+  imageFileId: string | null;
+}
+
 export interface UpdateOrderStatusRequest { status: OrderStatus; notes: string | null; }
 export interface StaffOrderSummary {
   totalOrders: number;

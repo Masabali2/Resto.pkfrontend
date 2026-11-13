@@ -13,6 +13,7 @@ import type {
   CreateStaffOrderRequest,
   PublicCart,
   PublicCartItem,
+  PublicMenuDto,
   PublicOrderCreated,
   PublicOrderTracking,
   StaffCreateOrderContext,
@@ -96,6 +97,16 @@ export class OrderApiService {
   ): Observable<ApiResponse<PublicCart>> {
     return this.http.get<ApiResponse<PublicCart>>(
       `${this.publicBaseUrl}/${encodeURIComponent(slug)}/cart`
+    );
+  }
+
+  /**
+   * Loads the published menu for a public site (anonymous customers).
+   * GET api/v1/public/sites/{slug}/menu
+   */
+  getPublicMenu(slug: string): Observable<ApiResponse<PublicMenuDto[]>> {
+    return this.http.get<ApiResponse<PublicMenuDto[]>>(
+      `${environment.apiUrl}/v1/public/sites/${encodeURIComponent(slug)}/menu`
     );
   }
 

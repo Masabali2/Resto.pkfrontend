@@ -1,14 +1,18 @@
 
-import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
+import { DestroyRef, effect, Injectable, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
+import { HubConnection } from '@microsoft/signalr';
 
 import { HttpErrorHandlerService } from '../../../core/services/http-error-handler.service';
 import type {
   OrderStatus,
+  OrderType,
   StaffOrderDetails,
   StaffOrderSummary
 } from '../models/order.models';
 import { OrderApiService } from './order-api.service';
+import { OrderSignalRService } from './order-signalr.service';
 import { forkJoin } from 'rxjs';
 export type OrderStatusFilter = OrderStatus | 'All orders';
 
@@ -23,14 +27,53 @@ const KANBAN_STATUSES: readonly OrderStatus[] = [
 ];
 
 const KANBAN_PAGE_SIZE = 20;
+
+interface OrderCreatedEvent {
+  restaurantId: string;
+  orderId: string;
+  orderNumber: string;
+  status: OrderStatus;
+  orderType: OrderType;
+  customerName: string;
+  customerPhone: string | null;
+  customerEmail: string | null;
+  subtotal: number;
+  taxAmount: number;
+  totalAmount: number;
+  currency: string;
+  specialInstructions: string | null;
+  createdAt: string;
+  items: Array<{
+    menuItemId: string | null;
+    itemName: string;
+    unitPrice: number;
+    quantity: number;
+    lineTotal: number;
+    currency: string;
+  }>;
+}
+
+interface OrderStatusChangedEvent {
+  restaurantId: string;
+  orderId: string;
+  status: OrderStatus;
+  completedAt: string | null;
+  cancelledAt: string | null;
+  updatedAt: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class OrderStateService {
   private readonly orderApi = inject(OrderApiService);
   private readonly errors = inject(HttpErrorHandlerService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly signalR = inject(OrderSignalRService);
 
   // Restaurant scope
   private readonly restaurantIdState = signal<string | null>(null);
+
+  private hubConnection: HubConnection | null = null;
+  private hubConnectedRestaurantId: string | null = null;
 
   // Order list
   private readonly ordersState = signal<StaffOrderDetails[]>([]);
@@ -113,6 +156,19 @@ readonly kanbanError = this.kanbanErrorState.asReadonly();
   readonly detailMessage = computed(
     () => this.workflowErrorState() ?? this.detailErrorState()
   );
+
+  constructor() {
+    effect(() => {
+      const restaurantId = this.restaurantIdState();
+      if (restaurantId) {
+        this.connectToHub(restaurantId);
+      } else {
+        this.disconnectFromHub();
+      }
+    });
+
+    this.destroyRef.onDestroy(() => this.disconnectFromHub());
+  }
 
   // Clear all state when leaving the restaurant workspace.
   clear(): void {
@@ -638,5 +694,149 @@ transitionOrderStatus(
     }
 
     this.loadOrders(restaurantId);
+  }
+
+  /* ------------------------------------------------------------
+   * SignalR: real-time order events for the staff dashboard.
+   * ------------------------------------------------------------ */
+
+  private connectToHub(restaurantId: string): void {
+    if (this.hubConnectedRestaurantId === restaurantId && this.hubConnection) {
+      return;
+    }
+    this.disconnectFromHub();
+
+    this.hubConnection = this.signalR.connect();
+    this.hubConnectedRestaurantId = restaurantId;
+
+    this.hubConnection.invoke('SubscribeToRestaurant', restaurantId).catch(() => {
+      /* Best effort: the group subscription may fail if the hub is down. */
+    });
+
+    this.hubConnection.on('order.created', (payload: OrderCreatedEvent) =>
+      this.onOrderCreated(payload)
+    );
+    this.hubConnection.on('order.status_changed', (payload: OrderStatusChangedEvent) =>
+      this.onOrderStatusChanged(payload)
+    );
+  }
+
+  private disconnectFromHub(): void {
+    if (this.hubConnection) {
+      this.hubConnection.off('order.created');
+      this.hubConnection.off('order.status_changed');
+    }
+    this.hubConnection = null;
+    this.hubConnectedRestaurantId = null;
+    this.signalR.disconnect();
+  }
+
+  private onOrderCreated(payload: OrderCreatedEvent): void {
+    if (
+      !payload ||
+      payload.restaurantId !== this.restaurantIdState()
+    ) {
+      return;
+    }
+
+    const order = this.mapEventToOrderDetails(payload);
+    const filter = this.statusFilterState();
+    const matchesFilter =
+      filter === 'All orders' || filter === order.status;
+
+    this.ordersState.update(items => {
+      if (items.some(item => item.id === order.id)) return items;
+      return matchesFilter ? [order, ...items] : items;
+    });
+
+    this.kanbanOrdersState.update(columns => {
+      const next = { ...columns };
+      KANBAN_STATUSES.forEach(status => {
+        next[status] = next[status].filter(item => item.id !== order.id);
+      });
+      next[order.status].push(order);
+      return next;
+    });
+
+    // Keep summary counts consistent with the server as the source of truth.
+    const currentRestaurantId = this.restaurantIdState();
+    if (currentRestaurantId) {
+      this.loadSummary(currentRestaurantId);
+    }
+  }
+
+  private onOrderStatusChanged(payload: OrderStatusChangedEvent): void {
+    if (
+      !payload ||
+      payload.restaurantId !== this.restaurantIdState()
+    ) {
+      return;
+    }
+
+    const orderId = payload.orderId as string | undefined;
+    const newStatus = payload.status as OrderStatus | undefined;
+    if (!orderId || !newStatus) return;
+
+    this.ordersState.update(items =>
+      items.map(item =>
+        item.id === orderId ? { ...item, status: newStatus } : item
+      )
+    );
+
+    if (this.selectedOrderState()?.id === orderId) {
+      this.selectedOrderState.update(current =>
+        current ? { ...current, status: newStatus } : current
+      );
+    }
+
+    this.kanbanOrdersState.update(columns => {
+      const next = { ...columns };
+      let moved: StaffOrderDetails | null = null;
+      KANBAN_STATUSES.forEach(status => {
+        const found = next[status].find(item => item.id === orderId);
+        if (found) {
+          next[status] = next[status].filter(item => item.id !== orderId);
+          moved = { ...found, status: newStatus };
+        }
+      });
+      if (moved) next[newStatus].push(moved);
+      return next;
+    });
+
+    const currentRestaurantId = this.restaurantIdState();
+    if (currentRestaurantId) {
+      this.loadSummary(currentRestaurantId);
+    }
+  }
+
+  private mapEventToOrderDetails(
+    payload: OrderCreatedEvent
+  ): StaffOrderDetails {
+    return {
+      id: payload.orderId,
+      orderNumber: payload.orderNumber,
+      status: payload.status,
+      orderType: payload.orderType,
+      customerName: payload.customerName,
+      customerPhone: payload.customerPhone,
+      customerEmail: payload.customerEmail,
+      subtotal: payload.subtotal,
+      discountAmount: 0,
+      taxAmount: payload.taxAmount,
+      totalAmount: payload.totalAmount,
+      currency: payload.currency,
+      specialInstructions: payload.specialInstructions,
+      createdAt: payload.createdAt,
+      completedAt: null,
+      cancelledAt: null,
+      items: payload.items.map(item => ({
+        menuItemId: item.menuItemId,
+        itemName: item.itemName,
+        unitPrice: item.unitPrice,
+        quantity: item.quantity,
+        lineTotal: item.lineTotal,
+        currency: item.currency
+      }))
+    };
   }
 }

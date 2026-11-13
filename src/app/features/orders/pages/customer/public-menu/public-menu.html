@@ -1,0 +1,221 @@
+<div class="public-menu-page" style="display:flex;flex-direction:column;height:100vh;">
+
+  <header class="public-menu__header">
+    <div class="public-menu__identity">
+      <h2 class="public-menu__title">{{ menu()?.name ?? 'Restaurant Menu' }}</h2>
+      <p class="public-menu__subtitle">{{ menu()?.description ?? 'Explore our delicious menu' }}</p>
+    </div>
+    <div class="public-menu__cart">
+      @if (cartCount() > 0) {
+        <span class="public-menu__cart-summary">
+          {{ cartCount() }} item{{ cartCount() === 1 ? '' : 's' }}
+          &middot;
+          {{ formatMoney(cartSubtotal(), cartCurrency()) }}
+        </span>
+      }
+      <button
+        type="button"
+        class="btn btn-add-item"
+        [disabled]="cartCount() === 0 || cartLoading()"
+        (click)="goCheckout()"
+      >
+        Checkout
+      </button>
+    </div>
+  </header>
+
+  <main class="public-menu__main" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:1rem;">
+
+    @if (loading()) {
+      <div class="menu-management__loading" style="width:min(100%,490px);">
+        <app-loading-spinner />
+        <span>Loading menu...</span>
+      </div>
+    }
+
+    @if (error() && !loading()) {
+      <div class="menu-management__empty menu-management__error" role="alert" style="width:min(100%,490px);text-align:center;">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <p>{{ error() }}</p>
+        <button type="button" class="btn btn-outline-secondary" (click)="retry()">Retry</button>
+      </div>
+    }
+
+    @if (!loading() && !error() && menu()) {
+
+      <aside
+        class="preview-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Customer menu"
+      >
+
+        <div class="preview-drawer__body">
+
+          <div class="preview-toolbar">
+            <span class="preview-toolbar__label">
+              <i class="bi bi-phone"></i>
+              Mobile QR Experience
+            </span>
+            <span class="preview-toolbar__hint">
+              {{ items().length }} Menu Items
+            </span>
+          </div>
+
+          <div class="phone-frame">
+
+            <div class="preview-phone-status">
+              <span>9:41</span>
+              <div class="preview-phone-status__icons">
+                <i class="bi bi-reception-4"></i>
+                <i class="bi bi-wifi"></i>
+                <i class="bi bi-battery-full"></i>
+              </div>
+            </div>
+
+            <section class="phone-banner">
+              <div class="preview-restaurant-logo">
+                <i class="bi bi-shop"></i>
+              </div>
+              <span class="phone-banner__eyebrow">
+                <i class="bi bi-circle-fill"></i>
+                DIGITAL RESTAURANT MENU
+              </span>
+              <h2>{{ menu()?.name ?? 'Restaurant Menu' }}</h2>
+              <p>Explore our delicious menu</p>
+              <div class="phone-banner__meta">
+                <span><i class="bi bi-grid"></i> {{ categories().length }} Categories</span>
+                <span><i class="bi bi-egg-fried"></i> {{ items().length }} Items</span>
+              </div>
+            </section>
+
+            <section class="preview-menu-info">
+              <div class="preview-menu-info__heading">
+                <span class="preview-menu-eyebrow">OUR COLLECTION</span>
+                <h3>Explore Menu</h3>
+                <p>Find something delicious today.</p>
+              </div>
+              <div class="preview-menu-stats">
+                <div class="preview-menu-stat"><strong>{{ items().length }}</strong><span>Total Items</span></div>
+                <div class="preview-menu-stat"><strong>{{ categories().length }}</strong><span>Categories</span></div>
+                <div class="preview-menu-stat"><strong>{{ items().length }}</strong><span>Loaded</span></div>
+              </div>
+
+              <div class="preview-search">
+                <i class="bi bi-search"></i>
+                <input
+                  type="text"
+                  placeholder="Search menu items..."
+                  [value]="previewSearch()"
+                  (input)="previewSearch.set($any($event.target).value)"
+                  aria-label="Search menu items"
+                />
+                @if (previewSearch()) {
+                  <button type="button" (click)="clearSearch()" aria-label="Clear search">
+                    <i class="bi bi-x-circle"></i>
+                  </button>
+                }
+              </div>
+
+              <div class="preview-categories">
+                <button
+                  type="button"
+                  class="preview-category-chip"
+                  [class.active]="selectedPreviewCategory() === 'all'"
+                  (click)="selectedPreviewCategory.set('all')"
+                >
+                  All Items
+                </button>
+                @for (category of categories(); track category.id) {
+                  <button
+                    type="button"
+                    class="preview-category-chip"
+                    [class.active]="selectedPreviewCategory() === category.id"
+                    (click)="selectedPreviewCategory.set(category.id)"
+                  >
+                    {{ category.name }}
+                    <span>{{ category.items.length }}</span>
+                  </button>
+                }
+              </div>
+            </section>
+
+            <section class="preview-menu-collection">
+              <div class="preview-section-heading">
+                <div>
+                  <span class="preview-menu-eyebrow">FRESHLY PREPARED</span>
+                  <h3>Our Menu</h3>
+                </div>
+                <span>{{ filteredItems().length }} Results</span>
+              </div>
+
+              @if (filteredItems().length > 0) {
+                <div class="preview-item-list">
+                  @for (item of filteredItems(); track trackByItem($index, item)) {
+                    <article class="preview-food-card">
+                      @if (item.imageUrl) {
+                        <img [src]="item.imageUrl" [alt]="item.name" loading="lazy" />
+                      } @else {
+                        <div class="preview-food-placeholder"><i class="bi bi-egg-fried"></i></div>
+                      }
+                      <div class="preview-food-card__content">
+                        <span class="preview-food-card__category">{{ item.categoryName || 'Uncategorized' }}</span>
+                        <h3>{{ item.name }}</h3>
+                        <p>{{ item.description || 'Deliciously prepared for you.' }}</p>
+                        <div class="preview-food-card__footer">
+                          <strong>{{ formatMoney(item.price, itemCurrency(item)) }}</strong>
+                          <span
+                            class="preview-food-card__availability"
+                            [class.available]="item.isAvailable"
+                            [class.unavailable]="!item.isAvailable"
+                          >
+                            @if (item.isAvailable) {
+                              <i class="bi bi-check-circle-fill"></i> Available
+                            } @else {
+                              <i class="bi bi-x-circle-fill"></i> Sold Out
+                            }
+                          </span>
+                          <div class="public-menu__cart-controls" style="display:flex;align-items:center;gap:.35rem;">
+                            @if (isInCart(item.id)) {
+                              <button type="button" class="btn" style="padding:.1rem .5rem;font-size:.65rem;" (click)="decrease(item.id)" aria-label="Decrease quantity">-</button>
+                              <span style="min-width:1rem;text-align:center;font-size:.65rem;font-weight:700;">{{ cartQuantity(item.id) }}</span>
+                              <button type="button" class="btn" style="padding:.1rem .5rem;font-size:.65rem;" (click)="increase(item.id)" aria-label="Increase quantity">+</button>
+                              <button type="button" class="btn btn-outline-secondary" style="padding:.15rem .55rem;font-size:.65rem;" (click)="removeFromCart(item.id)" aria-label="Remove from cart">Remove</button>
+                            } @else if (item.isAvailable) {
+                              <button type="button" class="btn btn-add-item" style="padding:.25rem .6rem;font-size:.68rem;" (click)="addToCart(item)" aria-label="Add to cart">Add</button>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </article>
+                  }
+                </div>
+              } @else {
+                <div class="preview-empty-state">
+                  <div class="preview-empty-state__icon"><i class="bi bi-search"></i></div>
+                  <h3>No menu items found</h3>
+                  <p>Try another search or category.</p>
+                  <button type="button" (click)="clearSearch()">Clear Filters</button>
+                </div>
+              }
+            </section>
+
+            <footer class="customer-menu-footer">
+              <div class="customer-menu-footer__brand">
+                <i class="bi bi-qr-code"></i>
+                <span>Powered by Resto.pk</span>
+              </div>
+              <span>Digital Restaurant Experience</span>
+            </footer>
+
+          </div>
+
+        </div>
+
+      </aside>
+
+    }
+
+  </main>
+
+</div>

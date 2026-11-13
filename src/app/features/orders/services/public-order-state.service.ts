@@ -1,5 +1,8 @@
-import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
+import { DestroyRef, effect, Injectable, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
+import { HubConnection } from '@microsoft/signalr';
+
 import {
   EMPTY,
   Observable,
@@ -13,17 +16,19 @@ import type { ApiResponse } from '../../../core/models/api-response.model';
 import { HttpErrorHandlerService } from '../../../core/services/http-error-handler.service';
 import type {
   CreatePublicOrderRequest,
+  OrderStatus,
   PublicCart,
   PublicOrderCreated,
   PublicOrderTracking
 } from '../models/order.models';
 import { OrderApiService } from './order-api.service';
-
+import { OrderSignalRService } from './order-signalr.service';
 @Injectable({ providedIn: 'root' })
 export class PublicOrderStateService {
   private readonly orderApi = inject(OrderApiService);
   private readonly errors = inject(HttpErrorHandlerService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly signalR = inject(OrderSignalRService);
 
   private readonly cartSlugState = signal<string | null>(null);
   private readonly cartState = signal<PublicCart | null>(null);
@@ -42,6 +47,13 @@ export class PublicOrderStateService {
   private cartMutationRequestId = 0;
   private checkoutRequestId = 0;
   private trackingRequestId = 0;
+
+  private hubConnection: HubConnection | null = null;
+  private hubOrderKey: string | null = null;
+
+  constructor() {
+    this.destroyRef.onDestroy(() => this.disconnectTracking());
+  }
 
   readonly cartSlug = this.cartSlugState.asReadonly();
   readonly cart = this.cartState.asReadonly();
@@ -187,6 +199,7 @@ export class PublicOrderStateService {
 
   loadTracking(slug: string, trackingToken: string): void {
     this.trackingSlugState.set(slug);
+    this.setupTrackingHub(slug, trackingToken);
 
     const requestId = ++this.trackingRequestId;
     this.trackingLoadingState.set(true);
@@ -226,6 +239,62 @@ export class PublicOrderStateService {
     this.trackingLoadingState.set(false);
     this.trackingOrderState.set(null);
     this.trackingErrorState.set(message);
+  }
+
+  /* ------------------------------------------------------------
+   * SignalR: real-time order tracking for the customer.
+   * ------------------------------------------------------------ */
+
+  private setupTrackingHub(slug: string, trackingToken: string): void {
+    const key = `${slug}|${trackingToken}`;
+    if (this.hubOrderKey === key && this.hubConnection) {
+      return;
+    }
+    this.disconnectTracking();
+
+    this.hubConnection = this.signalR.connect();
+    this.hubOrderKey = key;
+
+    this.hubConnection.invoke('SubscribeToOrder', slug, trackingToken).catch(() => {
+      /* Best effort: the hub validates the tracking token server-side. */
+    });
+
+    this.hubConnection.on('order.status_changed', (payload: unknown) =>
+      this.onTrackingStatusChanged(payload as Record<string, unknown>)
+    );
+
+    this.hubConnection.onreconnected = () => {
+      this.hubConnection
+        ?.invoke('SubscribeToOrder', slug, trackingToken)
+        .catch(() => {
+          /* Best effort. */
+        });
+      // After reconnecting, reload the latest state so no updates are missed.
+      this.loadTracking(slug, trackingToken);
+    };
+  }
+
+  public disconnectTracking(): void {
+    if (this.hubConnection) {
+      this.hubConnection.off('order.status_changed');
+      this.signalR.disconnect();
+      this.hubConnection = null;
+      this.hubOrderKey = null;
+    }
+  }
+
+  private onTrackingStatusChanged(payload: Record<string, unknown>): void {
+    const order = this.trackingOrderState();
+    if (!order) return;
+
+    const newStatus = (payload['status'] as OrderStatus | undefined);
+    if (!newStatus) return;
+
+    this.trackingOrderState.set({
+      ...order,
+      status: newStatus,
+      completedAt: (payload['completedAt'] as string | null) ?? order.completedAt
+    });
   }
 
   private mutateCart<T>(

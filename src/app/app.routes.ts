@@ -21,6 +21,14 @@ export const routes: Routes = [
       import('./features/orders/pages/customer/cart/cart').then(m => m.PublicCart)
   },
   {
+    path: 'r/:slug/menu',
+    title: 'Menu — Resto.pk',
+    loadComponent: () =>
+      import('./features/orders/pages/customer/public-menu/public-menu').then(
+        m => m.PublicMenu
+      )
+  },
+  {
     path: 'r/:slug/checkout',
     title: 'Checkout — Resto.pk',
     loadComponent: () =>
